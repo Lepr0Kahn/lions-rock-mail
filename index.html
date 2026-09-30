@@ -251,8 +251,33 @@
     font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
     color: var(--accent); font-weight: 700; margin-bottom: 14px;
   }
+
+  select {
+    width:100%; background:transparent; border:0;
+    border-bottom:1px solid rgba(255,255,255,0.18);
+    padding:10px 0; color:var(--text); font-size:15px;
+    font-family:inherit; outline:none;
+  }
+  select:focus { border-bottom-color:var(--accent); }
+  select option { background:#171717; color:var(--text); }
+  .quick-tools { position:relative; overflow:hidden; }
+  .quick-tools::before {
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent);
+  }
+  .tool-note { color:var(--dim); font-size:11px; line-height:1.55; margin-top:12px; }
+  .track audio { width:100%; height:30px; margin-top:8px; display:block; }
+  .track-info { overflow:hidden; }
+  .send-success {
+    margin-top:14px; padding:14px; border:1px solid rgba(82,190,110,.45);
+    background:rgba(82,190,110,.08); color:#b8e6c3; font-size:12px; line-height:1.55;
+  }
+
 </style>
-<meta name="lions-rock-build" content="gmail-repair-20260930-1">\n</head>
+<meta name="lions-rock-build" content="gmail-repair-20260930-1">\n<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
 <body>
 
 <div class="wrap">
@@ -390,7 +415,7 @@ smTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC
         <div class="sub">Media Facility</div>
       </div>
     </div>
-    <div class="badge-offline"><span class="dot"></span> GMAIL TEST BUILD 4</div>
+    <div class="badge-offline"><span class="dot"></span> LIONS ROCK MAIL V5</div>
   </header>
 
   <section class="hero">
@@ -786,6 +811,43 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
         <div id="tracks-list"></div>
       </div>
 
+      <div class="panel quick-tools" style="margin-bottom:24px;">
+        <div class="panel-title">Quick Tools</div>
+        <div class="two-col">
+          <div class="field">
+            <div class="label-row"><label>Template</label><span class="hint">One-tap starting point</span></div>
+            <select id="template-select">
+              <option value="studio-follow-up">Studio Follow-up</option>
+              <option value="send-mix">Send Mix / Master</option>
+              <option value="booking-confirmation">Booking Confirmation</option>
+              <option value="producer-intro">Producer Introduction</option>
+              <option value="payment-follow-up">Payment Follow-up</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label-row"><label>First name</label><span class="hint">Fills {{First Name}}</span></div>
+            <input id="first-name" placeholder="e.g. Jordan" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <div class="label-row"><label>Test email</label><span class="hint">Saved on this device</span></div>
+            <input id="test-email" placeholder="your@email.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <div class="label-row"><label>Recent recipient</label><span class="hint">Last 10</span></div>
+            <select id="recent-recipient"><option value="">Choose recent…</option></select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:6px;">
+          <button class="btn btn-secondary btn-small" id="save-template">☆ Save current template</button>
+          <button class="btn btn-secondary btn-small" id="send-test">✉ Send test to myself</button>
+          <button class="btn btn-secondary btn-small" id="new-email">＋ New email</button>
+          <button class="btn btn-secondary btn-small" id="install-app" style="display:none;">⇩ Install app</button>
+        </div>
+        <div class="tool-note" id="size-note">No audio attached.</div>
+      </div>
+
       <div class="field">
         <div class="label-row"><label>Subject line</label><span class="hint">The headline of the email</span></div>
         <input id="subject" value="A Quick Note From The Facility" />
@@ -859,7 +921,7 @@ Talk soon.</textarea>
             <input id="bcc" />
           </div>
         </div>
-        <div id="gmail-runtime-note" style="display:none; margin-top:12px; padding:10px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.5;"></div>
+        <div id="gmail-runtime-note" style="display:none; margin-top:12px; padding:10px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.5;"></div><div id="send-success" class="send-success" style="display:none;"></div>
       </div>
 
       <div class="btn-row">
@@ -933,6 +995,100 @@ const CLIENT_ID = "773250602648-f1o63tevas55si5pdk0r8q1babam7ouk.apps.googleuser
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 const GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
 let tokenClient = null, accessToken = "", tracks = [];
+const TEMPLATES = {
+  "studio-follow-up":{
+    subject:"A Quick Note From The Facility",
+    preheader:"Behind the lens. Always in motion.",
+    greeting:"Hi {{First Name}},",
+    body:"Hope this finds you in good spirits. I wanted to share a quick update on what we've been crafting at the Facility this week — new sessions, fresh edits, and a few projects I think you'll appreciate.\n\nIf anything catches your eye, just reply to this email. Always happy to set up a call, a studio walkthrough, or send over a treatment.\n\nTalk soon.",
+    signoff:"With gratitude,"
+  },
+  "send-mix":{
+    subject:"Your Mix From The Lion's Den",
+    preheader:"Fresh from the room.",
+    greeting:"Hi {{First Name}},",
+    body:"Your latest audio is attached. Give it a listen when you have a chance and send me any notes.\n\nIf you want revisions, be as specific as you like — timestamps are always helpful.",
+    signoff:"Respect,"
+  },
+  "booking-confirmation":{
+    subject:"Studio Booking Confirmation — Lion's Rock Media",
+    preheader:"Your session is locked in.",
+    greeting:"Hi {{First Name}},",
+    body:"Your session at The Lion's Den is confirmed.\n\nReply to this email if anything changes or if you want to send references, stems, lyrics, or session notes ahead of time.",
+    signoff:"See you at the Facility,"
+  },
+  "producer-intro":{
+    subject:"Introduction From LeProKahn — Lion's Rock Media",
+    preheader:"A quick introduction from the Facility.",
+    greeting:"Hi {{First Name}},",
+    body:"I wanted to introduce myself and Lion's Rock Media Facility. I work across production, recording and creative development, and I thought it made sense for us to connect.\n\nIf you're open to it, reply here and let's talk about what you're working on.",
+    signoff:"Respect,"
+  },
+  "payment-follow-up":{
+    subject:"Quick Follow-Up From Lion's Rock Media",
+    preheader:"A quick note regarding the project.",
+    greeting:"Hi {{First Name}},",
+    body:"Just following up regarding the outstanding project payment. When you get a moment, please let me know the status or if you need anything resent from my side.\n\nThanks again.",
+    signoff:"With gratitude,"
+  }
+};
+let deferredInstallPrompt = null;
+
+function mergeText(value){
+  const name=$("first-name")?.value.trim()||"there";
+  return String(value||"")
+    .replace(/\{\{\s*First Name\s*\}\}/gi,name)
+    .replace(/\{\{\s*first_name\s*\}\}/gi,name);
+}
+function applyTemplate(key){
+  let t=TEMPLATES[key];
+  if(key==="custom"){
+    try{t=JSON.parse(localStorage.getItem("lrm_custom_template")||"null");}catch(_){t=null;}
+  }
+  if(!t)return;
+  ["subject","preheader","greeting","body","signoff"].forEach(id=>{const e=$(id);if(e&&t[id]!=null)e.value=t[id];});
+  renderPreview();
+  toastMsg("Template loaded", $("template-select")?.selectedOptions?.[0]?.textContent||"");
+}
+function saveCustomTemplate(){
+  const t={subject:$("subject")?.value||"",preheader:$("preheader")?.value||"",greeting:$("greeting")?.value||"",body:$("body")?.value||"",signoff:$("signoff")?.value||""};
+  localStorage.setItem("lrm_custom_template",JSON.stringify(t));
+  const sel=$("template-select");
+  if(sel&&!sel.querySelector('option[value="custom"]')){const o=document.createElement("option");o.value="custom";o.textContent="My Saved Template";sel.appendChild(o);}
+  if(sel)sel.value="custom";
+  toastMsg("Template saved","Saved on this device.");
+}
+function addRecentRecipient(value){
+  const items=String(value||"").split(/[;,]/).map(x=>x.trim()).filter(Boolean);
+  if(!items.length)return;
+  let recent=[];try{recent=JSON.parse(localStorage.getItem("lrm_recent_recipients")||"[]");}catch(_){}
+  recent=[...items,...recent.filter(x=>!items.some(y=>y.toLowerCase()===x.toLowerCase()))].slice(0,10);
+  localStorage.setItem("lrm_recent_recipients",JSON.stringify(recent));
+  renderRecentRecipients();
+}
+function renderRecentRecipients(){
+  const sel=$("recent-recipient");if(!sel)return;
+  let recent=[];try{recent=JSON.parse(localStorage.getItem("lrm_recent_recipients")||"[]");}catch(_){}
+  sel.innerHTML='<option value="">Choose recent…</option>'+recent.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+}
+function clearTrackUrls(){tracks.forEach(t=>{if(t.url)try{URL.revokeObjectURL(t.url);}catch(_){}});}
+function updateSizeNote(){
+  const el=$("size-note");if(!el)return;
+  const total=tracks.reduce((n,t)=>n+t.size,0);
+  if(!total){el.textContent="No audio attached.";return;}
+  const encoded=Math.ceil(total*4/3);
+  el.textContent=tracks.length+" track"+(tracks.length===1?"":"s")+" · "+fmt(total)+" selected · roughly "+fmt(encoded)+" after email encoding"+(total>16*1024*1024?" — getting large; consider a smaller export.":".");
+}
+function resetNewEmail(){
+  ["to","cc","bcc","first-name"].forEach(id=>{const e=$(id);if(e)e.value="";});
+  clearTrackUrls();tracks=[];const mi=$("music-input");if(mi)mi.value="";
+  const sel=$("template-select");if(sel)sel.value="studio-follow-up";
+  applyTemplate("studio-follow-up");
+  renderTracks();renderPreview();
+  const success=$("send-success");if(success)success.style.display="none";
+  toastMsg("New email ready");
+}
+
 
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function toastMsg(title,desc="",bad=false){const wrap=$("toasts");if(!wrap)return;const el=document.createElement("div");el.className="toast"+(bad?" err":"");el.innerHTML='<div class="t-title">'+esc(title)+'</div>'+(desc?'<div class="t-desc">'+esc(desc)+'</div>':'');wrap.appendChild(el);requestAnimationFrame(()=>el.classList.add("show"));setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),300)},4200);}
@@ -951,17 +1107,18 @@ function getState(){
     to:$("to")?.value.trim()||"",
     cc:$("cc")?.value.trim()||"",
     bcc:$("bcc")?.value.trim()||"",
-    subject:$("subject")?.value||"A Quick Note From The Facility",
-    preheader:$("preheader")?.value||"",
-    greeting:$("greeting")?.value||"",
-    body:$("body")?.value||"",
-    signoff:$("signoff")?.value||"",
+    firstName:$("first-name")?.value.trim()||"",
+    subject:mergeText($("subject")?.value||"A Quick Note From The Facility"),
+    preheader:mergeText($("preheader")?.value||""),
+    greeting:mergeText($("greeting")?.value||""),
+    body:mergeText($("body")?.value||""),
+    signoff:mergeText($("signoff")?.value||""),
     senderName:$("senderName")?.value||"",
     senderTitle:$("senderTitle")?.value||"",
     accent:$("accent-color")?.value||"#C24D2C"
   };
 }
-function buildEmailHtml(){
+function buildEmailHtml(imageMode="hosted"){
   const s=getState();
   const accent=s.accent;
   const BRAND="LION'S ROCK MEDIA FACILITY";
@@ -973,8 +1130,8 @@ function buildEmailHtml(){
 
   // Use hosted HTTPS images in the actual email. Email clients commonly strip
   // data: image URLs, while HTTPS images render reliably through Gmail's proxy.
-  const emailLogo="https://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-1";
-  const emailSignature="https://lions-rock-mail.vercel.app/signature.jpg?v=email-rich-1";
+  const emailLogo=imageMode==="cid"?"cid:lions-rock-logo":"https://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-2";
+  const emailSignature=imageMode==="cid"?"cid:lions-rock-signature":"https://lions-rock-mail.vercel.app/signature.jpg?v=email-rich-2";
 
   const paragraphs=(s.body||"").split(/\n{2,}/).map(block=>
     `<p style="margin:0 0 18px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#1a1a1a;">${esc(block).split(/\n/).join("<br>")}</p>`
@@ -1072,17 +1229,94 @@ function buildEmailHtml(){
 </html>`;
 }
 function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Audio attached: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
-function buildRaw(){const s=getState(),mixed="mix_"+Date.now(),alt="alt_"+Date.now()+"_"+Math.random().toString(36).slice(2);let raw="To: "+s.to+"\r\n";if(s.cc)raw+="Cc: "+s.cc+"\r\n";if(s.bcc)raw+="Bcc: "+s.bcc+"\r\n";raw+="Subject: =?UTF-8?B?"+b64utf8(s.subject)+"?=\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\""+mixed+"\"\r\n\r\n";raw+="--"+mixed+"\r\nContent-Type: multipart/alternative; boundary=\""+alt+"\"\r\n\r\n";raw+="--"+alt+"\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"+wrap76(b64utf8(buildPlain()))+"\r\n";raw+="--"+alt+"\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"+wrap76(b64utf8(buildEmailHtml()))+"\r\n--"+alt+"--\r\n";for(const t of tracks){const n=t.name.replace(/[\r\n"]/g,"_");raw+="--"+mixed+"\r\nContent-Type: "+t.mime+"; name=\""+n+"\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\""+n+"\"\r\n\r\n"+wrap76(t.base64)+"\r\n";}raw+="--"+mixed+"--\r\n";return b64url(raw);}
+function buildRaw(overrides={}){
+  const s={...getState(),...overrides};
+  const mixed="mix_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const alt="alt_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const related="rel_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const logoB64=String(LOGO).split(",")[1]||"";
+  const signatureB64=String(SIGNATURE).split(",")[1]||"";
+  let raw="To: "+s.to+"\r\n";
+  if(s.cc)raw+="Cc: "+s.cc+"\r\n";
+  if(s.bcc)raw+="Bcc: "+s.bcc+"\r\n";
+  raw+="Subject: =?UTF-8?B?"+b64utf8(s.subject)+"?=\r\n";
+  raw+="MIME-Version: 1.0\r\n";
+  raw+='Content-Type: multipart/mixed; boundary="'+mixed+'"\r\n\r\n';
+
+  raw+="--"+mixed+"\r\n";
+  raw+='Content-Type: multipart/alternative; boundary="'+alt+'"\r\n\r\n';
+
+  raw+="--"+alt+"\r\n";
+  raw+="Content-Type: text/plain; charset=UTF-8\r\n";
+  raw+="Content-Transfer-Encoding: base64\r\n\r\n";
+  raw+=wrap76(b64utf8(buildPlain()))+"\r\n";
+
+  raw+="--"+alt+"\r\n";
+  raw+='Content-Type: multipart/related; boundary="'+related+'"\r\n\r\n';
+
+  raw+="--"+related+"\r\n";
+  raw+="Content-Type: text/html; charset=UTF-8\r\n";
+  raw+="Content-Transfer-Encoding: base64\r\n\r\n";
+  raw+=wrap76(b64utf8(buildEmailHtml("cid")))+"\r\n";
+
+  raw+="--"+related+"\r\n";
+  raw+="Content-Type: image/png; name=\"lions-rock-logo.png\"\r\n";
+  raw+="Content-Transfer-Encoding: base64\r\n";
+  raw+="Content-ID: <lions-rock-logo>\r\n";
+  raw+="Content-Disposition: inline; filename=\"lions-rock-logo.png\"\r\n\r\n";
+  raw+=wrap76(logoB64)+"\r\n";
+
+  raw+="--"+related+"\r\n";
+  raw+="Content-Type: image/jpeg; name=\"lions-rock-signature.jpg\"\r\n";
+  raw+="Content-Transfer-Encoding: base64\r\n";
+  raw+="Content-ID: <lions-rock-signature>\r\n";
+  raw+="Content-Disposition: inline; filename=\"lions-rock-signature.jpg\"\r\n\r\n";
+  raw+=wrap76(signatureB64)+"\r\n";
+  raw+="--"+related+"--\r\n";
+  raw+="--"+alt+"--\r\n";
+
+  for(const t of tracks){
+    const n=t.name.replace(/[\r\n"]/g,"_");
+    raw+="--"+mixed+"\r\n";
+    raw+="Content-Type: "+t.mime+'; name="'+n+'"\r\n';
+    raw+="Content-Transfer-Encoding: base64\r\n";
+    raw+='Content-Disposition: attachment; filename="'+n+'"\r\n\r\n';
+    raw+=wrap76(t.base64)+"\r\n";
+  }
+  raw+="--"+mixed+"--\r\n";
+  return b64url(raw);
+}
 function renderPreview(){const root=$("preview-root");if(!root)return;const s=getState();root.innerHTML='<div class="ep"><div class="ep-box"><div class="ep-accent" style="background:'+s.accent+'"></div><div class="ep-head"><img class="logo" src="'+LOGO+'"><div class="ep-brand">LION\'S ROCK MEDIA FACILITY</div></div><div class="ep-divider"></div><div class="ep-subject">'+esc(s.subject)+'</div><div class="ep-greet">'+esc(s.greeting)+'</div><div class="ep-body"><p>'+esc(s.body)+'</p></div><div class="ep-sign"><p>'+esc(s.signoff)+'</p><img class="ep-sign-mark" src="'+SIGNATURE+'"><div class="ep-sign-name">'+esc(s.senderName)+'</div><div class="ep-sign-title">'+esc(s.senderTitle)+'</div></div><div class="ep-footer"><div class="ep-brand-foot">LION\'S ROCK MEDIA FACILITY</div><div class="ep-links">@lionsrockmedia · @yofavengineer<br>+1-246-851-8512</div></div></div></div>';}
-function renderTracks(){const list=$("tracks-list"),empty=$("tracks-empty");if(!list||!empty)return;if(!tracks.length){list.innerHTML="";empty.style.display="block";return;}empty.style.display="none";list.innerHTML=tracks.map((t,i)=>'<div class="track"><div class="track-mark">♪</div><div class="track-info"><div class="track-name">'+esc(t.name)+'</div><div class="track-meta">'+esc(t.mime)+' · '+fmt(t.size)+'</div></div><button class="track-remove" data-i="'+i+'">✕</button></div>').join("");list.querySelectorAll(".track-remove").forEach(b=>b.onclick=()=>{tracks.splice(Number(b.dataset.i),1);renderTracks();renderPreview();});}
+function renderTracks(){
+  const list=$("tracks-list"),empty=$("tracks-empty");
+  if(!list||!empty)return;
+  if(!tracks.length){list.innerHTML="";empty.style.display="block";updateSizeNote();return;}
+  empty.style.display="none";
+  list.innerHTML=tracks.map((t,i)=>
+    '<div class="track">'+
+      '<div class="track-mark">♪</div>'+
+      '<div class="track-info">'+
+        '<div class="track-name">'+esc(t.name)+'</div>'+
+        '<div class="track-meta">'+esc(t.mime)+' · '+fmt(t.size)+'</div>'+
+        (t.url?'<audio controls preload="metadata" src="'+esc(t.url)+'"></audio>':'')+
+      '</div>'+
+      '<button class="track-remove" data-i="'+i+'" title="Remove">✕</button>'+
+    '</div>'
+  ).join("");
+  list.querySelectorAll(".track-remove").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.i);const old=tracks[i];if(old?.url)try{URL.revokeObjectURL(old.url);}catch(_){}
+    tracks.splice(i,1);renderTracks();renderPreview();
+  });
+  updateSizeNote();
+}
 function initGoogle(){if(!(window.google&&google.accounts&&google.accounts.oauth2)){gmailNote("Google library is still loading. If this stays here, check the internet connection.",true);setTimeout(initGoogle,800);return;}try{tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:GMAIL_SCOPE,callback:r=>{if(!r||r.error||!r.access_token){accessToken="";gmailNote("Google authorization failed: "+((r&&(r.error_description||r.error))||"cancelled"),true);return;}accessToken=r.access_token;gmailNote("✓ Google connected. Ready to send.");toastMsg("Gmail connected");},error_callback:e=>{accessToken="";gmailNote("Google sign-in error: "+((e&&(e.message||e.type))||"authorization failed"),true);}});gmailNote("Google loaded. Tap Sign in with Google.");}catch(e){gmailNote("Google setup error: "+e.message,true);}}
 
 document.addEventListener("DOMContentLoaded",()=>{
   setImages();
   ["subject","preheader","greeting","body","signoff","senderName","senderTitle","accent-color","accent-hex"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",renderPreview);});
-  const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>20*1024*1024){toastMsg("Audio too large","Keep total under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
+  const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>20*1024*1024){toastMsg("Audio too large","Keep total under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}clearTrackUrls();tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f),url:URL.createObjectURL(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
   const sign=$("gmail-signin");if(sign)sign.onclick=()=>{if(!tokenClient){gmailNote("Google is not ready yet.",true);initGoogle();return;}gmailNote("Opening Google authorization…");tokenClient.requestAccessToken({prompt:"consent"});};
-  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
+  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" track"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
   const copy=$("copy-html");if(copy)copy.onclick=async()=>{try{const h=buildEmailHtml(),t=buildPlain();if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([h],{type:"text/html"}),"text/plain":new Blob([t],{type:"text/plain"})})]);}else await navigator.clipboard.writeText(t);toastMsg("Copied");}catch(e){toastMsg("Copy failed",e.message,true);}};
   const dl=$("dl-html");if(dl)dl.onclick=()=>{const u=URL.createObjectURL(new Blob([buildEmailHtml()],{type:"text/html;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-email.html";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("HTML downloaded");};
   const eml=$("dl-eml");if(eml)eml.onclick=()=>{const s=getState();const raw=["To: "+s.to,"Cc: "+s.cc,"Bcc: "+s.bcc,"Subject: "+s.subject,"MIME-Version: 1.0",'Content-Type: text/html; charset="UTF-8"',"",buildEmailHtml()].join("\r\n");const u=URL.createObjectURL(new Blob([raw],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft downloaded");};
@@ -1095,17 +1329,32 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(sb&&sigInput)sb.onclick=()=>sigInput.click();
   if(sigInput)sigInput.onchange=async()=>{const file=sigInput.files?.[0];if(!file)return;const src=await readDataUrl(file);const e=$("sig-thumb");if(e)e.src=src;if(sigReset)sigReset.style.display="inline-flex";toastMsg("Signature updated");};
   if(sigReset)sigReset.onclick=()=>{const e=$("sig-thumb");if(e)e.src=SIGNATURE;sigReset.style.display="none";toastMsg("Signature reset");};
+  const tpl=$("template-select");if(tpl)tpl.onchange=()=>applyTemplate(tpl.value);
+  const saveTpl=$("save-template");if(saveTpl)saveTpl.onclick=saveCustomTemplate;
+  const recent=$("recent-recipient");if(recent)recent.onchange=()=>{if(recent.value){$("to").value=recent.value;toastMsg("Recipient loaded");}};
+  const testEmail=$("test-email");if(testEmail)testEmail.addEventListener("input",()=>{try{localStorage.setItem("lrm_test_email",testEmail.value.trim());}catch(_){}});
+  const firstName=$("first-name");if(firstName)firstName.addEventListener("input",renderPreview);
+  const senderNameEl=$("senderName");if(senderNameEl)senderNameEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_sender_name",senderNameEl.value);}catch(_){}});
+  const senderTitleEl=$("senderTitle");if(senderTitleEl)senderTitleEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_sender_title",senderTitleEl.value);}catch(_){}});
+  const accentEl=$("accent-color");if(accentEl)accentEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_accent",accentEl.value);}catch(_){}});
+  const sendTest=$("send-test");if(sendTest)sendTest.onclick=async()=>{
+    const address=$("test-email")?.value.trim()||"";
+    if(!address){toastMsg("Test address required","Enter the email address you want to receive tests at.",true);return;}
+    if(!accessToken){toastMsg("Sign in first","Connect Google before sending a test.",true);return;}
+    sendTest.disabled=true;const old=sendTest.textContent;sendTest.textContent="Sending test…";
+    try{
+      const s=getState();
+      const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+s.subject})})});
+      if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}throw new Error(d);}
+      toastMsg("Test sent",address);
+    }catch(e){toastMsg("Test failed",e.message,true);}finally{sendTest.disabled=false;sendTest.textContent=old;}
+  };
+  const newEmail=$("new-email");if(newEmail)newEmail.onclick=resetNewEmail;
+  const installBtn=$("install-app");if(installBtn)installBtn.onclick=async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice;}catch(_){}deferredInstallPrompt=null;installBtn.style.display="none";};
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;if(installBtn)installBtn.style.display="inline-flex";});
+
   renderTracks();renderPreview();initGoogle();
-  if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
-  if("caches" in window)caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).catch(()=>{});
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
 });
-</script>\n<script id="lions-rock-cache-cleanup">
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
-}
-if ("caches" in window) {
-  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
-}
-</script>
-</body>
+</script>\n</body>
 </html>
