@@ -951,8 +951,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(e.data.type==="lions-rock-new-document"){
       if(typeof window.resetGenerator==="function")window.resetGenerator();
       var c=e.data.client||{};
+      if(c.id && window.STORE){
+        STORE.clients=STORE.clients||[];
+        var localClient=STORE.clients.find(function(x){return x.id===c.id;});
+        if(localClient)Object.assign(localClient,c,{updated_at:new Date().toISOString()});
+        else STORE.clients.push(Object.assign({created_at:new Date().toISOString(),updated_at:new Date().toISOString()},c));
+      }
+      if(e.data.project && e.data.project.id && window.STORE){
+        STORE.projects=STORE.projects||[];
+        var localProject=STORE.projects.find(function(x){return x.id===e.data.project.id;});
+        if(localProject)Object.assign(localProject,e.data.project);
+        else STORE.projects.push(e.data.project);
+      }
       state.currentClientId=c.id||null;
       state.currentProjectId=e.data.projectId||null;
+      if(typeof window.saveStore==="function")window.saveStore();
       if(document.getElementById("client-name"))document.getElementById("client-name").value=c.name||"";
       if(document.getElementById("client-email"))document.getElementById("client-email").value=c.email||"";
       if(document.getElementById("client-phone"))document.getElementById("client-phone").value=c.phone||"";
