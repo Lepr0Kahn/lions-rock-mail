@@ -30,8 +30,9 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
 .login-title{font-family:Georgia,serif;font-size:27px;letter-spacing:.08em;margin:0 0 7px}
 .login-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
 .login-field{text-align:left;margin:0 0 14px}.login-field label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:700}
-.login-field input{width:100%;background:#0e0e0e;border:1px solid var(--border);color:#fff;padding:13px 12px;font:inherit;font-size:14px;outline:none}.login-field input:focus{border-color:var(--accent)}
-.login-button{width:100%;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:13px 14px;font:inherit;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:5px}.login-button:disabled{opacity:.55;cursor:wait}
+.login-field input,.login-field textarea{width:100%;background:#0e0e0e;border:1px solid var(--border);color:#fff;padding:13px 12px;font:inherit;font-size:14px;outline:none}.login-field textarea{min-height:88px;resize:vertical}.login-field input:focus,.login-field textarea:focus{border-color:var(--accent)}
+.login-button{width:100%;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:13px 14px;font:inherit;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:5px}.login-button.secondary{background:transparent;border-color:var(--border);color:var(--text);margin-top:10px}.login-button:disabled{opacity:.55;cursor:wait}
+.login-help{font-size:11px;color:var(--muted);line-height:1.55;margin:15px 0}.login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.login-link{background:none;border:0;color:#e7a58e;text-decoration:underline;font:inherit;font-size:11px;cursor:pointer;margin-top:12px}.gate-section{display:none}.gate-section.active{display:block}
 .login-status{min-height:18px;color:var(--muted);font-size:11px;margin-top:13px;line-height:1.5}.login-status.err{color:#ff9388}
 .login-foot{font-size:10px;color:var(--dim);margin-top:24px;letter-spacing:.08em}
 body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{display:none!important}
@@ -45,16 +46,45 @@ body.studio-authenticated .login-gate{display:none!important}
     <img class="login-logo" src="/icon-192.png" alt="Lions Rock">
     <h1 class="login-title">Lions Rock Studio</h1>
     <div class="login-sub">Studio Management System</div>
-    <div class="login-field">
-      <label for="gate-email">Email</label>
-      <input id="gate-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com">
+
+    <div class="gate-section active" id="signin-view">
+      <div class="login-field">
+        <label for="gate-email">Email</label>
+        <input id="gate-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com">
+      </div>
+      <div class="login-field">
+        <label for="gate-password">Password</label>
+        <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
+      </div>
+      <button class="login-button" id="gate-signin">Sign In</button>
+      <button class="login-button secondary" id="show-apply">Apply for Access</button>
+      <div class="login-status" id="gate-status">Checking your session…</div>
     </div>
-    <div class="login-field">
-      <label for="gate-password">Password</label>
-      <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
+
+    <div class="gate-section" id="apply-view">
+      <div class="login-help">Applications are reviewed first. If you are accepted, Lions Rock will send payment instructions. Your account is only activated after payment is confirmed.</div>
+      <div class="login-field"><label>Full Name</label><input id="apply-name" autocomplete="name"></div>
+      <div class="login-field"><label>Business / Studio Name</label><input id="apply-business" autocomplete="organization"></div>
+      <div class="login-row">
+        <div class="login-field"><label>Email</label><input id="apply-email" type="email" autocomplete="email"></div>
+        <div class="login-field"><label>Phone</label><input id="apply-phone" autocomplete="tel"></div>
+      </div>
+      <div class="login-field"><label>Website / Social (optional)</label><input id="apply-website"></div>
+      <div class="login-field"><label>Tell us about your studio or work</label><textarea id="apply-about"></textarea></div>
+      <input id="apply-hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
+      <button class="login-button" id="apply-submit">Submit Application</button>
+      <button class="login-link" id="back-signin">Already approved? Return to Sign In</button>
+      <div class="login-status" id="apply-status"></div>
     </div>
-    <button class="login-button" id="gate-signin">Sign In</button>
-    <div class="login-status" id="gate-status">Checking your session…</div>
+
+    <div class="gate-section" id="invite-view">
+      <div class="login-help"><b>Your Lions Rock Studio access is active.</b><br>Create the password you will use to sign in.</div>
+      <div class="login-field"><label>New Password</label><input id="invite-password" type="password" autocomplete="new-password"></div>
+      <div class="login-field"><label>Confirm Password</label><input id="invite-confirm" type="password" autocomplete="new-password"></div>
+      <button class="login-button" id="invite-save">Set Password & Open Studio</button>
+      <div class="login-status" id="invite-status"></div>
+    </div>
+
     <div class="login-foot">THE LION'S ROCK MEDIA FACILITY</div>
   </div>
 </div>
@@ -85,20 +115,23 @@ body.studio-authenticated .login-gate{display:none!important}
     <button data-app="hub" data-view="projects">Projects</button>
     <button data-app="documents" data-view="dashboard">Dashboard</button>
     <button data-app="documents" data-view="settings">Settings</button>
+    <button data-app="admin" id="admin-nav" style="display:none">Admin</button>
   </div>
 </div>
 <div class="stage">
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=4" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=6" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=2" title="Lions Rock Clients and Projects"></iframe>
+  <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=1" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
 (function(){
  const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame");
- let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null;
+ const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),admin=document.getElementById("admin-frame");
+ let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null;
+ let inviteMode=new URLSearchParams(location.search).get("invite")==="1";
  function fitFrame(frame){
    try{
      const d=frame.contentDocument;
@@ -115,26 +148,64 @@ body.studio-authenticated .login-gate{display:none!important}
    setTimeout(()=>fitFrame(frame),900);
  }
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
- function setSession(session){
-   currentSession=session||null;
-   const on=!!(session&&session.user);
-   document.body.classList.toggle("studio-authenticated",on);
-   document.getElementById("cloud-dot").className="dot"+(on?" on":"");
-   document.getElementById("cloud-label").textContent=on?session.user.email:"Studio account";
-   document.getElementById("authbox").style.display="none";
-   document.getElementById("studio-signout").style.display=on?"inline-block":"none";
-   const status=document.getElementById("gate-status");
-   if(status){
-     status.classList.remove("err");
-     status.textContent=on?"Opening Studio…":"Sign in to continue.";
-   }
-   if(on){
-     mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
-     hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
-     setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:docs)),60);
-   }
+ function showGateSection(id){
+   ["signin-view","apply-view","invite-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
- async function init(){const s=await sb.auth.getSession();setSession(s.data&&s.data.session)}
+ async function setSession(session){
+   currentSession=session||null;
+   currentMembership=null;
+   document.body.classList.remove("studio-authenticated");
+   document.getElementById("admin-nav").style.display="none";
+   const status=document.getElementById("gate-status");
+
+   if(!session||!session.user){
+     document.getElementById("cloud-dot").className="dot";
+     document.getElementById("cloud-label").textContent="Studio account";
+     document.getElementById("studio-signout").style.display="none";
+     if(!document.getElementById("apply-view").classList.contains("active"))showGateSection("signin-view");
+     if(status){status.classList.remove("err");status.textContent="Sign in to continue.";}
+     return;
+   }
+
+   if(status){status.classList.remove("err");status.textContent="Checking access…";}
+
+   const m=await sb.from("app_memberships")
+     .select("role,access_status,payment_status,expires_at,business_name")
+     .eq("user_id",session.user.id)
+     .maybeSingle();
+
+   const active=!!m.data &&
+     m.data.access_status==="active" &&
+     ["paid","comped"].includes(m.data.payment_status) &&
+     (!m.data.expires_at || new Date(m.data.expires_at)>new Date());
+
+   if(m.error||!active){
+     const reason=m.data?.access_status==="suspended"?"Your Lions Rock Studio access is suspended.":m.data?.payment_status==="unpaid"?"Your account is awaiting payment activation.":"This account has not been activated by Lions Rock.";
+     await sb.auth.signOut();
+     showGateSection("signin-view");
+     if(status){status.textContent=reason;status.classList.add("err");}
+     return;
+   }
+
+   currentMembership=m.data;
+   document.getElementById("cloud-dot").className="dot on";
+   document.getElementById("cloud-label").textContent=session.user.email;
+   document.getElementById("authbox").style.display="none";
+   document.getElementById("studio-signout").style.display="inline-block";
+   document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
+
+   if(inviteMode){
+     showGateSection("invite-view");
+     const i=document.getElementById("invite-status");i.textContent="Invitation accepted. Set your password to continue.";i.classList.remove("err");
+     return;
+   }
+
+   document.body.classList.add("studio-authenticated");
+   mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
+   setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))),60);
+ }
+ async function init(){const s=await sb.auth.getSession();await setSession(s.data&&s.data.session)}
  async function signIn(email,password){
    const status=document.getElementById("gate-status"),button=document.getElementById("gate-signin");
    email=String(email||"").trim();
@@ -155,18 +226,64 @@ body.studio-authenticated .login-gate{display:none!important}
  ["gate-email","gate-password"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("gate-signin").click();}));
  document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
  document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();document.getElementById("gate-password").value="";};
+
+ document.getElementById("show-apply").onclick=()=>{showGateSection("apply-view");document.getElementById("apply-status").textContent="";};
+ document.getElementById("back-signin").onclick=()=>showGateSection("signin-view");
+ document.getElementById("apply-submit").onclick=async()=>{
+   const button=document.getElementById("apply-submit"),out=document.getElementById("apply-status");
+   const payload={
+     full_name:document.getElementById("apply-name").value,
+     business_name:document.getElementById("apply-business").value,
+     email:document.getElementById("apply-email").value,
+     phone:document.getElementById("apply-phone").value,
+     website:document.getElementById("apply-website").value,
+     about:document.getElementById("apply-about").value,
+     company_website:document.getElementById("apply-hp").value
+   };
+   if(!payload.full_name.trim()||!payload.business_name.trim()||!payload.email.trim()){
+     out.textContent="Name, business name and email are required.";out.classList.add("err");return;
+   }
+   button.disabled=true;button.textContent="Submitting…";out.textContent="Sending application…";out.classList.remove("err");
+   try{
+     const r=await sb.functions.invoke("studio-apply",{body:payload});
+     if(r.error)throw r.error;
+     if(r.data?.error)throw new Error(r.data.error);
+     out.textContent=r.data?.existing?"An application already exists for this email. Lions Rock will contact you when the status changes.":"Application received. Lions Rock will review it before requesting payment.";
+     ["apply-name","apply-business","apply-email","apply-phone","apply-website","apply-about"].forEach(id=>document.getElementById(id).value="");
+   }catch(e){out.textContent=e.message||String(e);out.classList.add("err")}
+   finally{button.disabled=false;button.textContent="Submit Application";}
+ };
+
+ document.getElementById("invite-save").onclick=async()=>{
+   const p=document.getElementById("invite-password").value,c=document.getElementById("invite-confirm").value,out=document.getElementById("invite-status"),button=document.getElementById("invite-save");
+   if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return}
+   if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return}
+   button.disabled=true;button.textContent="Saving…";
+   const r=await sb.auth.updateUser({password:p});
+   if(r.error){out.textContent=r.error.message;out.classList.add("err");button.disabled=false;button.textContent="Set Password & Open Studio";return}
+   inviteMode=false;
+   history.replaceState({},document.title,"/studio.html");
+   document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
+   await setSession((await sb.auth.getSession()).data.session);
+   button.disabled=false;button.textContent="Set Password & Open Studio";
+ };
+
  sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
  function activate(appName,viewName,payload){
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
    mail.classList.toggle("active",appName==="mail");
    docs.classList.toggle("active",appName==="documents");
    hub.classList.toggle("active",appName==="hub");
+   admin.classList.toggle("active",appName==="admin");
    if(appName==="documents"){
      pendingView=viewName||"generator";
      setTimeout(()=>{docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);if(payload)docs.contentWindow.postMessage(payload,location.origin);fitSoon(docs);},30);
    }else if(appName==="hub"){
      pendingHubView=viewName||"clients";
      setTimeout(()=>{hub.contentWindow.postMessage(Object.assign({type:"lions-rock-hub-view",view:pendingHubView},payload||{}),location.origin);fitSoon(hub);},30);
+   }else if(appName==="admin"){
+     if(currentMembership?.role!=="owner")return;
+     fitSoon(admin);
    }else fitSoon(mail);
    window.scrollTo({top:0,behavior:"instant"});
  }
@@ -212,6 +329,10 @@ body.studio-authenticated .login-gate{display:none!important}
    fitSoon(hub);
    try{const ro=new ResizeObserver(()=>fitFrame(hub));ro.observe(hub.contentDocument.documentElement);}catch(_){}
  });
+ admin.addEventListener("load",()=>{
+   fitSoon(admin);
+   try{const ro=new ResizeObserver(()=>fitFrame(admin));ro.observe(admin.contentDocument.documentElement);}catch(_){}
+ });
  mail.addEventListener("load",()=>{
    mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
    if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin);
@@ -221,7 +342,7 @@ body.studio-authenticated .login-gate{display:none!important}
      ro.observe(mail.contentDocument.documentElement);
    }catch(_){}
  });
- window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:docs));});
+ window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs)));});
 
  const searchInput=document.getElementById("global-search"),searchResults=document.getElementById("search-results");
  function closeSearch(){searchResults.classList.remove("open");searchResults.innerHTML="";}
