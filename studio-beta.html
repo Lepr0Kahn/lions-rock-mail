@@ -10,14 +10,14 @@
 <style>
 :root{--bg:#0d0c0c;--surface:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
-body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:relative;z-index:10}
+body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:sticky;top:0;z-index:10}
 .head{height:66px;display:flex;align-items:center;gap:12px;padding:10px 18px}.head img{width:42px;height:42px;background:#fff;padding:3px}.brand{min-width:0;flex:1}.brand .name{font-family:Georgia,serif;font-size:14px;letter-spacing:.22em;text-transform:uppercase}.brand .sub{font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:3px}
 .account{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.on{background:var(--green)}.pill{border:1px solid var(--border);padding:7px 10px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
 .authbox{display:none;align-items:center;gap:6px}.authbox input{width:150px;background:#111;border:1px solid var(--border);color:#fff;padding:8px}
 .nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:var(--accent);color:white}
-.stage{height:calc(100vh - 118px);position:relative}.frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);display:none}.frame.active{display:block}
+.stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
 .toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
-@media(max-width:720px){.top{height:128px}.stage{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
+@media(max-width:720px){.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
 </style>
 </head>
 <body>
@@ -56,6 +56,21 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame");
  let pendingView="generator",pendingClient=null;
+ function fitFrame(frame){
+   try{
+     const d=frame.contentDocument;
+     if(!d)return;
+     const de=d.documentElement,b=d.body;
+     const contentH=Math.max(de?de.scrollHeight:0,b?b.scrollHeight:0,de?de.offsetHeight:0,b?b.offsetHeight:0);
+     const minH=Math.max(520,window.innerHeight-(window.innerWidth<=720?128:118));
+     frame.style.height=Math.max(contentH+24,minH)+"px";
+   }catch(_){}
+ }
+ function fitSoon(frame){
+   setTimeout(()=>fitFrame(frame),80);
+   setTimeout(()=>fitFrame(frame),350);
+   setTimeout(()=>fitFrame(frame),900);
+ }
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
  function setSession(session){
    const on=!!(session&&session.user);
@@ -78,7 +93,9 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));
    const isMail=b.dataset.app==="mail";
    mail.classList.toggle("active",isMail);docs.classList.toggle("active",!isMail);
-   if(!isMail){ pendingView=b.dataset.view||"generator"; setTimeout(()=>docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin),30); }
+   if(!isMail){ pendingView=b.dataset.view||"generator"; setTimeout(()=>{docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);fitSoon(docs);},30); }
+   else fitSoon(mail);
+   window.scrollTo({top:0,behavior:"instant"});
  });
  window.addEventListener("message",e=>{
    if(e.origin!==location.origin||!e.data)return;
@@ -88,11 +105,24 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
      pendingClient={name:e.data.name||"",email:e.data.email||""}; setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin),60);
    }
  });
- docs.addEventListener("load",()=>docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin));
+ docs.addEventListener("load",()=>{
+   docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);
+   fitSoon(docs);
+   try{
+     const ro=new ResizeObserver(()=>fitFrame(docs));
+     ro.observe(docs.contentDocument.documentElement);
+   }catch(_){}
+ });
  mail.addEventListener("load",()=>{
    mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
    if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin);
+   fitSoon(mail);
+   try{
+     const ro=new ResizeObserver(()=>fitFrame(mail));
+     ro.observe(mail.contentDocument.documentElement);
+   }catch(_){}
  });
+ window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:docs);});
  init();
 })();
 </script>
