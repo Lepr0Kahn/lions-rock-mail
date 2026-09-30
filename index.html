@@ -468,8 +468,8 @@ Talk soon.</textarea>
    Standalone. Save this file anywhere. No internet required.
    ================================================================= */
 
-const ASSET_LOGO = "https://lions-rock-mail.vercel.app/icon-192.png?v=4";
-const ASSET_SIGNATURE = "https://lions-rock-mail.vercel.app/signature.jpg?v=3";
+const ASSET_LOGO = "/icon-192.png?v=20260930-2";
+const ASSET_SIGNATURE = "/signature.jpg?v=20260930-2";
 
 const BRAND = "LION'S ROCK MEDIA FACILITY";
 const INSTAGRAM_BRAND = "https://instagram.com/lionsrockmedia";
@@ -957,6 +957,13 @@ function bind() {
   }
 
   function initGoogle() {
+    if (location.origin === "https://lions-rock-mail.vercel.app") {
+      setGmailRuntimeNote(
+        '<b>Hosted Gmail mode:</b> this site is running from the correct HTTPS origin. ' +
+        'Google sign-in will work only after <code>https://lions-rock-mail.vercel.app</code> ' +
+        'is added to the OAuth client\'s Authorized JavaScript origins and the Gmail API is enabled.', true
+      );
+    }
     // Google OAuth cannot be authorized from a file:// page. The browser must
     // give Google a real origin such as http://localhost:8000 or an HTTPS site.
     if (location.protocol === "file:") {
