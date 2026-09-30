@@ -271,6 +271,8 @@
         : (d.doc_type === "quote" ? "quote" : (amountPaid >= total && total > 0 ? "paid" : amountPaid > 0 ? "partial" : "due"));
       return {
         id: d.id,
+        booking_id: d.booking_id || null,
+        currency: d.currency || "BBD",
         client_id: d.client_id || null,
         project_id: d.project_id || null,
         project_name: ((remote.projects || []).find(function (p) { return String(p.id) === String(d.project_id || ""); }) || {}).name || "",
@@ -443,6 +445,7 @@
       return {
         id: d.id,
         user_id: uid,
+        booking_id: d.booking_id || null,
         client_id: d.client_id || null,
         project_id: d.project_id || null,
         doc_type: d.type === "invoice" ? "invoice" : "quote",
@@ -450,7 +453,7 @@
         status: cloudDocStatus(d),
         doc_date: d.doc_date || (typeof window.todayISO === "function" ? window.todayISO() : new Date().toISOString().slice(0, 10)),
         due_date: d.due_date || null,
-        currency: cur,
+        currency: d.currency || cur,
         discount: Number(d.discount || 0),
         tax_pct: Number(d.tax_pct || 0),
         deposit_pct: Number(d.deposit_pct == null ? 50 : d.deposit_pct),
