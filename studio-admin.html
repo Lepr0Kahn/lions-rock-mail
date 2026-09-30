@@ -3,46 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lions Rock Studio — Admin</title>
+<title>Lions Rock Access Administration</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0d0c0c;--panel:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b;--amber:#dca34b;--red:#ef6a61}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
-body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}.title{font-family:Georgia,serif;font-size:30px;margin:0 0 5px}.sub{color:var(--muted);font-size:12px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.stat{background:var(--panel);border:1px solid var(--border);padding:14px}.stat .k{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}.stat .v{font-size:24px;font-weight:800;margin-top:4px}.tabs{display:flex;gap:6px;margin-bottom:12px;overflow:auto}.tab,.btn{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 11px;font:inherit;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.tab.active,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.green{border-color:rgba(68,182,107,.5);color:#9ce5b1}.btn.amber{border-color:rgba(220,163,75,.5);color:#ffd697}.btn.red{border-color:rgba(239,106,97,.5);color:#ff9d96}.btn:disabled{opacity:.5;cursor:wait}
-.panel{background:var(--panel);border:1px solid var(--border)}.row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(180px,.9fr) minmax(160px,.7fr) minmax(290px,1.2fr);gap:12px;padding:14px;border-bottom:1px solid rgba(255,255,255,.06);align-items:center}.row:last-child{border-bottom:0}.name{font-weight:800;font-size:14px}.meta{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px}.tag{display:inline-block;padding:3px 7px;border:1px solid var(--border);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-right:4px}.tag.paid,.tag.active{color:#9ce5b1;border-color:rgba(68,182,107,.45)}.tag.pending,.tag.awaiting_payment{color:#ffd697;border-color:rgba(220,163,75,.45)}.tag.declined,.tag.suspended{color:#ff9d96;border-color:rgba(239,106,97,.45)}.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.empty{padding:40px;text-align:center;color:var(--muted)}.note{font-size:11px;color:var(--muted);background:#111;border:1px solid var(--border);padding:10px;margin:12px 0}.loader{padding:40px;text-align:center;color:var(--muted)}
-@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}.actions{justify-content:flex-start}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}body{padding:18px}.wrap{max-width:1180px;margin:0 auto}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.title{font-family:Georgia,serif;font-size:24px;margin:0}.sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{background:var(--panel);border:1px solid var(--border);padding:13px}.stat .k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.stat .v{font-size:23px;font-weight:800;margin-top:4px}.tabs{display:flex;gap:6px;margin:12px 0}.tab,.btn{border:1px solid var(--border);background:#111;color:var(--text);padding:9px 12px;font:inherit;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.tab.active,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.green{border-color:rgba(68,182,107,.55);color:#9ce5b1}.btn.red{border-color:rgba(239,106,97,.55);color:#ff9d96}.btn:disabled{opacity:.5;cursor:wait}.panel{background:var(--panel);border:1px solid var(--border);padding:16px}.note{font-size:11px;color:var(--muted);background:#111;border:1px solid var(--border);padding:11px 12px;margin-bottom:12px;line-height:1.5}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}.field label{display:block;font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:800}.field input,.field select,.linkbox{width:100%;background:#0d0d0d;border:1px solid var(--border);color:#fff;padding:11px 12px;font:inherit;font-size:13px}.field input:focus,.field select:focus{outline:none;border-color:var(--accent)}.actions{display:flex;gap:7px;flex-wrap:wrap}.invite-result{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.invite-result.show{display:block}.linkrow{display:grid;grid-template-columns:1fr auto;gap:8px}.row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(190px,.9fr) minmax(180px,.8fr) minmax(200px,1fr);gap:12px;padding:14px;border-bottom:1px solid rgba(255,255,255,.06);align-items:center}.row:last-child{border-bottom:0}.name{font-weight:800;font-size:14px}.meta{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px}.tag{display:inline-block;padding:3px 7px;border:1px solid var(--border);font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:2px 4px 2px 0}.tag.active,.tag.paid,.tag.comped,.tag.business{color:#9ce5b1;border-color:rgba(68,182,107,.45)}.tag.artist{color:#e7b18d;border-color:rgba(194,77,44,.55)}.tag.suspended{color:#ff9d96;border-color:rgba(239,106,97,.45)}.empty{padding:36px;text-align:center;color:var(--muted)}.toast{position:fixed;right:16px;bottom:16px;background:#1b1a1a;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:360px}.toast.bad{border-color:#7b302c;color:#ffb0aa}
+@media(max-width:800px){body{padding:10px}.stats{grid-template-columns:1fr 1fr}.form-grid,.row{grid-template-columns:1fr}.linkrow{grid-template-columns:1fr}.head{align-items:center}.actions{justify-content:flex-start}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
-    <div><h1 class="title">Access Administration</h1><div class="sub">Review applications, confirm payment, activate invitations, and manage member access.</div></div>
+    <div><h1 class="title">Private Access</h1><div class="sub">Create invitation links and control which Lions Rock workspace each person can enter.</div></div>
     <button class="btn" id="refresh">Refresh</button>
   </div>
+
   <div class="stats">
-    <div class="stat"><div class="k">Pending</div><div class="v" id="s-pending">—</div></div>
-    <div class="stat"><div class="k">Awaiting Payment</div><div class="v" id="s-payment">—</div></div>
-    <div class="stat"><div class="k">Active Members</div><div class="v" id="s-active">—</div></div>
+    <div class="stat"><div class="k">Active Access</div><div class="v" id="s-active">—</div></div>
+    <div class="stat"><div class="k">Business Tools</div><div class="v" id="s-business">—</div></div>
+    <div class="stat"><div class="k">Artist Members</div><div class="v" id="s-artist">—</div></div>
     <div class="stat"><div class="k">Suspended</div><div class="v" id="s-suspended">—</div></div>
   </div>
-  <div class="note">Workflow: <b>Approve → Confirm payment → Activate & Invite.</b> No applicant can access Studio until you complete all three steps.</div>
+
+  <div class="note"><b>Invite-only:</b> there is no public application form. Create a private link here, then send that link yourself by WhatsApp, email, text, or any other method you choose.</div>
+
   <div class="tabs">
-    <button class="tab active" data-view="applications">Applications</button>
-    <button class="tab" data-view="members">Members</button>
+    <button class="tab active" data-view="invite">Create Invite</button>
+    <button class="tab" data-view="members">Access List</button>
   </div>
-  <div class="panel" id="content"><div class="loader">Loading…</div></div>
+  <div class="panel" id="content"><div class="empty">Loading…</div></div>
 </div>
+
 <script>
 (function(){
  const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const content=document.getElementById("content");
- let session=null,apps=[],members=[],view="applications";
+ let session=null,members=[],view="invite",lastLink="";
+
  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
  function dt(s){if(!s)return"—";try{return new Date(s).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});}catch(_){return s}}
- function tag(s){return '<span class="tag '+esc(s)+'">'+esc(String(s||"").replace(/_/g," "))+'</span>'}
- function msg(s,bad){const el=document.createElement("div");el.style.cssText="position:fixed;right:16px;bottom:16px;z-index:50;background:#1b1a1a;border:1px solid "+(bad?"#7b302c":"rgba(255,255,255,.12)")+";padding:12px 14px;max-width:360px;font-size:12px";el.textContent=s;document.body.appendChild(el);setTimeout(()=>el.remove(),3600)}
+ function tag(s,cls){return '<span class="tag '+(cls||"")+'">'+esc(s)+'</span>'}
+ function toast(s,bad){const el=document.createElement("div");el.className="toast"+(bad?" bad":"");el.textContent=s;document.body.appendChild(el);setTimeout(()=>el.remove(),3600)}
+
  async function requireOwner(){
    const s=await sb.auth.getSession();session=s.data&&s.data.session;
    if(!session){content.innerHTML='<div class="empty">Sign in to Lions Rock Studio first.</div>';return false}
@@ -50,110 +54,114 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.head{display:flex;gap:12
    if(r.error||r.data?.role!=="owner"||r.data?.access_status!=="active"){content.innerHTML='<div class="empty">Owner access required.</div>';return false}
    return true;
  }
+
  async function load(){
    if(!await requireOwner())return;
-   const [a,m]=await Promise.all([
-     sb.from("studio_applications").select("*").order("submitted_at",{ascending:false}),
-     sb.from("app_memberships").select("*").order("created_at",{ascending:false})
-   ]);
-   if(a.error||m.error){content.innerHTML='<div class="empty">Could not load administration data.</div>';return}
-   apps=a.data||[];members=(m.data||[]).filter(x=>x.role!=="owner");
-   document.getElementById("s-pending").textContent=apps.filter(x=>x.status==="pending").length;
-   document.getElementById("s-payment").textContent=apps.filter(x=>["approved","awaiting_payment","paid"].includes(x.status)&&x.payment_status==="unpaid").length;
+   const r=await sb.from("app_memberships").select("*").order("created_at",{ascending:false});
+   if(r.error){content.innerHTML='<div class="empty">Could not load access records.</div>';return}
+   members=(r.data||[]).filter(x=>x.role!=="owner");
    document.getElementById("s-active").textContent=members.filter(x=>x.access_status==="active").length;
+   document.getElementById("s-business").textContent=members.filter(x=>x.business_tools_enabled).length;
+   document.getElementById("s-artist").textContent=members.filter(x=>x.artist_member_enabled).length;
    document.getElementById("s-suspended").textContent=members.filter(x=>x.access_status==="suspended").length;
    render();
  }
+
  function render(){
    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
-   view==="members"?renderMembers():renderApps();
+   view==="members"?renderMembers():renderInvite();
  }
- function renderApps(){
-   if(!apps.length){content.innerHTML='<div class="empty">No applications yet.</div>';return}
-   content.innerHTML=apps.map(a=>{
-     const contact=[a.email,a.phone].filter(Boolean).join(" · ");
-     let actions='';
-     if(a.status==="pending")actions+='<button class="btn amber" data-act="approve" data-id="'+a.id+'">Approve & Draft Payment Email</button><button class="btn red" data-act="decline" data-id="'+a.id+'">Decline</button>';
-     if(["approved","awaiting_payment"].includes(a.status)&&a.payment_status==="unpaid")actions+='<button class="btn green" data-act="paid" data-id="'+a.id+'">Mark Paid & Invite</button><button class="btn" data-act="comp" data-id="'+a.id+'">Comp & Invite</button>';
-     if(["paid","approved","awaiting_payment"].includes(a.status)&&["paid","comped"].includes(a.payment_status))actions+='<button class="btn primary" data-act="activate" data-id="'+a.id+'">Send Invite</button>';
-     if(a.status==="active")actions+='<span class="tag active">Invitation sent</span>';
-     return '<div class="row"><div><div class="name">'+esc(a.full_name)+'</div><div class="meta">'+esc(a.business_name)+'<br>'+esc(contact)+(a.website?'<br>'+esc(a.website):'')+'</div></div><div>'+tag(a.status)+' '+tag(a.payment_status)+'<div class="meta">Applied '+esc(dt(a.submitted_at))+'</div></div><div class="meta">'+(a.about?esc(a.about):'No application note.')+'</div><div class="actions">'+actions+'</div></div>';
-   }).join("");
-   wireActions();
+
+ function renderInvite(){
+   content.innerHTML=
+     '<div class="form-grid">'+
+       '<div class="field"><label>Full Name</label><input id="invite-name" autocomplete="name"></div>'+
+       '<div class="field"><label>Email</label><input id="invite-email" type="email" autocomplete="email"></div>'+
+       '<div class="field"><label>Business / Artist Name</label><input id="invite-business" autocomplete="organization"></div>'+
+       '<div class="field"><label>Access Type</label><select id="invite-type"><option value="business_tools">Business Tools — invoices, clients, projects</option><option value="artist_member">Artist Member — career/studio workspace</option></select></div>'+
+       '<div class="field"><label>Payment Status</label><select id="invite-payment"><option value="paid">Paid / Confirmed</option><option value="comped">Comped / No Charge</option></select></div>'+
+     '</div>'+
+     '<div class="actions"><button class="btn primary" id="create-invite">Create Private Invite Link</button></div>'+
+     '<div class="invite-result'+(lastLink?' show':'')+'" id="invite-result">'+
+       '<div class="field"><label>Private Invite Link — send this person only</label><div class="linkrow"><input class="linkbox" id="invite-link" readonly value="'+esc(lastLink)+'"><button class="btn green" id="copy-link">Copy Link</button></div></div>'+
+       '<div class="meta">The link is generated by Supabase Auth and should be treated like a private invitation. If you need another link later, create a new one for the same email.</div>'+
+     '</div>';
+
+   document.getElementById("create-invite").onclick=createInvite;
+   const copy=document.getElementById("copy-link");
+   if(copy)copy.onclick=copyLink;
  }
+
+ async function createInvite(){
+   const btn=document.getElementById("create-invite");
+   const payload={
+     full_name:document.getElementById("invite-name").value.trim(),
+     email:document.getElementById("invite-email").value.trim(),
+     business_name:document.getElementById("invite-business").value.trim(),
+     access_type:document.getElementById("invite-type").value,
+     payment_status:document.getElementById("invite-payment").value
+   };
+   if(!payload.email){toast("Enter an email address.",true);return}
+   btn.disabled=true;btn.textContent="Creating…";
+   try{
+     const r=await sb.functions.invoke("studio-create-invite",{body:payload});
+     if(r.error)throw r.error;
+     if(r.data?.error)throw new Error(r.data.error);
+     lastLink=r.data?.invite_link||"";
+     if(!lastLink)throw new Error("No invite link was returned.");
+     renderInvite();
+     await copyLink();
+     toast("Private invite created and copied.");
+     await load();
+     view="invite";render();
+   }catch(e){toast(e.message||String(e),true)}
+   finally{
+     const b=document.getElementById("create-invite");
+     if(b){b.disabled=false;b.textContent="Create Private Invite Link"}
+   }
+ }
+
+ async function copyLink(){
+   if(!lastLink)return;
+   try{await navigator.clipboard.writeText(lastLink);toast("Invite link copied.");}
+   catch(_){
+     const i=document.getElementById("invite-link");if(i){i.focus();i.select();document.execCommand("copy");toast("Invite link copied.");}
+   }
+ }
+
  function renderMembers(){
-   if(!members.length){content.innerHTML='<div class="empty">No paid members yet.</div>';return}
+   if(!members.length){content.innerHTML='<div class="empty">No invited users yet.</div>';return}
    content.innerHTML=members.map(m=>{
-     const action=m.access_status==="active"?'<button class="btn red" data-member-act="suspend" data-id="'+m.id+'">Suspend</button>':'<button class="btn green" data-member-act="reactivate" data-id="'+m.id+'">Reactivate</button>';
-     return '<div class="row"><div><div class="name">'+esc(m.business_name||m.email)+'</div><div class="meta">'+esc(m.email)+'</div></div><div>'+tag(m.access_status)+' '+tag(m.payment_status)+'</div><div class="meta">Plan: '+esc(m.plan)+'<br>Activated '+esc(dt(m.activated_at))+'</div><div class="actions">'+action+'</div></div>';
+     const types=[];
+     if(m.business_tools_enabled)types.push(tag("Business Tools","business"));
+     if(m.artist_member_enabled)types.push(tag("Artist Member","artist"));
+     const action=m.access_status==="active"
+       ?'<button class="btn red" data-member-act="suspend" data-id="'+m.id+'">Suspend</button>'
+       :'<button class="btn green" data-member-act="reactivate" data-id="'+m.id+'">Reactivate</button>';
+     return '<div class="row">'+
+       '<div><div class="name">'+esc(m.business_name||m.email)+'</div><div class="meta">'+esc(m.email)+'</div></div>'+
+       '<div>'+types.join("")+'<div class="meta">Plan: '+esc(m.plan||"—")+'</div></div>'+
+       '<div>'+tag(m.access_status,m.access_status)+' '+tag(m.payment_status,m.payment_status)+'<div class="meta">Invited '+esc(dt(m.invited_at))+'<br>Claimed '+esc(dt(m.invite_claimed_at))+'</div></div>'+
+       '<div class="actions">'+action+'</div>'+
+     '</div>';
    }).join("");
    content.querySelectorAll("[data-member-act]").forEach(b=>b.onclick=()=>memberAction(b.dataset.memberAct,b.dataset.id,b));
  }
- function wireActions(){
-   content.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>appAction(b.dataset.act,b.dataset.id,b));
- }
- async function activateAndInvite(id){
-   const r=await sb.functions.invoke("studio-activate-member",{body:{application_id:id}});
-   if(r.error)throw r.error;
-   if(r.data&&r.data.error)throw new Error(r.data.error);
-   return r.data;
- }
- async function appAction(act,id,button){
-   button.disabled=true;
-   try{
-     const now=new Date().toISOString();
-     const application=apps.find(x=>x.id===id);
-     let q=null;
-     if(act==="approve")q=sb.from("studio_applications").update({status:"awaiting_payment",approved_at:now}).eq("id",id);
-     if(act==="decline")q=sb.from("studio_applications").update({status:"declined"}).eq("id",id);
-     if(act==="paid")q=sb.from("studio_applications").update({status:"paid",payment_status:"paid",paid_at:now}).eq("id",id);
-     if(act==="comp")q=sb.from("studio_applications").update({status:"paid",payment_status:"comped",paid_at:now}).eq("id",id);
 
-     if(q){
-       const r=await q;
-       if(r.error)throw r.error;
-     }
-
-     if(act==="approve"){
-       msg("Approved. A payment email draft is ready for you to review and send.");
-       if(application){
-         window.parent.postMessage({
-           type:"lions-rock-email-client",
-           name:application.full_name||"",
-           email:application.email||"",
-           subject:"Lions Rock Studio Access — Payment",
-           greeting:"Hi "+String(application.full_name||"").trim().split(/\s+/)[0]+",",
-           body:"Your application for Lions Rock Studio has been approved.\n\nThe next step is payment. Please add the payment amount and payment instructions here before sending this email.\n\nOnce payment is confirmed, your private Studio account invitation will be sent.",
-           signoff:"With gratitude,"
-         },location.origin);
-       }
-     }else if(act==="paid" || act==="comp"){
-       await activateAndInvite(id);
-       msg(act==="paid"?"Payment confirmed — invitation email sent.":"Comp access activated — invitation email sent.");
-     }else if(act==="activate"){
-       await activateAndInvite(id);
-       msg("Invitation email sent.");
-     }else if(act==="decline"){
-       msg("Application declined.");
-     }
-     await load();
-   }catch(e){msg(e.message||String(e),true)}
-   finally{button.disabled=false}
- }
  async function memberAction(act,id,button){
    button.disabled=true;
    try{
      const status=act==="suspend"?"suspended":"active";
-     const r=await sb.from("app_memberships").update({access_status:status}).eq("id",id);
+     const r=await sb.from("app_memberships").update({access_status:status,updated_at:new Date().toISOString()}).eq("id",id);
      if(r.error)throw r.error;
-     msg(status==="active"?"Member access restored.":"Member access suspended.");
+     toast(status==="active"?"Access reactivated.":"Access suspended.");
      await load();
-   }catch(e){msg(e.message||String(e),true)}
+   }catch(e){toast(e.message||String(e),true)}
    finally{button.disabled=false}
  }
- document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{view=t.dataset.view;render()});
+
+ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});
  document.getElementById("refresh").onclick=load;
- window.addEventListener("focus",load);
  load();
 })();
 </script>
