@@ -282,6 +282,7 @@ body.studio-authenticated .login-gate{display:none!important}
    document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
    document.getElementById("mail-nav").style.display=m.data.role==="owner"&&loginMode==="business_tools"?"":"none";
    document.getElementById("member-nav").style.display=artistOK?"":"none";
+   document.getElementById("member-nav").textContent=m.data.role==="owner"?"Studio OS":"Member";
    document.querySelectorAll('[data-scope="business"]').forEach(x=>x.style.display=businessOK?"":"none");
    document.querySelector(".global-search").style.display=businessOK&&loginMode==="business_tools"?"":"none";
 
@@ -298,7 +299,7 @@ body.studio-authenticated .login-gate{display:none!important}
    if(loginMode==="artist_member"&&artistOK){
      activate("member");
    }else if(m.data.role==="owner"){
-     activate("mail");
+     activate("member");
    }else{
      activate("hub","clients");
    }
