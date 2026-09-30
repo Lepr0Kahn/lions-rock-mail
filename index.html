@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lion's Rock Media Facility — Edge + Apple Mail Kit</title>
+<title>Lion's Rock Media Facility — Offline Email Kit</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #0d0c0c;
@@ -263,13 +264,13 @@
         <div class="sub">Media Facility</div>
       </div>
     </div>
-    <div class="badge-offline"><span class="dot"></span> Edge + Apple Mail</div>
+    <div class="badge-offline"><span class="dot"></span> Offline kit</div>
   </header>
 
   <section class="hero">
     <div class="eyebrow"><span class="line"></span> The Lion's Rock email kit</div>
     <h1 class="display">Compose.<br/>Attach.<br/><em>Send.</em></h1>
-    <p class="lede">A styled email template for <b>Lion's Rock Media Facility</b>, configured for <b>Microsoft Edge</b> with Apple Mail handoff. No Google sign-in, no OAuth, and no Gmail API. <b>Everything stays on this device until you choose to send.</b></p>
+    <p class="lede">A styled email template for <b>Lion's Rock Media Facility</b>. Sign in with Google, write the note, attach audio — the email goes out from <b>your Gmail</b> with everything intact. <b>Works offline as a copy/paste kit too.</b></p>
   </section>
 
   <section class="grid">
@@ -310,7 +311,7 @@
         <div style="display:flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px;">
           <div>
             <div class="panel-title">Audio Attachments</div>
-            <div class="panel-hint" style="margin-top: 0;">Kept as real files. Microsoft Edge cannot place local files directly into a <b>mailto:</b> draft, so when tracks are attached this kit builds a real <b>.eml</b> Apple Mail draft with the audio embedded. Nothing leaves this device until you send.</div>
+            <div class="panel-hint" style="margin-top: 0;">Embedded into the <b>.eml</b> draft as real attachments. Recipient gets the audio files. Nothing leaves this device until you send.</div>
           </div>
           <input type="file" id="music-input" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff" multiple style="display:none" />
           <button class="btn btn-accent btn-small" id="music-btn">♪ Add tracks</button>
@@ -371,16 +372,17 @@ Talk soon.</textarea>
         </div>
       </div>
 
-      <!-- Open in Apple Mail -->
+      <!-- Send Directly with Gmail -->
       <div class="panel" style="margin-bottom: 24px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
           <div>
-            <div class="panel-title">Microsoft Edge → Apple Mail</div>
-            <div class="panel-hint" style="margin-top:0;">No Google connection or OAuth. <b>Open Apple Mail</b> uses the standard mail link for recipient, subject and message. When audio is attached, use <b>Create attachment-ready .eml</b>; Edge downloads one Apple Mail draft containing the styled email and all selected tracks.</div>
+            <div class="panel-title">Send Directly with Gmail</div>
+            <div class="panel-hint" style="margin-top:0;">Sign in once — the app sends from your Gmail account with the styled body <b>and your audio attached as real files</b>. Message saves to your Sent folder. <span style="color:var(--dim);">Requires internet.</span></div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px; color:var(--accent); font-size:10px; letter-spacing:0.22em; text-transform:uppercase; font-weight:700;">✓ No sign-in</div>
+          <div id="gmail-status-row" style="display:flex; align-items:center; gap:10px;">
+            <button class="btn btn-secondary btn-small" id="gmail-signin">→ Sign in with Google</button>
+          </div>
         </div>
-        <div id="edge-note" style="margin:0 0 14px; padding:11px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.55;">Edge mode active. Direct Mail compose and attachment-ready .eml export use only standard browser features.</div>
         <div class="two-col" style="margin-top: 8px;">
           <div style="grid-column: 1 / -1;">
             <div class="label-row"><label>Recipient(s)</label><span class="hint">comma-separated</span></div>
@@ -395,18 +397,18 @@ Talk soon.</textarea>
             <input id="bcc" />
           </div>
         </div>
+        <div id="gmail-runtime-note" style="display:none; margin-top:12px; padding:10px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.5;"></div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-accent" id="send-mail">✉ Open Apple Mail</button>
-        <button class="btn btn-accent" id="edge-eml" style="background:#8f321e;">⬇ Create attachment-ready .eml</button>
+        <button class="btn btn-accent" id="send-gmail">✉ Send with Gmail</button>
         <button class="btn btn-secondary" id="copy-html">⧉ Copy styled email</button>
-        <button class="btn btn-secondary" id="dl-eml">⬇ Apple Mail draft (.eml)</button>
+        <button class="btn btn-secondary" id="dl-eml">⬇ .eml</button>
         <button class="btn btn-secondary" id="dl-html">⬇ .html</button>
       </div>
       <div style="color: var(--dim); font-size: 12px; max-width: 620px; line-height: 1.6; margin-top: 16px;">
-        <p style="margin: 0 0 10px 0;"><span style="color: var(--accent); font-weight: 700;">Open Apple Mail</span> — opens a normal compose window with To, Cc, Bcc, subject and message. This works through Edge&rsquo;s standard <b>mailto:</b> handoff.</p>
-        <p style="margin: 0;"><span style="color: var(--muted);">Create attachment-ready .eml</span> — use this when tracks are selected. Edge downloads one draft containing the styled HTML and the actual audio files. Open that downloaded <b>.eml</b> in Apple Mail.</p>
+        <p style="margin: 0 0 10px 0;"><span style="color: var(--accent); font-weight: 700;">Send with Gmail</span> — one tap. Attachments and styling all go through as a real Gmail send. First use asks for permission to send emails on your behalf.</p>
+        <p style="margin: 0;"><span style="color: var(--muted);">.eml / Copy / .html</span> still work fully offline as fallbacks when you don't have internet.</p>
       </div>
     </div>
 
@@ -433,29 +435,29 @@ Talk soon.</textarea>
   <div class="wrap">
     <div class="section-eyebrow">How it works</div>
     <h2 class="section-h2">Three taps. <em>Any device.</em></h2>
-    <p style="color: var(--muted); max-width: 540px; margin-top: 8px;">Configured for Microsoft Edge on Apple devices. Direct compose uses <b>mailto:</b>; attachment-ready messages use a standard <b>.eml</b> draft because browsers do not allow local attachments to be injected into Mail automatically.</p>
+    <p style="color: var(--muted); max-width: 540px; margin-top: 8px;">Works the same on Mac, Windows, Android, iPhone, Linux — anywhere there's a default mail app.</p>
     <div class="how-grid">
       <div class="step">
         <div class="n">01</div>
-        <div class="t">Write &amp; attach</div>
-        <div class="d">Fill recipient, subject and body, then add any audio files. No Google sign-in is required.</div>
+        <div class="t">Sign in &amp; write</div>
+        <div class="d">Sign in with Google (one-time), then fill recipient, subject, body, and drop in any audio files.</div>
       </div>
       <div class="step">
         <div class="n">02</div>
-        <div class="t">Open Apple Mail</div>
-        <div class="d">Tap Open Apple Mail for a normal compose window. Microsoft Edge passes recipient, subject and message through the standard mail link.</div>
+        <div class="t">Send with Gmail</div>
+        <div class="d">Tap Send. The email goes out from your Gmail account with the styled body and attached audio. Saves to your Sent folder.</div>
       </div>
       <div class="step">
         <div class="n">03</div>
-        <div class="t">Styled draft fallback</div>
-        <div class="d">Need the full styled HTML and attachments together? Download the Apple Mail .eml draft and open it from Files/Finder.</div>
+        <div class="t">Offline fallback</div>
+        <div class="d">No internet? Use Copy styled email or .eml — the whole builder still works. Bring it online later to send.</div>
       </div>
     </div>
   </div>
 </section>
 
 <footer class="foot">
-  <div class="wrap">© <span id="year"></span> Lion's Rock Media Facility — Edge + Apple Mail Kit</div>
+  <div class="wrap">© <span id="year"></span> Lion's Rock Media Facility — Offline Email Kit</div>
 </footer>
 
 <div class="toast-wrap" id="toasts"></div>
@@ -475,6 +477,9 @@ const INSTAGRAM_PERSONAL = "https://instagram.com/yofavengineer";
 const YOUTUBE = "https://www.youtube.com/@LionsRockMediaFacility";
 const PHONE = "+1-246-851-8512";
 
+const GOOGLE_CLIENT_ID = "773250602648-f1o63tevas55si5pdk0r8q1babam7ouk.apps.googleusercontent.com";
+const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
+const GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
 
 const state = {
   logo: ASSET_LOGO,
@@ -489,6 +494,7 @@ const state = {
   accent: "#C24D2C",
   tracks: [], // {id, name, type, size, sizeLabel, base64}
   to: "", cc: "", bcc: "",
+  gmail: { tokenClient: null, accessToken: null, email: "", sending: false },
 };
 
 /* ---------------- UTILITIES ---------------- */
@@ -686,16 +692,13 @@ function buildEml() {
 
   const headers = [
     `From: ${safeFrom}`,
-    p.to ? `To: ${p.to}` : null,
-    p.cc ? `Cc: ${p.cc}` : null,
-    p.bcc ? `Bcc: ${p.bcc}` : null,
     `Subject: ${p.subject || "A note from Lion's Rock Media Facility"}`,
     `Date: ${new Date().toUTCString()}`,
     `MIME-Version: 1.0`,
     `X-Unsent: 1`,
     `Content-Type: multipart/mixed; boundary="${mixedB}"`,
     ``,
-  ].filter(x => x !== null).join("\r\n");
+  ].join("\r\n");
 
   const altPart = [
     `--${mixedB}`,
@@ -850,151 +853,147 @@ function bind() {
     toast(`${accepted.length} track${accepted.length>1?"s":""} attached.`);
   });
 
-  // ---- Microsoft Edge -> Apple Mail flow (no OAuth, no Web Share dependency) ----
-  // Edge and other browsers are not allowed to inject local File objects into a mailto: URL.
-  // Direct compose therefore uses mailto:, while attachments are carried in a standards-based .eml draft.
-
-  function buildMailtoUrl() {
-    const to = (state.to || "").trim().replace(/\s+/g, "");
-    const params = new URLSearchParams();
-    if (state.cc.trim()) params.set("cc", state.cc.trim());
-    if (state.bcc.trim()) params.set("bcc", state.bcc.trim());
-    params.set("subject", state.subject || "A note from Lion's Rock Media Facility");
-    params.set("body", buildPlainText());
-    return `mailto:${to}?${params.toString()}`;
+  // ---- Gmail send (client-side; direct call to Gmail API) ----
+  function base64UrlFromString(s) {
+    return btoa(unescape(encodeURIComponent(s)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function base64UrlFromMixed(rawStr) {
+    // rawStr may contain base64 blocks (already ASCII) plus UTF-8 headers/body.
+    // encodeURIComponent handles unicode safely; result is pure ASCII → btoa OK.
+    return base64UrlFromString(rawStr);
+  }
+  function encodeHeader(value) {
+    // If the header value has non-ASCII, encode as UTF-8 base64 word (RFC 2047)
+    if (/[^\x00-\x7F]/.test(value)) {
+      return "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(value))) + "?=";
+    }
+    return value;
   }
 
-  function openMailtoEdgeSafe() {
-    if (!state.to.trim()) return toast("Recipient required", "Add at least one email address.", true);
+  function buildGmailRaw({ to, cc, bcc, subject, html, plaintext, attachments }) {
+    const mixedB = "MIXED_" + Math.random().toString(36).slice(2) + "_" + Date.now();
+    const altB = "ALT_" + Math.random().toString(36).slice(2) + "_" + Date.now();
+    const CRLF = "\r\n";
+    const headers = [
+      `To: ${encodeHeader(to)}`,
+      cc ? `Cc: ${encodeHeader(cc)}` : null,
+      bcc ? `Bcc: ${encodeHeader(bcc)}` : null,
+      `Subject: ${encodeHeader(subject)}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/mixed; boundary="${mixedB}"`,
+      ``,
+    ].filter(x => x !== null).join(CRLF);
 
-    // A real anchor click is more dependable than window.open() from a local file in Edge.
-    const a = document.createElement("a");
-    a.href = buildMailtoUrl();
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => a.remove(), 1000);
+    const alt = [
+      `--${mixedB}`,
+      `Content-Type: multipart/alternative; boundary="${altB}"`,
+      ``,
+      `--${altB}`,
+      `Content-Type: text/plain; charset="UTF-8"`,
+      `Content-Transfer-Encoding: base64`,
+      ``,
+      wrap76(btoa(unescape(encodeURIComponent(plaintext || " ")))),
+      ``,
+      `--${altB}`,
+      `Content-Type: text/html; charset="UTF-8"`,
+      `Content-Transfer-Encoding: base64`,
+      ``,
+      wrap76(btoa(unescape(encodeURIComponent(html || " ")))),
+      ``,
+      `--${altB}--`,
+      ``,
+    ].join(CRLF);
 
-    if (state.tracks.length) {
-      toast("Apple Mail opened without audio", "Edge cannot attach local files through mailto:. Use Create attachment-ready .eml for a draft containing the tracks.");
+    const atts = (attachments || []).map(a => {
+      const safeName = (a.name || "audio").replace(/[\r\n"]+/g, "_");
+      return [
+        `--${mixedB}`,
+        `Content-Type: ${a.mime}; name="${safeName}"`,
+        `Content-Transfer-Encoding: base64`,
+        `Content-Disposition: attachment; filename="${safeName}"`,
+        ``,
+        wrap76(a.base64),
+        ``,
+      ].join(CRLF);
+    }).join("");
+
+    const raw = headers + alt + atts + `--${mixedB}--` + CRLF;
+    return base64UrlFromMixed(raw);
+  }
+
+  function updateGmailUi() {
+    const row = $("gmail-status-row");
+    const g = state.gmail;
+    if (g.accessToken) {
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; color:var(--accent); font-size:10px; letter-spacing:0.22em; text-transform:uppercase; font-weight:700;">
+          ✓ <span id="gmail-email">${escapeHtml(g.email || "Connected")}</span>
+        </div>
+        <button class="btn btn-secondary btn-small" id="gmail-signout">Sign out</button>`;
+      $("gmail-signout").addEventListener("click", gmailSignOut);
     } else {
-      toast("Opening Apple Mail", "If Edge asks which app should handle email links, choose Apple Mail.");
+      row.innerHTML = `<button class="btn btn-secondary btn-small" id="gmail-signin">→ Sign in with Google</button>`;
+      $("gmail-signin").addEventListener("click", gmailSignIn);
     }
   }
 
-  function downloadAttachmentReadyEml() {
-    if (!state.to.trim()) return toast("Recipient required", "Add at least one email address.", true);
-    const blob = new Blob([buildEml()], { type: "application/octet-stream" });
-    const name = safeFileName(state.subject || "Lions Rock Mail Draft") + ".eml";
-    triggerDownload(blob, name);
-    if (state.tracks.length) {
-      toast("Attachment-ready draft downloaded", "Open the .eml from Edge Downloads, Finder or Files. It contains the styled message and all selected audio tracks.");
-    } else {
-      toast("Apple Mail draft downloaded", "Open the .eml from Edge Downloads, Finder or Files.");
-    }
+  let gisAttempts = 0;
+  let googleReady = false;
+
+  function setGmailRuntimeNote(message, show = true) {
+    const el = $("gmail-runtime-note");
+    if (!el) return;
+    el.style.display = show ? "block" : "none";
+    el.innerHTML = show ? message : "";
   }
 
-  function openInAppleMail() {
-    openMailtoEdgeSafe();
-  }
-
-  // Wire recipient inputs
-  ["to","cc","bcc"].forEach(id => {
-    const el = $(id);
-    if (el) {
-      state[id] = el.value || "";
-      el.addEventListener("input", () => { state[id] = el.value; });
+  function initGoogle() {
+    // Google OAuth cannot be authorized from a file:// page. The browser must
+    // give Google a real origin such as http://localhost:8000 or an HTTPS site.
+    if (location.protocol === "file:") {
+      setGmailRuntimeNote(
+        '<b>Gmail setup:</b> this HTML file was opened directly from your computer. ' +
+        'Google OAuth requires a web origin. Run it from <code>http://localhost:8000</code> ' +
+        'or host it on your HTTPS website, then add that origin to the Google OAuth client.', true
+      );
+      return;
     }
-  });
 
-  $("send-mail").addEventListener("click", openInAppleMail);
-  $("edge-eml").addEventListener("click", downloadAttachmentReadyEml);
+    if (!window.google?.accounts?.oauth2) {
+      if (gisAttempts++ > 30) {
+        setGmailRuntimeNote(
+          '<b>Google authorization could not load.</b> Check your internet connection and make sure ' +
+          '<code>https://accounts.google.com/gsi/client</code> is not blocked by the browser or an extension.', true
+        );
+        return;
+      }
+      return setTimeout(initGoogle, 300);
+    }
 
-  // Helper: copy styled email (rich) to clipboard
-  async function copyRich() {
-    const html = buildEmailHtml();
-    const text = buildPlainText();
     try {
-      if (window.ClipboardItem && navigator.clipboard?.write) {
-        await navigator.clipboard.write([new ClipboardItem({
-          "text/html": new Blob([html], { type: "text/html" }),
-          "text/plain": new Blob([text], { type: "text/plain" }),
-        })]);
-        return { ok: true, rich: true };
-      }
-      await navigator.clipboard.writeText(text);
-      return { ok: true, rich: false };
-    } catch (e) {
-      // Edge opened from a local file may block navigator.clipboard. Fall back to execCommand.
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.setAttribute("readonly", "");
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        const ok = document.execCommand("copy");
-        ta.remove();
-        return { ok, rich: false };
-      } catch (_) {
-        return { ok: false, rich: false };
-      }
-    }
-  }
+      state.gmail.tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GMAIL_SEND_SCOPE,
+        callback: async (tokenResp) => {
+          if (!tokenResp || tokenResp.error || !tokenResp.access_token) {
+            const detail = tokenResp?.error_description || tokenResp?.error || "Authorization was cancelled.";
+            toast("Google authorization failed", detail, true);
+            return;
+          }
 
-  $("dl-eml").addEventListener("click", downloadAttachmentReadyEml);
+          state.gmail.accessToken = tokenResp.access_token;
+          state.gmail.email = "";
+          googleReady = true;
 
-  $("copy-html").addEventListener("click", async () => {
-    const res = await copyRich();
-    if (res.ok && res.rich) toast("Copied as styled email.", "Open your mail app, start a new message, paste into the body.");
-    else if (res.ok) toast("Copied (plain text).", "Browser doesn't support rich copy.");
-    else toast("Couldn't copy.", "Try the .eml download instead.", true);
-  });
-
-  $("dl-html").addEventListener("click", () => {
-    const blob = new Blob([buildEmailHtml()], { type: "text/html;charset=utf-8" });
-    triggerDownload(blob, "lions-rock-email-template.html");
-    toast("Template downloaded.");
-  });
-}
-
-function renderTracks() {
-  const list = $("tracks-list");
-  const empty = $("tracks-empty");
-  if (!state.tracks.length) {
-    list.innerHTML = ""; empty.style.display = "block"; return;
-  }
-  empty.style.display = "none";
-  const totalSize = state.tracks.reduce((a, t) => a + t.size, 0);
-  list.innerHTML = state.tracks.map(t => `
-    <div class="track">
-      <div class="track-mark">♪</div>
-      <div class="track-info">
-        <div class="track-name">${escapeHtml(t.name)}</div>
-        <div class="track-meta">${escapeHtml((t.type || "").replace("audio/", ""))} · ${t.sizeLabel}</div>
-      </div>
-      <button class="track-remove" data-id="${escapeHtml(t.id)}" title="Remove">✕</button>
-    </div>
-  `).join("") + `<div class="track-total">Total: ${formatBytes(totalSize)} / 25 MB</div>`;
-
-  list.querySelectorAll(".track-remove").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      state.tracks = state.tracks.filter(t => t.id !== id);
-      renderTracks(); renderPreview();
-    });
-  });
-}
-
-/* ---------------- INIT ---------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  $("year").textContent = new Date().getFullYear();
-  bind();
-  renderTracks();
-  renderPreview();
-});
-</script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"7f7b0fd8732c4326aae4b9d58d5c514a","spa":2}' crossorigin="anonymous"></script>
-</body>
-</html>
+          // Fetch the signed-in address for display only. Gmail sending itself
+          // is authorized by the access token above.
+          try {
+            const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${tokenResp.access_token}` },
+            });
+            if (r.ok) {
+              const j = await r.json();
+              state.gmail.email = j.email || "";
+            }
+          } catch (_) { /* email display is non-fatal */ }
