@@ -460,8 +460,17 @@ body.studio-authenticated .login-gate{display:none!important}
    const b=e.target.closest("button[data-app]");if(!b)return;
    activate(b.dataset.app,b.dataset.view||null);
  });
- window.addEventListener("message",e=>{
+ window.addEventListener("message",async e=>{
    if(e.origin!==location.origin||!e.data)return;
+   if(e.data.type==="lions-rock-booking-invoice"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     try{
+       const r=await sb.rpc("invoice_for_studio_booking",{session_id:e.data.bookingId});
+       if(r.error)throw r.error;
+       activate("documents","generator",{type:"lions-rock-booking-document",...r.data});
+     }catch(error){toast(error.message||"Could not open the booking invoice.");}
+     return;
+   }
    if(e.data.type==="lions-rock-email-client"){
      pendingClient={
        name:e.data.name||"",
