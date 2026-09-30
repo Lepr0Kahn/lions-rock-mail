@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lions Rock Studio — Clients & Projects</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0d0c0c;--panel:#171616;--panel2:#111;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9d9892;--dim:#6e6a66;--accent:#c24d2c;--green:#49b96d;--amber:#e5a542}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;min-height:100%}
+body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.tabs{display:flex;gap:6px}.tabs button,.btn{border:1px solid var(--border);background:transparent;color:var(--text);padding:10px 14px;font:inherit;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.tabs button.active,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.small{padding:7px 10px;font-size:9px}.btn.green{border-color:rgba(73,185,109,.5);color:#9ce7b2}.title{font-family:Georgia,serif;font-size:30px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.card{border:1px solid var(--border);background:var(--panel);padding:16px;cursor:pointer}.card:hover{border-color:rgba(194,77,44,.55)}.card h3{font-family:Georgia,serif;font-size:19px;margin:0 0 6px}.meta{font-size:12px;color:var(--muted);line-height:1.6}.badge{display:inline-block;padding:4px 8px;border:1px solid var(--border);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:10px}.badge.active{color:#9ce7b2;border-color:rgba(73,185,109,.45)}.badge.completed{color:#9dbdff;border-color:rgba(90,130,220,.45)}.badge.on_hold{color:#ffd38a;border-color:rgba(229,165,66,.45)}.empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed var(--border)}
+.profile-head{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;margin-bottom:16px}.profile-head h2{font-family:Georgia,serif;font-size:32px;margin:0}.actions{display:flex;gap:7px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.stat{border:1px solid var(--border);background:var(--panel);padding:14px}.stat .k{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}.stat .v{font-size:22px;font-weight:800;margin-top:5px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{border:1px solid var(--border);background:var(--panel);padding:16px}.panel-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:12px}.row{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;gap:10px;align-items:center;justify-content:space-between}.row:last-child{border-bottom:0}.row-main{min-width:0}.row-title{font-weight:700;font-size:13px}.row-sub{font-size:11px;color:var(--muted);margin-top:3px}.money{text-align:right;font-weight:800}.link{color:#f0b09a;cursor:pointer}.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;cursor:pointer;margin-bottom:16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-start;justify-content:center;padding:44px 14px;z-index:50;overflow:auto}.modal.open{display:flex}.sheet{width:min(620px,100%);background:#151414;border:1px solid var(--border);padding:20px}.sheet h3{font-family:Georgia,serif;font-size:24px;margin:0 0 16px}.field{margin-bottom:12px}.field label{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}.field input,.field textarea,.field select{width:100%;background:#0f0f0f;border:1px solid var(--border);color:#fff;padding:10px;font:inherit}.field textarea{min-height:90px;resize:vertical}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.notice{padding:12px;border:1px solid var(--border);color:var(--muted);font-size:12px}.toolbar-search{flex:1;max-width:380px}.toolbar-search input{width:100%;background:#111;border:1px solid var(--border);color:#fff;padding:10px 12px;font:inherit}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){body{padding:10px}.grid{grid-template-columns:1fr}.profile-head{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.actions .btn{flex:1}.title{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="tabs">
+      <button id="tab-clients" class="active">Clients</button>
+      <button id="tab-projects">Projects</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;flex-wrap:wrap">
+      <div class="toolbar-search"><input id="local-search" placeholder="Filter this page…"></div>
+      <button class="btn" id="add-client">+ Client</button>
+      <button class="btn primary" id="add-project">+ Project</button>
+    </div>
+  </div>
+  <main id="app"><div class="empty">Loading Studio data…</div></main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3 id="form-title">New Client</h3>
+    <div id="client-form">
+      <div class="field"><label>Name / Artist</label><input id="f-client-name"></div>
+      <div class="two">
+        <div class="field"><label>Email</label><input id="f-client-email" type="email"></div>
+        <div class="field"><label>Phone</label><input id="f-client-phone"></div>
+      </div>
+      <div class="field"><label>Address</label><textarea id="f-client-address"></textarea></div>
+      <div class="field"><label>Notes</label><textarea id="f-client-notes"></textarea></div>
+    </div>
+    <div id="project-form" style="display:none">
+      <div class="field"><label>Project / Song Name</label><input id="f-project-name"></div>
+      <div class="two">
+        <div class="field"><label>Client</label><select id="f-project-client"></select></div>
+        <div class="field"><label>Type</label><input id="f-project-type" placeholder="Single, Album, Ad, Podcast…"></div>
+      </div>
+      <div class="two">
+        <div class="field"><label>Status</label><select id="f-project-status"><option value="lead">Lead</option><option value="active" selected>Active</option><option value="on_hold">On Hold</option><option value="completed">Completed</option><option value="archived">Archived</option></select></div>
+        <div class="field"><label>Due Date</label><input id="f-project-due" type="date"></div>
+      </div>
+      <div class="field"><label>Description / Notes</label><textarea id="f-project-description"></textarea></div>
+    </div>
+    <div class="actions" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn" id="cancel">Cancel</button>
+      <button class="btn primary" id="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+ const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
+ const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
+ const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+ const app=document.getElementById("app");
+ let session=null,clients=[],projects=[],documents=[];
+ let view="clients",selectedClient=null,selectedProject=null,formMode=null,editId=null,filter="";
+
+ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+ function money(n,cur){return (cur==="USD"?"US $":"BBD $")+Number(n||0).toFixed(2);}
+ function statusLabel(s){return ({lead:"Lead",active:"Active",on_hold:"On Hold",completed:"Completed",archived:"Archived"})[s]||s||"Active";}
+ function docStatus(d){if(d.doc_type==="quote")return"Quote";if(d.status==="paid")return"Paid";if(d.status==="partial")return"Partial";if(d.status==="overdue")return"Overdue";return"Invoice";}
+ function byClient(id){return clients.find(c=>c.id===id);}
+ function clientDocs(id){return documents.filter(d=>d.client_id===id);}
+ function clientProjects(id){return projects.filter(p=>p.client_id===id);}
+ function projectDocs(id){return documents.filter(d=>d.project_id===id);}
+ function post(data){window.parent.postMessage(data,location.origin);}
+ function syncDocs(){post({type:"lions-rock-sync"});}
+ function matchesClient(c){const q=filter.toLowerCase();return !q||[c.name,c.email,c.phone,c.address].some(v=>String(v||"").toLowerCase().includes(q));}
+ function matchesProject(p){const q=filter.toLowerCase(),c=byClient(p.client_id);return !q||[p.name,p.project_type,p.status,p.description,c&&c.name].some(v=>String(v||"").toLowerCase().includes(q));}
+
+ async function load(){
+   const s=await sb.auth.getSession();session=s.data&&s.data.session;
+   if(!session){app.innerHTML='<div class="empty">Sign in to your Lions Rock Studio account from the top bar.</div>';return;}
+   const uid=session.user.id;
+   const [cr,pr,dr]=await Promise.all([
+     sb.from("clients").select("*").eq("user_id",uid).order("name"),
+     sb.from("projects").select("*").eq("user_id",uid).order("updated_at",{ascending:false}),
+     sb.from("documents").select("id,client_id,project_id,doc_type,doc_number,status,doc_date,due_date,currency,total,amount_paid,balance_due,client_name,created_at,updated_at").eq("user_id",uid).order("updated_at",{ascending:false})
+   ]);
+   if(cr.error||pr.error||dr.error){app.innerHTML='<div class="empty">Could not load Studio data. '+esc((cr.error||pr.error||dr.error).message)+'</div>';return;}
+   clients=cr.data||[];projects=pr.data||[];documents=dr.data||[];
+   render();
+ }
+
+ function render(){
+   document.getElementById("tab-clients").classList.toggle("active",view==="clients"||view==="client");
+   document.getElementById("tab-projects").classList.toggle("active",view==="projects"||view==="project");
+   if(view==="client")return renderClient();
+   if(view==="project")return renderProject();
+   if(view==="projects")return renderProjects();
+   renderClients();
+ }
+
+ function renderClients(){
+   const rows=clients.filter(matchesClient);
+   app.innerHTML='<h1 class="title">Client Profiles</h1><div class="sub">Every client, their projects, documents and account activity in one place.</div>'+
+     (rows.length?'<div class="grid">'+rows.map(c=>{
+       const ds=clientDocs(c.id),ps=clientProjects(c.id),open=ds.filter(d=>d.doc_type==="invoice"&&d.status!=="paid").reduce((n,d)=>n+Number(d.balance_due||0),0);
+       return '<div class="card" data-client="'+c.id+'"><h3>'+esc(c.name)+'</h3><div class="meta">'+esc(c.email||"No email")+'<br>'+esc(c.phone||"No phone")+'</div><div class="badge">'+ps.length+' project'+(ps.length===1?"":"s")+'</div> <div class="badge">'+ds.length+' document'+(ds.length===1?"":"s")+'</div>'+(open?'<div class="badge on_hold">'+money(open,ds[0]&&ds[0].currency)+' due</div>':'')+'</div>';
+     }).join("")+'</div>':'<div class="empty">No clients match this view.</div>');
+   app.querySelectorAll("[data-client]").forEach(el=>el.onclick=()=>openClient(el.dataset.client));
+ }
+
+ function renderProjects(){
+   const rows=projects.filter(matchesProject);
+   app.innerHTML='<h1 class="title">Projects</h1><div class="sub">Songs, productions and studio work tied to the client and billing trail.</div>'+
+     (rows.length?'<div class="grid">'+rows.map(p=>{
+       const c=byClient(p.client_id),ds=projectDocs(p.id);
+       return '<div class="card" data-project="'+p.id+'"><h3>'+esc(p.name)+'</h3><div class="meta">'+esc(p.project_type||"Project")+' · '+esc(c?c.name:"No client")+(p.due_date?'<br>Due '+esc(p.due_date):'')+'</div><div class="badge '+esc(p.status)+'">'+esc(statusLabel(p.status))+'</div> <div class="badge">'+ds.length+' document'+(ds.length===1?"":"s")+'</div></div>';
+     }).join("")+'</div>':'<div class="empty">No projects match this view.</div>');
+   app.querySelectorAll("[data-project]").forEach(el=>el.onclick=()=>openProject(el.dataset.project));
+ }
+
+ function renderClient(){
+   const c=byClient(selectedClient);if(!c){view="clients";return render();}
+   const ds=clientDocs(c.id),ps=clientProjects(c.id);
+   const invoices=ds.filter(d=>d.doc_type==="invoice"),quoted=ds.filter(d=>d.doc_type==="quote").reduce((n,d)=>n+Number(d.total||0),0);
+   const invoiced=invoices.reduce((n,d)=>n+Number(d.total||0),0),paid=invoices.reduce((n,d)=>n+Number(d.amount_paid||0),0),due=invoices.reduce((n,d)=>n+Number(d.balance_due||0),0);
+   const cur=(ds[0]&&ds[0].currency)||"BBD";
+   app.innerHTML='<div class="back" id="back">← All clients</div><div class="profile-head"><div><h2>'+esc(c.name)+'</h2><div class="meta">'+esc(c.email||"No email")+' · '+esc(c.phone||"No phone")+(c.address?'<br>'+esc(c.address):'')+'</div></div><div class="actions"><button class="btn small" id="edit-client">Edit</button><button class="btn small" id="email-client">Email</button><button class="btn small" id="new-quote">New Quote</button><button class="btn primary small" id="new-invoice">New Invoice</button></div></div>'+
+   '<div class="stats"><div class="stat"><div class="k">Projects</div><div class="v">'+ps.length+'</div></div><div class="stat"><div class="k">Quoted</div><div class="v">'+money(quoted,cur)+'</div></div><div class="stat"><div class="k">Paid</div><div class="v">'+money(paid,cur)+'</div></div><div class="stat"><div class="k">Outstanding</div><div class="v">'+money(due,cur)+'</div></div></div>'+
+   '<div class="cols"><div class="panel"><div class="panel-title">Projects</div>'+(ps.length?ps.map(p=>'<div class="row"><div class="row-main"><div class="row-title link" data-open-project="'+p.id+'">'+esc(p.name)+'</div><div class="row-sub">'+esc(p.project_type||"Project")+' · '+esc(statusLabel(p.status))+'</div></div><span class="badge '+esc(p.status)+'">'+esc(statusLabel(p.status))+'</span></div>').join(""):'<div class="notice">No projects yet.</div>')+'<div style="margin-top:12px"><button class="btn small" id="client-new-project">+ Project</button></div></div>'+
+   '<div class="panel"><div class="panel-title">Documents</div>'+(ds.length?ds.map(d=>'<div class="row"><div class="row-main"><div class="row-title link" data-open-doc="'+d.id+'">'+esc(d.doc_number)+'</div><div class="row-sub">'+esc(docStatus(d))+' · '+esc(d.doc_date||"")+'</div></div><div class="money">'+money(d.total,d.currency)+'</div></div>').join(""):'<div class="notice">No quotes or invoices yet.</div>')+'</div></div>'+
+   (c.notes?'<div class="panel" style="margin-top:14px"><div class="panel-title">Client Notes</div><div class="meta">'+esc(c.notes).replace(/\n/g,"<br>")+'</div></div>':'');
+   document.getElementById("back").onclick=()=>{view="clients";selectedClient=null;render()};
+   document.getElementById("edit-client").onclick=()=>openClientForm(c);
+   document.getElementById("email-client").onclick=()=>post({type:"lions-rock-email-client",name:c.name,email:c.email||""});
+   document.getElementById("new-quote").onclick=()=>newDocument(c,null,"quote");
+   document.getElementById("new-invoice").onclick=()=>newDocument(c,null,"invoice");
+   document.getElementById("client-new-project").onclick=()=>openProjectForm(null,c.id);
+   app.querySelectorAll("[data-open-project]").forEach(el=>el.onclick=()=>openProject(el.dataset.openProject));
+   app.querySelectorAll("[data-open-doc]").forEach(el=>el.onclick=()=>post({type:"lions-rock-open-document",documentId:el.dataset.openDoc}));
+ }
+
+ function renderProject(){
+   const p=projects.find(x=>x.id===selectedProject);if(!p){view="projects";return render();}
+   const c=byClient(p.client_id),ds=projectDocs(p.id),invoices=ds.filter(d=>d.doc_type==="invoice");
+   const total=invoices.reduce((n,d)=>n+Number(d.total||0),0),paid=invoices.reduce((n,d)=>n+Number(d.amount_paid||0),0),due=invoices.reduce((n,d)=>n+Number(d.balance_due||0),0),cur=(ds[0]&&ds[0].currency)||"BBD";
+   app.innerHTML='<div class="back" id="back">← All projects</div><div class="profile-head"><div><h2>'+esc(p.name)+'</h2><div class="meta">'+esc(p.project_type||"Project")+' · '+(c?'<span class="link" id="project-client">'+esc(c.name)+'</span>':'No client')+(p.due_date?'<br>Due '+esc(p.due_date):'')+'</div><span class="badge '+esc(p.status)+'">'+esc(statusLabel(p.status))+'</span></div><div class="actions"><button class="btn small" id="edit-project">Edit</button><button class="btn small" id="project-quote">New Quote</button><button class="btn primary small" id="project-invoice">New Invoice</button></div></div>'+
+   '<div class="stats"><div class="stat"><div class="k">Documents</div><div class="v">'+ds.length+'</div></div><div class="stat"><div class="k">Invoiced</div><div class="v">'+money(total,cur)+'</div></div><div class="stat"><div class="k">Paid</div><div class="v">'+money(paid,cur)+'</div></div><div class="stat"><div class="k">Outstanding</div><div class="v">'+money(due,cur)+'</div></div></div>'+
+   '<div class="cols"><div class="panel"><div class="panel-title">Project Notes</div><div class="meta">'+(p.description?esc(p.description).replace(/\n/g,"<br>"):'No project notes yet.')+'</div></div><div class="panel"><div class="panel-title">Billing Trail</div>'+(ds.length?ds.map(d=>'<div class="row"><div class="row-main"><div class="row-title link" data-open-doc="'+d.id+'">'+esc(d.doc_number)+'</div><div class="row-sub">'+esc(docStatus(d))+' · '+esc(d.doc_date||"")+'</div></div><div class="money">'+money(d.total,d.currency)+'</div></div>').join(""):'<div class="notice">No documents linked to this project yet.</div>')+'</div></div>';
+   document.getElementById("back").onclick=()=>{view="projects";selectedProject=null;render()};
+   if(c)document.getElementById("project-client").onclick=()=>openClient(c.id);
+   document.getElementById("edit-project").onclick=()=>openProjectForm(p);
+   document.getElementById("project-quote").onclick=()=>newDocument(c,p.id,"quote");
+   document.getElementById("project-invoice").onclick=()=>newDocument(c,p.id,"invoice");
+   app.querySelectorAll("[data-open-doc]").forEach(el=>el.onclick=()=>post({type:"lions-rock-open-document",documentId:el.dataset.openDoc}));
+ }
+
+ function openClient(id){selectedClient=id;selectedProject=null;view="client";render();window.scrollTo(0,0)}
+ function openProject(id){selectedProject=id;selectedClient=null;view="project";render();window.scrollTo(0,0)}
+ function newDocument(c,projectId,docType){if(!c)return;post({type:"lions-rock-new-document",client:{id:c.id,name:c.name,email:c.email||"",phone:c.phone||"",address:c.address||""},projectId:projectId||null,docType:docType||"quote"})}
+
+ function fillClientSelect(selected){
+   const sel=document.getElementById("f-project-client");
+   sel.innerHTML='<option value="">— Choose client —</option>'+clients.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join("");
+   sel.value=selected||"";
+ }
+ function openClientForm(c){
+   formMode="client";editId=c&&c.id||null;
+   document.getElementById("form-title").textContent=c?"Edit Client":"New Client";
+   document.getElementById("client-form").style.display="block";document.getElementById("project-form").style.display="none";
+   document.getElementById("f-client-name").value=c&&c.name||"";
+   document.getElementById("f-client-email").value=c&&c.email||"";
+   document.getElementById("f-client-phone").value=c&&c.phone||"";
+   document.getElementById("f-client-address").value=c&&c.address||"";
+   document.getElementById("f-client-notes").value=c&&c.notes||"";
+   document.getElementById("modal").classList.add("open");
+ }
+ function openProjectForm(p,clientId){
+   formMode="project";editId=p&&p.id||null;
+   document.getElementById("form-title").textContent=p?"Edit Project":"New Project";
+   document.getElementById("client-form").style.display="none";document.getElementById("project-form").style.display="block";
+   fillClientSelect((p&&p.client_id)||clientId||"");
+   document.getElementById("f-project-name").value=p&&p.name||"";
+   document.getElementById("f-project-type").value=p&&p.project_type||"Single";
+   document.getElementById("f-project-status").value=p&&p.status||"active";
+   document.getElementById("f-project-due").value=p&&p.due_date||"";
+   document.getElementById("f-project-description").value=p&&p.description||"";
+   document.getElementById("modal").classList.add("open");
+ }
+ function closeModal(){document.getElementById("modal").classList.remove("open");formMode=null;editId=null}
+
+ async function saveForm(){
+   if(!session)return;
+   const uid=session.user.id;
+   if(formMode==="client"){
+     const name=document.getElementById("f-client-name").value.trim();if(!name){alert("Client name is required");return}
+     const payload={user_id:uid,name,email:document.getElementById("f-client-email").value.trim()||null,phone:document.getElementById("f-client-phone").value.trim()||null,address:document.getElementById("f-client-address").value.trim()||null,notes:document.getElementById("f-client-notes").value.trim()||null};
+     let r=editId?await sb.from("clients").update(payload).eq("id",editId).eq("user_id",uid).select().single():await sb.from("clients").insert(payload).select().single();
+     if(r.error){alert(r.error.message);return}selectedClient=r.data.id;view="client";
+   }else if(formMode==="project"){
+     const name=document.getElementById("f-project-name").value.trim(),client_id=document.getElementById("f-project-client").value||null;if(!name){alert("Project name is required");return}
+     const payload={user_id:uid,client_id,name,project_type:document.getElementById("f-project-type").value.trim()||"Project",status:document.getElementById("f-project-status").value,description:document.getElementById("f-project-description").value.trim()||null,due_date:document.getElementById("f-project-due").value||null};
+     let r=editId?await sb.from("projects").update(payload).eq("id",editId).eq("user_id",uid).select().single():await sb.from("projects").insert(payload).select().single();
+     if(r.error){alert(r.error.message);return}selectedProject=r.data.id;view="project";
+   }
+   closeModal();await load();syncDocs();
+ }
+
+ document.getElementById("tab-clients").onclick=()=>{view="clients";selectedClient=selectedProject=null;render()};
+ document.getElementById("tab-projects").onclick=()=>{view="projects";selectedClient=selectedProject=null;render()};
+ document.getElementById("add-client").onclick=()=>openClientForm(null);
+ document.getElementById("add-project").onclick=()=>openProjectForm(null,selectedClient);
+ document.getElementById("cancel").onclick=closeModal;
+ document.getElementById("save").onclick=saveForm;
+ document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+ document.getElementById("local-search").oninput=e=>{filter=e.target.value.trim();render()};
+ window.addEventListener("focus",load);
+ window.addEventListener("message",e=>{
+   if(e.origin!==location.origin||!e.data)return;
+   if(e.data.type==="lions-rock-hub-view"){
+     if(e.data.clientId){openClient(e.data.clientId);return}
+     if(e.data.projectId){openProject(e.data.projectId);return}
+     view=e.data.view==="projects"?"projects":"clients";selectedClient=selectedProject=null;render();
+   }
+   if(e.data.type==="lions-rock-hub-refresh")load();
+ });
+ sb.auth.onAuthStateChange((_e,s)=>{session=s;setTimeout(load,0)});
+ load();
+})();
+</script>
+</body>
+</html>
