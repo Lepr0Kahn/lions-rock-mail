@@ -222,6 +222,7 @@
         id: d.id,
         client_id: d.client_id || null,
         project_id: d.project_id || null,
+        project_name: ((remote.projects || []).find(function (p) { return String(p.id) === String(d.project_id || ""); }) || {}).name || "",
         type: d.doc_type,
         paid: localStatus === "paid",
         payment_status: localStatus,
