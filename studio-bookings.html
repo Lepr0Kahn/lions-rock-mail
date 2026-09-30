@@ -34,6 +34,7 @@ async function load(){
  const notes=document.createElement("p");notes.textContent=b.notes;row.append(notes);
  if(status==="requested"){const hold=document.createElement("p");hold.textContent="Hold expires "+time(b.hold_expires_at);row.append(hold);}
  if(["requested","confirmed"].includes(status)){for(const decision of (owner&&status==="requested"?["confirmed","cancelled"]:["cancelled"])){const button=document.createElement("button");button.textContent=decision==="confirmed"?"Confirm":"Cancel session";button.onclick=()=>run(button,async()=>{const r=await sb.rpc("decide_studio_booking",{booking_id:b.id,decision});if(r.error)throw r.error;await load();message("Booking "+decision+".");});row.append(button);}}
+ if(owner&&status==="confirmed"){const invoice=document.createElement("button");invoice.textContent="Open booking invoice";invoice.onclick=()=>{window.parent.postMessage({type:"lions-rock-booking-invoice",bookingId:b.id},location.origin);message("Opening the booking invoice for review…");};row.append(invoice);}
  el("queue").append(row);});
  el("workspace").classList.remove("hidden");message("");resize();
 }
