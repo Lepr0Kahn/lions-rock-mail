@@ -65,3 +65,13 @@ These need a real browser/Auth-session pass after the functional merge:
 - live Vercel deployment behavior
 
 The user will handle visual review after the functional layers are complete.
+
+## Production follow-up — 2026-09-30
+
+- PR #2 merged as `a12469ff4345d27dad79ddbf26c790689e3f1107`.
+- Production deployment `dpl_8sNXYdC4wHxzYMZHwPaD47Cu6qDk` reached READY.
+- Production `studio-admin.html` returned HTTP 200 and contains the verified Auth state listener.
+- Live create-invite and claim-invite endpoints both returned HTTP 401 for unauthenticated POST requests.
+- Additional rolled-back database assertions passed: invited user can read only their own test invite, Owner can read both test invites, pending invite grants no Artist entitlement, and member membership rows are isolated.
+- Authenticated invite creation/claim and wrong-workspace browser tests still require a dedicated non-owner test session.
+- Build-log retrieval was unavailable through the connected Vercel tool; no clean build-log scan is claimed.
