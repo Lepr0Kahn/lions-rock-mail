@@ -147,7 +147,7 @@ body.studio-authenticated .login-gate{display:none!important}
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),member=document.getElementById("member-frame"),admin=document.getElementById("admin-frame");
- let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null;
+ let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null,accessDenialMessage="";
  const query=new URLSearchParams(location.search);
  let recoveryMode=query.get("reset")==="1" || new URLSearchParams(location.hash.slice(1)).get("type")==="recovery";
  let inviteMode=query.get("invite")==="1";
@@ -196,7 +196,7 @@ body.studio-authenticated .login-gate{display:none!important}
      document.getElementById("studio-signout").style.display="none";
      document.getElementById("mail-nav").style.display="";
      if(!document.getElementById("apply-view").classList.contains("active"))showGateSection("signin-view");
-     if(status){status.classList.remove("err");status.textContent="Sign in to continue.";}
+     if(status){status.classList.toggle("err",!!accessDenialMessage);status.textContent=accessDenialMessage||"Sign in to continue.";}
      return;
    }
 
@@ -214,9 +214,10 @@ body.studio-authenticated .login-gate{display:none!important}
 
    if(inviteMode){
      if(!["business_tools","artist_member"].includes(inviteAccess)){
+       accessDenialMessage="This invitation link is invalid.";
        await sb.auth.signOut();
        showGateSection("signin-view");
-       if(status){status.textContent="This invitation link is invalid.";status.classList.add("err");}
+       if(status){status.textContent=accessDenialMessage;status.classList.add("err");}
        return;
      }
      const pending=await sb.from("studio_invites")
@@ -229,9 +230,10 @@ body.studio-authenticated .login-gate{display:none!important}
        .maybeSingle();
      const validInvite=!!pending.data && new Date(pending.data.expires_at)>new Date();
      if(pending.error||!validInvite){
+       accessDenialMessage="This private invitation is invalid or has expired.";
        await sb.auth.signOut();
        showGateSection("signin-view");
-       if(status){status.textContent="This private invitation is invalid or has expired.";status.classList.add("err");}
+       if(status){status.textContent=accessDenialMessage;status.classList.add("err");}
        return;
      }
      currentMembership=m.data||null;
@@ -255,6 +257,7 @@ body.studio-authenticated .login-gate{display:none!important}
 
    if(m.error||!active){
      const reason=m.data?.access_status==="suspended"?"Your Lions Rock access is suspended.":m.data?.payment_status==="unpaid"?"Your account is awaiting activation.":"This account has not been activated by Lions Rock.";
+     accessDenialMessage=reason;
      await sb.auth.signOut();
      showGateSection("signin-view");
      if(status){status.textContent=reason;status.classList.add("err");}
@@ -264,6 +267,7 @@ body.studio-authenticated .login-gate{display:none!important}
    const businessOK=canBusiness(m.data),artistOK=canArtist(m.data);
    if(m.data.role!=="owner" && ((loginMode==="business_tools"&&!businessOK)||(loginMode==="artist_member"&&!artistOK))){
      const reason=loginMode==="artist_member"?"This account does not have Artist Member access.":"This account does not have Business Tools access.";
+     accessDenialMessage=reason;
      await sb.auth.signOut();
      showGateSection("signin-view");
      if(status){status.textContent=reason;status.classList.add("err");}
@@ -321,6 +325,7 @@ body.studio-authenticated .login-gate{display:none!important}
    }
    if(button){button.disabled=true;button.textContent="Signing In…";}
    if(status){status.textContent="Signing in…";status.classList.remove("err");}
+   accessDenialMessage="";
    const r=await sb.auth.signInWithPassword({email,password});
    if(r.error){
      if(status){status.textContent=r.error.message;status.classList.add("err");}
@@ -333,7 +338,7 @@ body.studio-authenticated .login-gate{display:none!important}
  document.getElementById("gate-signin").onclick=()=>signIn(document.getElementById("gate-email").value,document.getElementById("gate-password").value);
  ["gate-email","gate-password"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("gate-signin").click();}));
  document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
- document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();document.getElementById("gate-password").value="";};
+ document.getElementById("studio-signout").onclick=async()=>{accessDenialMessage="";await sb.auth.signOut();document.getElementById("gate-password").value="";};
 
  document.getElementById("forgot-password").onclick=async()=>{
    const email=document.getElementById("gate-email").value.trim();
