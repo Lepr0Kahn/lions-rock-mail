@@ -101,3 +101,18 @@ Preserve the denial reason across the asynchronous SIGNED_OUT callback. Clear it
 - Disposable fixture retained: service 060535e7-0fa7-46d7-8f41-7980997b682a (deactivated), booking 525dcc45-3e54-4ff9-be15-fb6b7836f631 (cancelled). No real appointment or payment.
 - Browser test found iframe height feedback; now measures body content, rather than iframe viewport height. Found existing missing deletion queue returning null; JSON fallback regression checks passed for missing/null/malformed queues and preserved populated JSON.
 - Scope excludes payment collection, outbound booking notices, external calendar sync, rescheduling, and legacy data migration. Member booking flow verified at database level; distinct Artist browser flow remains unverified.
+
+
+## Booking → invoice → email bridge — 2026-09-30
+
+Implementation merged in PR #7 (bbb6524). Existing generator and Email PDF/composer flow reused. Owner booking action creates/reopens a saved document and line item; booking reference, price, currency, deposit and session notes persist. No automatic outbound email.
+
+Passed checks:
+- Authenticated Owner database rollback tests: one invoice and one line item per booking, repeated invocation returns identical document ID, USD 125 / 30% snapshot preserved, and reopening after cancellation preserves the existing invoice.
+- Artist and Business-only RPC denial, cross-account invoice RLS denial, anonymous execute revoked, cancelled uninvoiced booking rejected.
+- Final JavaScript parsing across all edited HTML scripts and invoice-sync.js.
+- Executed production-source cloud mapping preserves booking ID, USD invoice currency with BBD default settings, total and deposit, and legacy currency fallback.
+
+Deployment is blocked: GitHub Vercel status for merged commit points to upgradeToPro=build-rate-limit. Last successful production remains bab1aaf (services/bookings). Production HTML was fetched and does not contain the new booking document bridge. Browser invoice/PDF/composer handoff is pending deployment; do not report it verified or live.
+
+Disposable new test service 0a4db48f-9a47-4ac9-bf60-ba94c90eb470 deactivated; booking 9e76ee44-6f2c-4717-b213-44bfa29b9c7d cancelled, zero associated invoices. Retained audit fixture; no real appointment, payment or email.
