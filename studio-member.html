@@ -7,12 +7,13 @@
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
 <div id="workspace" class="hidden">
-<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="refresh">Refresh</button></nav>
+<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="bookings-tab">Services &amp; bookings</button><button id="refresh">Refresh</button></nav>
 <div id="notice" role="status" aria-live="polite"></div>
 <section id="dashboard">
 <div class="stats"><div class="card"><div class="eyebrow">Projects</div><div id="count-all" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Active</div><div id="count-active" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Released</div><div id="count-released" class="stat-value">0</div></div></div>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
+<section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html" style="width:100%;height:1400px;border:0"></iframe></section>
 <section id="projects" class="hidden"><div class="layout"><div><h2>Music projects</h2><div id="project-list"></div></div>
 <form id="project-form" class="card"><div class="eyebrow">New project</div>
 <div class="field hidden" id="project-artist-field"><label for="project-artist">Artist</label><select id="project-artist"></select></div>
@@ -34,7 +35,9 @@
  const el=id=>document.getElementById(id);
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
- function show(name){view=name;["dashboard","projects","detail"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",name!=="dashboard");}
+ function show(name){view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
+ el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
+ window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
  function deny(text){uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
