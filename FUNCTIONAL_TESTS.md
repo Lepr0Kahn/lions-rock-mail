@@ -92,3 +92,12 @@ The user will handle visual review after the functional layers are complete.
 ### Denial-message regression fix
 
 Preserve the denial reason across the asynchronous SIGNED_OUT callback. Clear it before a fresh password sign-in and explicit Sign Out. Invalid/expired invite messages use the same preservation. JavaScript syntax passed. A regression harness exercised the actual setSession function with a queued signed-out callback: original failed; fixed version passed for suspension, unpaid account, and Artist workspace denial, repeated signed-out updates, and clearing the reason for ordinary sign-out.
+
+
+## Services and bookings — 2026-09-30
+
+- Supabase rollback assertions passed for Barbados hourly availability, rejection of overlapping sessions, cancellation freeing slots, Artist request holds, Owner confirmation, forbidden Artist catalogue creation/confirmation, and Business RPC/RLS denial.
+- Owner preview browser: default Management Dashboard, service and offering creation, 12 one-hour slots from 10am to 9pm Barbados, confirmed session recorded with matching UTC times and snapshotted price, and cancellation through queue verified against Supabase.
+- Disposable fixture retained: service 060535e7-0fa7-46d7-8f41-7980997b682a (deactivated), booking 525dcc45-3e54-4ff9-be15-fb6b7836f631 (cancelled). No real appointment or payment.
+- Browser test found iframe height feedback; now measures body content, rather than iframe viewport height. Found existing missing deletion queue returning null; JSON fallback regression checks passed for missing/null/malformed queues and preserved populated JSON.
+- Scope excludes payment collection, outbound booking notices, external calendar sync, rescheduling, and legacy data migration. Member booking flow verified at database level; distinct Artist browser flow remains unverified.
