@@ -108,7 +108,7 @@ body.studio-authenticated .login-gate{display:none!important}
     </div>
   </div>
   <div class="nav" id="nav">
-    <button class="active" data-app="mail">Mail</button>
+    <button class="active" data-app="mail" id="mail-nav">Mail</button>
     <button data-app="documents" data-view="generator">Documents</button>
     <button data-app="documents" data-view="history">History</button>
     <button data-app="hub" data-view="clients">Clients</button>
@@ -120,7 +120,7 @@ body.studio-authenticated .login-gate{display:none!important}
 </div>
 <div class="stage">
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=4" title="Lions Rock Mail"></iframe>
-  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=6" title="Lions Rock Documents"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=7" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=2" title="Lions Rock Clients and Projects"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=1" title="Lions Rock Access Administration"></iframe>
 </div>
@@ -162,6 +162,7 @@ body.studio-authenticated .login-gate{display:none!important}
      document.getElementById("cloud-dot").className="dot";
      document.getElementById("cloud-label").textContent="Studio account";
      document.getElementById("studio-signout").style.display="none";
+     document.getElementById("mail-nav").style.display="";
      if(!document.getElementById("apply-view").classList.contains("active"))showGateSection("signin-view");
      if(status){status.classList.remove("err");status.textContent="Sign in to continue.";}
      return;
@@ -193,6 +194,7 @@ body.studio-authenticated .login-gate{display:none!important}
    document.getElementById("authbox").style.display="none";
    document.getElementById("studio-signout").style.display="inline-block";
    document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
+   document.getElementById("mail-nav").style.display=m.data.role==="owner"?"":"none";
 
    if(inviteMode){
      showGateSection("invite-view");
@@ -201,6 +203,7 @@ body.studio-authenticated .login-gate{display:none!important}
    }
 
    document.body.classList.add("studio-authenticated");
+   if(m.data.role!=="owner" && mail.classList.contains("active")) activate("hub","clients");
    mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
    hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
    setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))),60);
