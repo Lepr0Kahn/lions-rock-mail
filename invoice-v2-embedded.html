@@ -921,7 +921,7 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
-<script src="/invoice-sync.js?v=5"></script>
+<script src="/invoice-sync.js?v=6"></script>
 <script>
 (function(){
   function switchRequested(view){
@@ -942,7 +942,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var doc=e.data.document,client=e.data.client;
       STORE.documents=STORE.documents||[];
       var existing=STORE.documents.find(function(d){return d.id===doc.id;});
-      if(existing)Object.assign(existing,doc);else STORE.documents.push(doc);
+      if(existing){if(Date.parse(existing.updated_at||"")>Date.parse(doc.updated_at||""))doc=existing;else Object.assign(existing,doc);}else STORE.documents.push(doc);
       if(client&&client.id){STORE.clients=STORE.clients||[];var found=STORE.clients.find(function(c){return c.id===client.id;});if(found)Object.assign(found,client);else STORE.clients.push(client);}
       if(typeof window.saveStore==="function")window.saveStore();
       window.loadDocIntoGenerator(doc);
