@@ -1,8 +1,8 @@
 {
   "name": "Lions Rock Mail",
-  "short_name": "Lions Rock Mail",
-  "description": "Lions Rock Media email and audio sharing tool",
-  "start_url": "/",
+  "short_name": "LR Mail",
+  "description": "Lions Rock Media branded Gmail sender for studio messages and audio delivery.",
+  "start_url": "/?source=app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0d0c0c",
