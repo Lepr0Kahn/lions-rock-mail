@@ -390,7 +390,7 @@ smTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC
         <div class="sub">Media Facility</div>
       </div>
     </div>
-    <div class="badge-offline"><span class="dot"></span> GMAIL TEST BUILD 3</div>
+    <div class="badge-offline"><span class="dot"></span> GMAIL TEST BUILD 4</div>
   </header>
 
   <section class="hero">
@@ -946,8 +946,131 @@ function wrap76(s){return (s.match(/.{1,76}/g)||[]).join("\r\n");}
 function mime(name,type){const e=(name.split(".").pop()||"").toLowerCase();return ({mp3:"audio/mpeg",wav:"audio/wav",m4a:"audio/mp4",aac:"audio/aac",flac:"audio/flac",ogg:"audio/ogg",aiff:"audio/x-aiff",aif:"audio/x-aiff"})[e]||type||"application/octet-stream";}
 
 function setImages(){[["header-logo-img",LOGO],["logo-thumb",LOGO],["sig-thumb",SIGNATURE]].forEach(([id,src])=>{const e=$(id);if(e)e.src=src;});}
-function getState(){return {to:$("to")?.value.trim()||"",cc:$("cc")?.value.trim()||"",bcc:$("bcc")?.value.trim()||"",subject:$("subject")?.value||"A Quick Note From The Facility",greeting:$("greeting")?.value||"",body:$("body")?.value||"",signoff:$("signoff")?.value||"",senderName:$("senderName")?.value||"",senderTitle:$("senderTitle")?.value||"",accent:$("accent-color")?.value||"#C24D2C"};}
-function buildEmailHtml(){const s=getState();const paras=esc(s.body).split(/\n{2,}/).map(x=>'<p style="margin:0 0 16px;font:15px/1.7 Arial,sans-serif;color:#1a1a1a;white-space:pre-wrap">'+x+'</p>').join("");const att=tracks.length?'<div style="margin:16px 0;padding:12px;border:1px solid #eee;background:#fbf8f2;font:12px Arial"><b>Audio attached:</b><br>'+tracks.map(t=>esc(t.name)+' ('+fmt(t.size)+')').join("<br>")+'</div>':"";return '<!doctype html><html><body style="margin:0;background:#f3efe8;padding:22px"><table role="presentation" width="100%"><tr><td align="center"><table role="presentation" width="600" style="max-width:600px;background:#fff"><tr><td style="height:6px;background:'+s.accent+'"></td></tr><tr><td style="padding:22px;text-align:center"><img src="'+LOGO+'" width="90" style="display:block;margin:auto;max-width:90px"><div style="font:11px Georgia,serif;letter-spacing:3px;margin-top:8px">LION\'S ROCK MEDIA FACILITY</div></td></tr><tr><td style="padding:0 30px 28px"><h2 style="font:600 23px Georgia,serif;color:#111">'+esc(s.subject)+'</h2><p style="font:15px/1.7 Arial;color:#1a1a1a">'+esc(s.greeting)+'</p>'+paras+att+'<div style="margin-top:20px"><p style="font:15px/1.6 Arial;margin:0 0 8px">'+esc(s.signoff)+'</p><img src="'+SIGNATURE+'" width="55" height="55" style="object-fit:cover;border-radius:8px"><div style="font:600 15px Georgia;margin-top:6px">'+esc(s.senderName)+'</div><div style="font:12px Arial;color:#777">'+esc(s.senderTitle)+'</div></div></td></tr><tr><td style="background:#111;color:#eee;padding:20px 30px;font:12px/1.7 Arial"><b style="color:'+s.accent+'">LION\'S ROCK MEDIA FACILITY</b><br>@lionsrockmedia · @yofavengineer<br>+1-246-851-8512</td></tr></table></td></tr></table></body></html>';}
+function getState(){
+  return {
+    to:$("to")?.value.trim()||"",
+    cc:$("cc")?.value.trim()||"",
+    bcc:$("bcc")?.value.trim()||"",
+    subject:$("subject")?.value||"A Quick Note From The Facility",
+    preheader:$("preheader")?.value||"",
+    greeting:$("greeting")?.value||"",
+    body:$("body")?.value||"",
+    signoff:$("signoff")?.value||"",
+    senderName:$("senderName")?.value||"",
+    senderTitle:$("senderTitle")?.value||"",
+    accent:$("accent-color")?.value||"#C24D2C"
+  };
+}
+function buildEmailHtml(){
+  const s=getState();
+  const accent=s.accent;
+  const BRAND="LION'S ROCK MEDIA FACILITY";
+  const INSTAGRAM_BRAND="https://instagram.com/lionsrockmedia";
+  const INSTAGRAM_PERSONAL="https://instagram.com/yofavengineer";
+  const YOUTUBE="https://www.youtube.com/@LionsRockMediaFacility";
+  const PHONE="+1-246-851-8512";
+  const phoneTel=PHONE.replace(/[^+\d]/g,"");
+
+  // Use hosted HTTPS images in the actual email. Email clients commonly strip
+  // data: image URLs, while HTTPS images render reliably through Gmail's proxy.
+  const emailLogo="https://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-1";
+  const emailSignature="https://lions-rock-mail.vercel.app/signature.jpg?v=email-rich-1";
+
+  const paragraphs=(s.body||"").split(/\n{2,}/).map(block=>
+    `<p style="margin:0 0 18px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#1a1a1a;">${esc(block).split(/\n/).join("<br>")}</p>`
+  ).join("");
+
+  const attRows=tracks.map(t=>`
+    <tr>
+      <td style="padding:6px 18px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#1a1a1a;">
+        <span style="display:inline-block;width:8px;height:8px;background:${accent};margin-right:10px;vertical-align:middle;"></span>
+        ${esc(t.name)}
+        <span style="color:#a19d98;font-size:11px;margin-left:8px;letter-spacing:0.06em;">(${fmt(t.size)})</span>
+      </td>
+    </tr>`).join("");
+
+  const attBlock=tracks.length?`
+    <tr>
+      <td style="padding:0 36px 24px 36px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #eeeae2;background:#fbf8f2;">
+          <tr>
+            <td style="padding:14px 18px 6px 18px;font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:0.22em;color:${accent};text-transform:uppercase;font-weight:700;">&#9836; Audio enclosed</td>
+          </tr>
+          ${attRows}
+          <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+        </table>
+      </td>
+    </tr>`:"";
+
+  const greetingBlock=s.greeting?`
+    <tr>
+      <td style="padding:18px 36px 0 36px;">
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;color:#1a1a1a;line-height:1.6;">${esc(s.greeting)}</div>
+      </td>
+    </tr>`:"";
+
+  const signBlock=(s.signoff||s.senderName)?`
+    <tr>
+      <td style="padding:6px 36px 36px 36px;">
+        ${s.signoff?`<p style="margin:0 0 14px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#1a1a1a;">${esc(s.signoff)}</p>`:""}
+        <img src="${emailSignature}" alt="${esc(s.senderName||"LeProKahn")}" width="70" style="display:block;margin:0 0 8px 0;max-width:70px;height:auto;border:0;outline:none;text-decoration:none;">
+        ${s.senderName?`<div style="font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#111111;font-weight:600;">${esc(s.senderName)}</div>`:""}
+        ${s.senderTitle?`<div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#6b6864;letter-spacing:0.04em;margin-top:2px;">${esc(s.senderTitle)}</div>`:""}
+      </td>
+    </tr>`:"";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${esc(s.subject||"A note from Lion's Rock Media Facility")}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f3efe8;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<div style="display:none;font-size:1px;color:#f3efe8;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${esc(s.preheader)}</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3efe8;">
+<tr>
+<td align="center" style="padding:32px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background:#ffffff;">
+  <tr><td style="background:${accent};height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
+  <tr>
+    <td align="center" style="padding:36px 36px 18px 36px;background:#ffffff;">
+      <img src="${emailLogo}" alt="${esc(BRAND)}" width="140" style="display:block;margin:0 auto 14px auto;max-width:140px;height:auto;border:0;outline:none;text-decoration:none;">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:0.32em;color:#111111;text-transform:uppercase;font-weight:600;">${esc(BRAND)}</div>
+    </td>
+  </tr>
+  <tr><td style="padding:14px 36px 0 36px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-bottom:1px solid #eeeae2;height:1px;line-height:1px;font-size:0;">&nbsp;</td></tr></table></td></tr>
+  <tr><td style="padding:32px 36px 6px 36px;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;color:#111111;font-weight:600;letter-spacing:-0.01em;">${esc(s.subject||"A note from Lion's Rock Media Facility")}</div></td></tr>
+  ${greetingBlock}
+  <tr><td style="padding:22px 36px 8px 36px;">${paragraphs}</td></tr>
+  ${signBlock}
+  ${attBlock}
+  <tr><td style="padding:0 36px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${accent};height:2px;width:40px;line-height:2px;font-size:0;">&nbsp;</td></tr></table></td></tr>
+  <tr>
+    <td style="background:#111111;padding:36px;color:#f3efe8;">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;letter-spacing:0.18em;color:#f3efe8;text-transform:uppercase;font-weight:600;">${esc(BRAND)}</div>
+      <div style="margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:0.16em;color:${accent};text-transform:uppercase;">Stay in touch</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
+        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Instagram &nbsp;/&nbsp;</span><a href="${INSTAGRAM_BRAND}" style="color:#f3efe8;text-decoration:none;">@lionsrockmedia</a></td></tr>
+        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Instagram &nbsp;/&nbsp;</span><a href="${INSTAGRAM_PERSONAL}" style="color:#f3efe8;text-decoration:none;">@yofavengineer</a></td></tr>
+        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">YouTube &nbsp;/&nbsp;</span><a href="${YOUTUBE}" style="color:#f3efe8;text-decoration:none;">@LionsRockMediaFacility</a></td></tr>
+        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Phone &nbsp;/&nbsp;</span><a href="tel:${phoneTel}" style="color:#f3efe8;text-decoration:none;">${PHONE}</a></td></tr>
+      </table>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:28px;">
+        <tr><td style="border-top:1px solid #333333;padding-top:18px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#a19d98;line-height:1.6;">Sent with intention by <span style="color:#f3efe8;">Tarik &ldquo;LeProKahn&rdquo; Delves</span> &mdash; Founder, The Lion&rsquo;s Rock Media Facility.</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
+  <tr><td align="center" style="padding:18px 12px 0 12px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#a19d98;letter-spacing:0.16em;text-transform:uppercase;">&copy; ${new Date().getFullYear()} Lion&rsquo;s Rock Media Facility</td></tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>`;
+}
 function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Audio attached: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
 function buildRaw(){const s=getState(),mixed="mix_"+Date.now(),alt="alt_"+Date.now()+"_"+Math.random().toString(36).slice(2);let raw="To: "+s.to+"\r\n";if(s.cc)raw+="Cc: "+s.cc+"\r\n";if(s.bcc)raw+="Bcc: "+s.bcc+"\r\n";raw+="Subject: =?UTF-8?B?"+b64utf8(s.subject)+"?=\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\""+mixed+"\"\r\n\r\n";raw+="--"+mixed+"\r\nContent-Type: multipart/alternative; boundary=\""+alt+"\"\r\n\r\n";raw+="--"+alt+"\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"+wrap76(b64utf8(buildPlain()))+"\r\n";raw+="--"+alt+"\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"+wrap76(b64utf8(buildEmailHtml()))+"\r\n--"+alt+"--\r\n";for(const t of tracks){const n=t.name.replace(/[\r\n"]/g,"_");raw+="--"+mixed+"\r\nContent-Type: "+t.mime+"; name=\""+n+"\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\""+n+"\"\r\n\r\n"+wrap76(t.base64)+"\r\n";}raw+="--"+mixed+"--\r\n";return b64url(raw);}
 function renderPreview(){const root=$("preview-root");if(!root)return;const s=getState();root.innerHTML='<div class="ep"><div class="ep-box"><div class="ep-accent" style="background:'+s.accent+'"></div><div class="ep-head"><img class="logo" src="'+LOGO+'"><div class="ep-brand">LION\'S ROCK MEDIA FACILITY</div></div><div class="ep-divider"></div><div class="ep-subject">'+esc(s.subject)+'</div><div class="ep-greet">'+esc(s.greeting)+'</div><div class="ep-body"><p>'+esc(s.body)+'</p></div><div class="ep-sign"><p>'+esc(s.signoff)+'</p><img class="ep-sign-mark" src="'+SIGNATURE+'"><div class="ep-sign-name">'+esc(s.senderName)+'</div><div class="ep-sign-title">'+esc(s.senderTitle)+'</div></div><div class="ep-footer"><div class="ep-brand-foot">LION\'S ROCK MEDIA FACILITY</div><div class="ep-links">@lionsrockmedia · @yofavengineer<br>+1-246-851-8512</div></div></div></div>';}
