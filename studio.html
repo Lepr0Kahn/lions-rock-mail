@@ -318,7 +318,7 @@ body.studio-authenticated .login-gate{display:none!important}
    button.disabled=true;button.textContent="Saving…";
    const r=await sb.auth.updateUser({password:p});
    if(r.error){out.textContent=r.error.message;out.classList.add("err");button.disabled=false;button.textContent="Set Password & Open Studio";return}
-   try{await sb.rpc("mark_studio_invite_claimed");}catch(_){}
+   try{await sb.functions.invoke("studio-claim-invite",{body:{}});}catch(_){}
    if(inviteAccess)setLoginMode(inviteAccess);
    inviteMode=false;inviteAccess="";
    history.replaceState({},document.title,"/studio.html");
