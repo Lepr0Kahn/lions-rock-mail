@@ -63,8 +63,17 @@ body.studio-authenticated .login-gate{display:none!important}
         <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
       </div>
       <button class="login-button" id="gate-signin">Sign In to Business Tools</button>
+      <button class="login-link" id="forgot-password" type="button">Forgot password?</button>
       <button class="login-button secondary" id="show-apply" style="display:none">Apply for Access</button>
       <div class="login-status" id="gate-status">Checking your session…</div>
+    </div>
+
+    <div class="gate-section" id="reset-view">
+      <div class="login-help"><b>Choose a new password.</b><br>Your recovery link confirms your account. Workspace access stays the same.</div>
+      <div class="login-field"><label for="reset-password">New Password</label><input id="reset-password" type="password" autocomplete="new-password"></div>
+      <div class="login-field"><label for="reset-confirm">Confirm Password</label><input id="reset-confirm" type="password" autocomplete="new-password"></div>
+      <button class="login-button" id="reset-save">Save New Password</button>
+      <div class="login-status" id="reset-status"></div>
     </div>
 
     <div class="gate-section" id="apply-view">
@@ -140,6 +149,7 @@ body.studio-authenticated .login-gate{display:none!important}
  const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),member=document.getElementById("member-frame"),admin=document.getElementById("admin-frame");
  let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null;
  const query=new URLSearchParams(location.search);
+ let recoveryMode=query.get("reset")==="1" || new URLSearchParams(location.hash.slice(1)).get("type")==="recovery";
  let inviteMode=query.get("invite")==="1";
  let inviteAccess=query.get("access")||"";
  let inviteExisting=query.get("existing")==="1";
@@ -162,7 +172,7 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
  function showGateSection(id){
-   ["signin-view","apply-view","invite-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
+   ["signin-view","apply-view","invite-view","reset-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
  function setLoginMode(mode){
    loginMode=mode==="artist_member"?"artist_member":"business_tools";
@@ -190,6 +200,11 @@ body.studio-authenticated .login-gate{display:none!important}
      return;
    }
 
+   if(recoveryMode){
+     showGateSection("reset-view");
+     document.getElementById("reset-status").textContent="Enter and confirm your new password.";
+     return;
+   }
    if(status){status.classList.remove("err");status.textContent="Checking access…";}
 
    const m=await sb.from("app_memberships")
@@ -320,6 +335,38 @@ body.studio-authenticated .login-gate{display:none!important}
  document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
  document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();document.getElementById("gate-password").value="";};
 
+ document.getElementById("forgot-password").onclick=async()=>{
+   const email=document.getElementById("gate-email").value.trim();
+   const out=document.getElementById("gate-status"),button=document.getElementById("forgot-password");
+   if(!email){out.textContent="Enter your email above, then tap Forgot password.";out.classList.add("err");return;}
+   button.disabled=true;
+   out.classList.remove("err");out.textContent="Requesting a password reset…";
+   try{
+     const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:"https://lions-rock-mail.vercel.app/studio.html?reset=1"});
+     if(r.error)throw r.error;
+     out.textContent="If that email has an account, a reset link will arrive shortly. Check your inbox and spam folder.";
+   }catch(e){out.textContent=e.message||"Could not request a reset. Try again.";out.classList.add("err");}
+   finally{button.disabled=false;}
+ };
+ document.getElementById("reset-save").onclick=async()=>{
+   const p=document.getElementById("reset-password").value,c=document.getElementById("reset-confirm").value;
+   const out=document.getElementById("reset-status"),button=document.getElementById("reset-save");
+   if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return;}
+   if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return;}
+   button.disabled=true;out.classList.remove("err");out.textContent="Saving…";
+   try{
+     const r=await sb.auth.updateUser({password:p});
+     if(r.error)throw r.error;
+     recoveryMode=false;
+     history.replaceState({},document.title,"/studio.html");
+     document.getElementById("reset-password").value="";document.getElementById("reset-confirm").value="";
+     await sb.auth.signOut({scope:"local"});
+     await setSession(null);
+     document.getElementById("gate-status").textContent="Password updated. Sign in with your new password.";
+   }catch(e){out.textContent=e.message||"Could not update your password.";out.classList.add("err");}
+   finally{button.disabled=false;}
+ };
+
  document.getElementById("show-apply").onclick=()=>{showGateSection("apply-view");document.getElementById("apply-status").textContent="";};
  document.getElementById("back-signin").onclick=()=>showGateSection("signin-view");
  document.getElementById("apply-submit").onclick=async()=>{
@@ -375,7 +422,10 @@ body.studio-authenticated .login-gate{display:none!important}
    }
  };
 
- sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
+ sb.auth.onAuthStateChange((event,s)=>{
+   if(event==="PASSWORD_RECOVERY")recoveryMode=true;
+   setTimeout(()=>setSession(s),0);
+ });
  function activate(appName,viewName,payload){
    if(appName==="member"&&!canArtist(currentMembership))return;
    if((appName==="documents"||appName==="hub")&&!canBusiness(currentMembership))return;
