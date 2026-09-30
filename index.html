@@ -415,7 +415,7 @@ smTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC
         <div class="sub">Media Facility</div>
       </div>
     </div>
-    <div class="badge-offline"><span class="dot"></span> LIONS ROCK MAIL V5</div>
+    <div class="badge-offline"><span class="dot"></span> LIONS ROCK MAIL V5.1</div>
   </header>
 
   <section class="hero">
@@ -817,6 +817,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
           <div class="field">
             <div class="label-row"><label>Template</label><span class="hint">One-tap starting point</span></div>
             <select id="template-select">
+              <option value="blank" selected>Blank email</option>
               <option value="studio-follow-up">Studio Follow-up</option>
               <option value="send-mix">Send Mix / Master</option>
               <option value="booking-confirmation">Booking Confirmation</option>
@@ -850,31 +851,27 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
 
       <div class="field">
         <div class="label-row"><label>Subject line</label><span class="hint">The headline of the email</span></div>
-        <input id="subject" value="A Quick Note From The Facility" />
+        <input id="subject" value="" placeholder="Subject" />
       </div>
 
       <div class="field">
         <div class="label-row"><label>Preheader</label><span class="hint">Shown in the inbox preview</span></div>
-        <input id="preheader" value="Behind the lens. Always in motion." />
+        <input id="preheader" value="" placeholder="Optional inbox preview text" />
       </div>
 
       <div class="field">
         <div class="label-row"><label>Greeting</label></div>
-        <input id="greeting" value="Hi {{First Name}}," />
+        <input id="greeting" value="" placeholder="Greeting" />
       </div>
 
       <div class="field">
         <div class="label-row"><label>Body</label><span class="hint">Use a blank line for a new paragraph</span></div>
-        <textarea id="body" rows="8">Hope this finds you in good spirits. I wanted to share a quick update on what we've been crafting at the Facility this week — new sessions, fresh edits, and a few projects I think you'll appreciate.
-
-If anything catches your eye, just reply to this email. Always happy to set up a call, a studio walkthrough, or send over a treatment.
-
-Talk soon.</textarea>
+        <textarea id="body" rows="8" placeholder="Write your message…"></textarea>
       </div>
 
       <div class="field">
         <div class="label-row"><label>Sign-off</label></div>
-        <input id="signoff" value="With gratitude," />
+        <input id="signoff" value="" placeholder="Sign-off" />
       </div>
 
       <div class="two-col">
@@ -996,6 +993,7 @@ const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 const GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
 let tokenClient = null, accessToken = "", tracks = [];
 const TEMPLATES = {
+  "blank":{subject:"",preheader:"",greeting:"",body:"",signoff:""},
   "studio-follow-up":{
     subject:"A Quick Note From The Facility",
     preheader:"Behind the lens. Always in motion.",
@@ -1082,8 +1080,8 @@ function updateSizeNote(){
 function resetNewEmail(){
   ["to","cc","bcc","first-name"].forEach(id=>{const e=$(id);if(e)e.value="";});
   clearTrackUrls();tracks=[];const mi=$("music-input");if(mi)mi.value="";
-  const sel=$("template-select");if(sel)sel.value="studio-follow-up";
-  applyTemplate("studio-follow-up");
+  const sel=$("template-select");if(sel)sel.value="blank";
+  applyTemplate("blank");
   renderTracks();renderPreview();
   const success=$("send-success");if(success)success.style.display="none";
   toastMsg("New email ready");
@@ -1108,7 +1106,7 @@ function getState(){
     cc:$("cc")?.value.trim()||"",
     bcc:$("bcc")?.value.trim()||"",
     firstName:$("first-name")?.value.trim()||"",
-    subject:mergeText($("subject")?.value||"A Quick Note From The Facility"),
+    subject:mergeText($("subject")?.value||""),
     preheader:mergeText($("preheader")?.value||""),
     greeting:mergeText($("greeting")?.value||""),
     body:mergeText($("body")?.value||""),
