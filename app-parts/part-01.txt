@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lion's Rock Media Facility — Edge + Apple Mail Kit</title>
+<style>
+  :root {
+    --bg: #0d0c0c;
+    --surface: #1a1a1a;
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #f4f1ea;
+    --muted: #a19d98;
+    --dim: #6b6864;
+    --accent: #c24d2c;
+    --accent-hover: #a63d20;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  .display { font-family: Georgia, "Times New Roman", serif; }
+  ::selection { background: var(--accent); color: #fff; }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* HEADER */
+  header.nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 40px; height: 40px; background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center;
+    padding: 4px;
+  }
+  .brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+  .brand-text .display { font-size: 13px; letter-spacing: 0.32em; text-transform: uppercase; }
+  .brand-text .sub { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+  .badge-offline {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    border: 1px solid var(--accent); color: var(--accent);
+    padding: 8px 14px; font-weight: 700;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
+
+  /* HERO */
+  .hero { padding: 64px 0 32px; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 24px;
+  }
+  .eyebrow .line { width: 36px; height: 1px; background: var(--accent); }
+  h1.display {
+    font-size: clamp(40px, 6vw, 76px); line-height: 0.95; letter-spacing: -0.01em;
+    margin: 0 0 24px 0; font-weight: 500;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .lede { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 640px; margin: 0; }
+  .lede b { color: var(--text); font-weight: 600; }
+
+  /* GRID */
+  .grid {
+    display: grid; grid-template-columns: 1fr; gap: 48px;
+    padding: 32px 0 96px;
+  }
+  @media (min-width: 1024px) { .grid { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
+
+  .panel {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    padding: 24px;
+  }
+  .panel-title {
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 14px;
+  }
+  .panel-hint { color: var(--dim); font-size: 12px; line-height: 1.55; margin-top: 8px; }
+
+  /* Two-col logo card */
+  .logo-row { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  @media (min-width: 720px) { .logo-row { grid-template-columns: 1fr 1fr; } }
+  .logo-cell { display: flex; align-items: center; gap: 14px; }
+  .logo-thumb {
+    width: 56px; height: 56px; background: #fff; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .logo-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+
+  /* Field */
+  .field { margin-bottom: 22px; }
+  .label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  label {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .hint {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim);
+  }
+  input[type="text"], input:not([type]), textarea {
+    width: 100%; background: transparent; border: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.18);
+    padding: 10px 0; color: var(--text); font-size: 15px;
+    font-family: inherit;
+    outline: none; transition: border-color 240ms ease;
+  }
+  input:focus, textarea:focus { border-bottom-color: var(--accent); }
+  textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
+  input[type="color"] {
+    width: 48px; height: 48px; padding: 0; background: transparent;
+    border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+  }
+  .color-row { display: flex; gap: 16px; align-items: center; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 22px; font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; font-weight: 700; border-radius: 0;
+    cursor: pointer; transition: all 240ms ease; border: 0;
+    font-family: inherit;
+  }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.4); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+  .btn-small { padding: 8px 12px; font-size: 10px; }
+
+  /* Music */
+  .empty {
+    border: 1px dashed rgba(255,255,255,0.12);
+    padding: 28px; text-align: center;
+  }
+  .track {
+    display: flex; align-items: center; gap: 14px;
+    border: 1px solid var(--border); background: rgba(0,0,0,0.3);
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .track-mark {
+    width: 32px; height: 32px; background: rgba(194,77,44,0.14);
+    display: flex; align-items: center; justify-content: center; color: var(--accent);
+    flex-shrink: 0; font-size: 16px;
+  }
+  .track-info { flex: 1; min-width: 0; }
+  .track-name { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-meta { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+  .track-remove {
+    background: transparent; border: 0; color: var(--muted); cursor: pointer; padding: 6px;
+    font-size: 16px;
+  }
+  .track-remove:hover { color: var(--accent); }
+  .track-total {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); margin-top: 8px;
+  }
+
+  /* iPhone Preview */
+  .preview-wrap { position: sticky; top: 24px; }
+  .iphone {
+    width: 340px; height: 700px; max-width: 100%;
+    background: #050505; border-radius: 48px; padding: 12px;
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.7), inset 0 0 0 2px #1a1a1a;
+    position: relative; margin: 0 auto;
+  }
+  .iphone::before {
+    content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 28px; background: #050505; border-radius: 999px; z-index: 10;
+  }
+  .iphone-screen {
+    width: 100%; height: 100%; background: #fff; border-radius: 38px; overflow: hidden;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .mail-bar {
+    height: 64px; background: #f7f7f7; border-bottom: 1px solid #e7e7e7;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 14px 10px; font-size: 13px; color: #007aff;
+  }
+
+  /* Email preview */
+  .ep { background: #f3efe8; padding: 16px 8px 24px; font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif; color: #1a1a1a; }
+  .ep-box { background: #fff; max-width: 600px; margin: 0 auto; }
+  .ep-accent { height: 6px; }
+  .ep-head { padding: 22px 22px 12px; text-align: center; }
+  .ep-head img.logo { max-width: 100px; height: auto; display: block; margin: 0 auto 10px; }
+  .ep-head .ep-brand { font-family: Georgia, serif; font-size: 10px; letter-spacing: 0.32em; color: #111; text-transform: uppercase; font-weight: 600; }
+  .ep-head .ep-est { margin-top: 4px; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .ep-divider { margin: 0 22px; border-bottom: 1px solid #eeeae2; }
+  .ep-subject { padding: 20px 22px 4px; font-family: Georgia, serif; font-size: 22px; line-height: 1.2; color: #111; font-weight: 600; letter-spacing: -0.01em; }
+  .ep-greet { padding: 14px 22px 0; font-size: 14px; color: #1a1a1a; line-height: 1.6; }
+  .ep-body { padding: 14px 22px 6px; }
+  .ep-body p { margin: 0 0 14px 0; font-size: 14px; line-height: 1.7; color: #1a1a1a; white-space: pre-wrap; }
+  .ep-sign { padding: 4px 22px 24px; }
+  .ep-sign-mark { max-width: 56px; height: auto; display: block; margin: 0 0 6px; }
+  .ep-sign-name { font-family: Georgia, serif; font-size: 15px; font-weight: 600; color: #111; }
+  .ep-sign-title { font-size: 11px; color: #6b6864; letter-spacing: 0.04em; margin-top: 2px; }
+  .ep-att { padding: 0 22px 18px; }
+  .ep-att-card { border: 1px solid #eeeae2; background: #fbf8f2; padding: 12px 14px; }
+  .ep-att-title { font-family: Georgia, serif; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+  .ep-att-row { font-size: 12px; color: #1a1a1a; padding: 3px 0; display: flex; align-items: center; gap: 8px; }
+  .ep-att-row .swatch { width: 7px; height: 7px; display: inline-block; flex-shrink: 0; }
+  .ep-att-row .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ep-att-row .sz { color: #a19d98; font-size: 10px; }
+  .ep-footer { background: #111; color: #f3efe8; padding: 22px; margin-top: 4px; }
+  .ep-footer .ep-brand-foot { font-family: Georgia, serif; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+  .ep-footer .ep-stay { margin-top: 4px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .ep-footer .ep-links { margin-top: 14px; font-size: 12px; line-height: 1.9; }
+  .ep-footer .ep-links .k { color: #a19d98; letter-spacing: 0.08em; text-transform: uppercase; font-size: 9px; }
+  .ep-footer .ep-sig { margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 10px; color: #a19d98; line-height: 1.6; }
+  .ep-meta { text-align: center; padding: 10px 8px 0; font-size: 9px; color: #a19d98; letter-spacing: 0.16em; text-transform: uppercase; }
+
+  /* Toast */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+  .toast { background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 14px 18px; min-width: 260px; max-width: 380px;
+    font-size: 13px; line-height: 1.45;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
+    opacity: 0; transform: translateY(10px); transition: all 280ms ease;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast .t-title { font-weight: 700; }
+  .toast .t-desc { color: var(--muted); margin-top: 4px; font-size: 12px; }
+  .toast.err { border-color: rgba(255, 90, 90, 0.4); }
+  .toast.err .t-title { color: #ff7e7e; }
+
+  /* How */
+  .how { padding: 48px 0 96px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); }
+  .how-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 24px; }
+  @media (min-width: 880px) { .how-grid { grid-template-columns: repeat(3, 1fr); } }
+  .step { border: 1px solid var(--border); background: rgba(255,255,255,0.02); padding: 24px; }
+  .step .n { font-family: Georgia, serif; font-size: 26px; color: var(--accent); margin-bottom: 16px; }
+  .step .t { font-family: Georgia, serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
+  .step .d { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  footer.foot { padding: 32px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--dim); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; text-align: center; }
+
+  .section-h2 {
+    font-family: Georgia, serif; font-size: clamp(28px, 4vw, 44px); line-height: 1.15;
+    margin: 4px 0 12px; color: var(--text);
+  }
+  .section-h2 em { color: var(--accent); font-style: italic; }
+  .section-eyebrow {
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="nav">
+    <div class="brand">
+      <div class="brand-mark"><img id="header-logo-img" alt="Lion's Rock" /></div>
+      <div class="brand-text">
+        <div class="display">Lion&rsquo;s Rock</div>
+        <div class="sub">Media Facility</div>
+      </div>
+    </div>
+    <div class="badge-offline"><span class="dot"></span> Edge + Apple Mail</div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow"><span class="line"></span> The Lion's Rock email kit</div>
+    <h1 class="display">Compose.<br/>Attach.<br/><em>Send.</em></h1>
+    <p class="lede">A styled email template for <b>Lion's Rock Media Facility</b>, configured for <b>Microsoft Edge</b> with Apple Mail handoff. No Google sign-in, no OAuth, and no Gmail API. <b>Everything stays on this device until you choose to send.</b></p>
+  </section>
+
+  <section class="grid">
+    <!-- BUILDER -->
+    <div>
+      <div class="section-eyebrow">The Builder</div>
+      <h2 class="section-h2">Write the email. <em>Download the draft.</em></h2>
+      <p style="color: var(--muted); margin: 8px 0 28px;">Every field updates the preview live. Attach audio. Tap download.</p>
+
+      <!-- Logos -->
+      <div class="panel" style="margin-bottom: 24px;">
+        <div class="logo-row">
+          <div>
+            <div class="panel-title">Header Logo</div>
+            <div class="logo-cell">
+              <div class="logo-thumb"><img id="logo-thumb" alt="logo" /></div>
+              <input type="file" id="logo-input" accept="image/*" style="display:none" />
+              <button class="btn btn-secondary btn-small" id="logo-replace-btn">⤴ Replace</button>
+              <button class="btn btn-secondary btn-small" id="logo-reset-btn" style="display:none">⌫</button>
+            </div>
+            <div class="panel-hint">Lion's Rock crest. Sits at the top of every email.</div>
+          </div>
+          <div>
+            <div class="panel-title">Signature Mark</div>
+            <div class="logo-cell">
+              <div class="logo-thumb"><img id="sig-thumb" alt="sig" /></div>
+              <input type="file" id="sig-input" accept="image/*" style="display:none" />
+              <button class="btn btn-secondary btn-small" id="sig-replace-btn">⤴ Replace</button>
+              <button class="btn btn-secondary btn-small" id="sig-reset-btn" style="display:none">⌫</button>
+            </div>
+            <div class="panel-hint">Leprokahn mark. Next to your name in the sign-off.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Music -->
+      <div class="panel" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px;">
+          <div>
+            <div class="panel-title">Audio Attachments</div>
+            <div class="panel-hint" style="margin-top: 0;">Kept as real files. Microsoft Edge cannot place local files directly into a <b>mailto:</b> draft, so when tracks are attached this kit builds a real <b>.eml</b> Apple Mail draft with the audio embedded. Nothing leaves this device until you send.</div>
+          </div>
+          <input type="file" id="music-input" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff" multiple style="display:none" />
+          <button class="btn btn-accent btn-small" id="music-btn">♪ Add tracks</button>
+        </div>
+        <div id="tracks-empty" class="empty">
+          <div style="font-size: 24px; opacity: 0.4; margin-bottom: 8px;">♫</div>
+          <div style="font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);">No tracks attached</div>
+          <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">MP3 · WAV · M4A · FLAC · OGG · up to 25MB total</div>
+        </div>
+        <div id="tracks-list"></div>
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Subject line</label><span class="hint">The headline of the email</span></div>
+        <input id="subject" value="A Quick Note From The Facility" />
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Preheader</label><span class="hint">Shown in the inbox preview</span></div>
+        <input id="preheader" value="Behind the lens. Always in motion." />
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Greeting</label></div>
+        <input id="greeting" value="Hi {{First Name}}," />
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Body</label><span class="hint">Use a blank line for a new paragraph</span></div>
+        <textarea id="body" rows="8">Hope this finds you in good spirits. I wanted to share a quick update on what we've been crafting at the Facility this week — new sessions, fresh edits, and a few projects I think you'll appreciate.
+
+If anything catches your eye, just reply to this email. Always happy to set up a call, a studio walkthrough, or send over a treatment.
+
+Talk soon.</textarea>
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Sign-off</label></div>
+        <input id="signoff" value="With gratitude," />
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <div class="label-row"><label>Your name</label></div>
+          <input id="senderName" value="Tarik 'LeProKahn' Delves" />
+        </div>
+        <div class="field">
+          <div class="label-row"><
