@@ -4,7 +4,7 @@
 <style>
 :root{color-scheme:dark;--bg:#0d0c0c;--panel:#171616;--line:#34302b;--text:#f4f1ea;--muted:#a6a099;--gold:#d2ad68}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1150px;margin:auto;padding:28px}h1,h2{font-family:Georgia,serif;font-weight:400}h1{font-size:36px;margin:8px 0 20px}h2{font-size:24px}.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.16em;text-transform:uppercase}.muted{color:var(--muted);line-height:1.6}nav{display:flex;gap:8px;margin:20px 0}button{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text);padding:11px 16px;font:inherit}button.active,button.primary{background:var(--gold);color:#16120c;border-color:var(--gold)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);padding:24px}.stat-value{font-size:32px;margin-top:10px}.layout{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;margin-top:24px}.row{display:block;width:100%;text-align:left;padding:18px 4px;border-width:0 0 1px}.row strong{display:block;font-size:17px;margin-bottom:8px}.tag{color:var(--gold);font-size:11px;text-transform:uppercase}.field{margin:16px 0}label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}input,select,textarea{width:100%;font:inherit;background:#0d0c0c;border:1px solid var(--line);color:var(--text);padding:12px}textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:1px solid var(--gold)}#notice{min-height:24px;line-height:1.5;margin:16px 0;color:var(--gold)}#notice.error{color:#ffaaa1}.actions{display:flex;gap:10px;flex-wrap:wrap}.brief{white-space:pre-wrap;overflow-wrap:anywhere}.hidden{display:none!important}@media(max-width:700px){.wrap{padding:20px 14px}h1{font-size:30px}.layout{grid-template-columns:1fr}.card{padding:18px}.stats{gap:8px}.stats .card{padding:14px}.stat-value{font-size:26px}}
 </style></head><body><main class="wrap">
-<div class="eyebrow">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
+<div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
 <div id="workspace" class="hidden">
 <nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="refresh">Refresh</button></nav>
@@ -15,24 +15,31 @@
 </section>
 <section id="projects" class="hidden"><div class="layout"><div><h2>Music projects</h2><div id="project-list"></div></div>
 <form id="project-form" class="card"><div class="eyebrow">New project</div>
+<div class="field hidden" id="project-artist-field"><label for="project-artist">Artist</label><select id="project-artist"></select></div>
 <div class="field"><label for="project-title">Title</label><input id="project-title" required maxlength="200"></div>
 <div class="field"><label for="project-kind">Kind</label><select id="project-kind"><option value="single">Single</option><option value="ep">EP</option><option value="album">Album</option><option value="mixtape">Mixtape</option><option value="sync">Sync</option></select></div>
 <div class="field"><label for="project-date">Target date</label><input id="project-date" type="date"></div>
 <div class="field"><label for="project-brief">Brief</label><textarea id="project-brief" rows="5" maxlength="10000"></textarea></div>
 <button id="create-project" class="primary">Create project</button></form></div></section>
-<section id="detail" class="hidden"><button id="back-projects">Back to projects</button><div class="card" style="margin-top:20px"><div id="detail-kind" class="eyebrow"></div><h2 id="detail-title"></h2><p id="detail-date" class="muted"></p><p id="detail-brief" class="brief"></p><div class="field"><label for="detail-status">Project status</label><select id="detail-status"><option value="active">Active</option><option value="released">Released</option><option value="archived">Archived</option></select></div><button id="save-status" class="primary">Save status</button></div></section>
+<section id="detail" class="hidden"><button id="back-projects">Back to projects</button><div class="card" style="margin-top:20px"><div id="detail-kind" class="eyebrow"></div><h2 id="detail-title"></h2><p id="detail-date" class="muted"></p><p id="detail-brief" class="brief"></p><div class="field"><label for="detail-status">Project status</label><select id="detail-status"><option value="active">Active</option><option value="released">Released</option><option value="archived">Archived</option></select></div><button id="save-status" class="primary">Save status</button></div>
+<div class="layout"><div class="card"><h2>Files &amp; deliveries</h2><div id="file-list"></div></div>
+<form id="upload-form" class="card"><div class="eyebrow">Upload to project</div>
+<div class="field"><label for="upload-file">File — up to 50 MB</label><input id="upload-file" type="file" required></div>
+<div class="field"><label for="upload-kind">Kind</label><select id="upload-kind"><option value="reference">Reference</option><option value="stem">Stem</option><option value="demo">Demo</option></select></div>
+<div class="field"><label for="upload-notes">Notes</label><textarea id="upload-notes" rows="3" maxlength="5000"></textarea></div>
+<button id="upload-button" class="primary">Upload file</button><p class="muted">Studio masters and MP3 deliveries are available for 30 days. The studio can reissue expired deliveries.</p></form></div></section>
 </div></main><script>
 (function(){
  const sb=window.supabase.createClient("https://xsvczfqvscnvmngwcmtp.supabase.co","sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const el=id=>document.getElementById(id);
- let uid=null,items=[],selected=null,view="dashboard",generation=0;
+ let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){view=name;["dashboard","projects","detail"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",name!=="dashboard");}
- function deny(text){uid=null;items=[];selected=null;el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
-   const meta=document.createElement("span");meta.className="muted";meta.textContent=p.kind.toUpperCase()+(p.target_date?" · Target "+p.target_date:"")+" · ";
+   const meta=document.createElement("span");meta.className="muted";meta.textContent=(isOwner?(artistNames.get(p.user_id)||"Artist")+" · ":"")+p.kind.toUpperCase()+(p.target_date?" · Target "+p.target_date:"")+" · ";
    const status=document.createElement("span");status.className="tag";status.textContent=p.status;
    button.append(title,meta,status);button.onclick=()=>open(p.id);return button;
  }
@@ -41,11 +48,11 @@
    el("count-all").textContent=items.length;el("count-active").textContent=items.filter(p=>p.status==="active").length;el("count-released").textContent=items.filter(p=>p.status==="released").length;
    list("project-list",items);list("recent-projects",items.slice(0,5));
    const next=items.filter(p=>p.status==="active"&&p.target_date).sort((a,b)=>a.target_date.localeCompare(b.target_date))[0];
-   el("next-title").textContent=next?"Plan around "+next.title:items.some(p=>p.status==="active")?"Set your next target date":"Start your next project";
-   el("next-detail").textContent=next?"Your earliest active target is "+next.target_date+". Review the brief and the work still needed.":"A clear brief and target date give your next studio conversation a starting point.";
+   el("next-title").textContent=next?(isOwner?"Review ":"Plan around ")+next.title:items.some(p=>p.status==="active")?(isOwner?"Review project target dates":"Set your next target date"):(isOwner?"Build the studio project queue":"Start your next project");
+   el("next-detail").textContent=next?"The earliest active target is "+next.target_date+". Review the brief and the work still needed.":isOwner?"Create projects for artists, review briefs, and deliver studio files from the project queue.":"A clear brief and target date give your next studio conversation a starting point.";
    if(selected){const p=items.find(p=>p.id===selected);if(p)open(p.id);else show("projects");}
  }
- function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;show("detail");}
+ function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;show("detail");loadFiles(id);}
  async function load(){
    const version=++generation;
    const session=(await sb.auth.getSession()).data.session;
@@ -56,24 +63,82 @@
    const m=member.data;
    if(member.error)return deny("Could not check artist access. Refresh to retry.");
    if(!m||m.access_status!=="active"||!["paid","comped"].includes(m.payment_status)||(m.expires_at&&new Date(m.expires_at)<=new Date())||(m.role!=="owner"&&!m.artist_member_enabled))return deny("Active Artist Member access is required.");
-   uid=session.user.id;
-   const result=await sb.from("artist_projects").select("id,title,kind,brief,target_date,status,created_at").eq("user_id",uid).order("created_at",{ascending:false});
+   uid=session.user.id;isOwner=m.role==="owner";
+   let query=sb.from("artist_projects").select("id,user_id,title,kind,brief,target_date,status,created_at").order("created_at",{ascending:false});
+   if(!isOwner)query=query.eq("user_id",uid);
+   const result=await query;
    if(version!==generation)return;
    if(result.error)return deny("Could not load your projects. Refresh to retry.");
-   items=result.data||[];el("artist-name").textContent=m.business_name||"Your career workspace";el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);
+   items=result.data||[];
+   artistNames=new Map();
+   const artistSelect=el("project-artist");artistSelect.replaceChildren();
+   if(isOwner){
+     const artists=await sb.from("app_memberships").select("user_id,business_name,email,role,access_status,artist_member_enabled").eq("access_status","active");
+     if(artists.error)return deny("Could not load artists. Refresh to retry.");
+     (artists.data||[]).filter(a=>a.role==="owner"||a.artist_member_enabled).forEach(a=>{const name=a.business_name||a.email;artistNames.set(a.user_id,name);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
+     artistSelect.value=uid;
+   }
+   el("project-artist-field").classList.toggle("hidden",!isOwner);
+   el("workspace-label").textContent=isOwner?"Studio management":"Career operating system";
+   el("dashboard-tab").textContent=isOwner?"Management Dashboard":"Career Dashboard";
+   el("artist-name").textContent=isOwner?"Lions Rock Studio Management":m.business_name||"Your career workspace";
+   const kindSelect=el("upload-kind");kindSelect.replaceChildren();
+   (isOwner?["reference","stem","demo","mp3_delivery","master"]:["reference","stem","demo"]).forEach(kind=>{const option=document.createElement("option");option.value=kind;option.textContent=kind.replaceAll("_"," ");kindSelect.append(option);});
+   el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);
  }
+
+ async function loadFiles(projectId){
+   const version=++fileGeneration;el("file-list").textContent="Loading files…";
+   const result=await sb.from("artist_project_files").select("id,filename,kind,notes,size_bytes,object_path,expires_at").eq("project_id",projectId).order("created_at",{ascending:false});
+   if(version!==fileGeneration||selected!==projectId)return;
+   const list=el("file-list");list.replaceChildren();
+   if(result.error){list.textContent="Could not load files.";notice(result.error.message,true);return;}
+   if(!result.data.length){list.textContent="No files yet.";return;}
+   result.data.forEach(f=>{
+     const row=document.createElement("div");row.className="row";
+     const title=document.createElement("strong");title.textContent=f.filename;
+     const meta=document.createElement("p");meta.className="muted";meta.textContent=f.kind.replaceAll("_"," ")+" · "+(f.size_bytes/1048576).toFixed(2)+" MB"+(f.expires_at?" · Available until "+new Date(f.expires_at).toLocaleDateString():"");
+     const note=document.createElement("p");note.className="brief";note.textContent=f.notes;
+     const actions=document.createElement("div");actions.className="actions";
+     const expired=f.expires_at&&new Date(f.expires_at)<=new Date();
+     const download=document.createElement("button");download.textContent=expired?"Expired":"Download";download.disabled=!!expired;
+     download.onclick=async()=>{download.disabled=true;try{const r=await sb.storage.from("artist-project-files").download(f.object_path);if(r.error)throw r.error;const url=URL.createObjectURL(r.data),a=document.createElement("a");a.href=url;a.download=f.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);notice("Download ready.");}catch(e){notice(e.message||"Download failed.",true);}finally{download.disabled=!!expired;}};
+     actions.append(download);
+     if(isOwner&&["master","mp3_delivery"].includes(f.kind)){const reissue=document.createElement("button");reissue.textContent="Reissue for 30 days";reissue.onclick=async()=>{reissue.disabled=true;try{const r=await sb.rpc("reissue_artist_delivery",{file_id:f.id});if(r.error)throw r.error;await loadFiles(projectId);notice("Delivery reissued for 30 days.");}catch(e){notice(e.message,true);}finally{reissue.disabled=false;}};actions.append(reissue);}
+     row.append(title,meta,note,actions);list.append(row);
+   });
+ }
+ el("upload-form").onsubmit=async e=>{
+   e.preventDefault();const project=items.find(p=>p.id===selected),file=el("upload-file").files[0],button=el("upload-button");
+   if(!uid||!project||!file)return;
+   if(file.size>52428800){notice("Choose a file of 50 MB or less.",true);return;}
+   const filename=file.name.replace(/[^a-zA-Z0-9._ -]/g,"_").slice(0,180)||"file";
+   const path=[project.user_id,project.id,el("upload-kind").value,crypto.randomUUID(),filename].join("/");
+   button.disabled=true;notice("Uploading…");
+   let uploaded=false,registered=false;
+   try{
+     const up=await sb.storage.from("artist-project-files").upload(path,file,{upsert:false,contentType:file.type||"application/octet-stream"});if(up.error)throw up.error;uploaded=true;
+     const result=await sb.rpc("register_artist_file",{path,file_notes:el("upload-notes").value.trim()});if(result.error)throw result.error;registered=true;
+     el("upload-form").reset();await loadFiles(project.id);notice("File uploaded.");
+   }catch(error){
+     let cleanupFailed=false;
+     if(uploaded&&!registered){const r=await sb.storage.from("artist-project-files").remove([path]);cleanupFailed=!!r.error;}
+     notice((error.message||"Upload failed.")+(cleanupFailed?" The unregistered upload could not be removed; contact the studio.":""),true);
+   }finally{button.disabled=false;}
+ };
+
  el("project-form").onsubmit=async e=>{
    e.preventDefault();if(!uid)return;const button=el("create-project");button.disabled=true;
    try{
      const title=el("project-title").value.trim();if(!title)throw new Error("Enter a project title.");
-     const result=await sb.from("artist_projects").insert({user_id:uid,title,kind:el("project-kind").value,brief:el("project-brief").value.trim(),target_date:el("project-date").value||null}).select("id").single();
+     const result=await sb.from("artist_projects").insert({user_id:isOwner?el("project-artist").value:uid,title,kind:el("project-kind").value,brief:el("project-brief").value.trim(),target_date:el("project-date").value||null}).select("id").single();
      if(result.error)throw result.error;
      el("project-form").reset();selected=null;await load();open(result.data.id);notice("Project created.");
    }catch(error){notice(error.message||"Could not create project.",true);}finally{button.disabled=false;}
  };
  el("save-status").onclick=async()=>{
    if(!uid||!selected)return;const button=el("save-status");button.disabled=true;
-   try{const result=await sb.from("artist_projects").update({status:el("detail-status").value}).eq("id",selected).eq("user_id",uid).select("id").single();if(result.error)throw result.error;await load();notice("Project status saved.");}catch(error){notice(error.message||"Could not save status.",true);}finally{button.disabled=false;}
+   try{const result=await sb.from("artist_projects").update({status:el("detail-status").value}).eq("id",selected).select("id").single();if(result.error)throw result.error;await load();notice("Project status saved.");}catch(error){notice(error.message||"Could not save status.",true);}finally{button.disabled=false;}
  };
  ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>{selected=null;show("projects");notice("");});
  el("dashboard-tab").onclick=()=>{selected=null;show("dashboard");notice("");};
