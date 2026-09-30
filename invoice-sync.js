@@ -21,7 +21,7 @@
 
   function byId(id) { return document.getElementById(id); }
   function nowIso() { return new Date().toISOString(); }
-  function parseJson(s, fallback) { try { return JSON.parse(s); } catch (_) { return fallback; } }
+  function parseJson(s, fallback) { try { var value = JSON.parse(s); return value == null ? fallback : value; } catch (_) { return fallback; } }
   function asTime(v) { var n = Date.parse(v || ""); return isFinite(n) ? n : 0; }
   function cloneCloud(v) { return JSON.parse(JSON.stringify(v)); }
   function deleteQueueKey() { return DELETE_QUEUE_KEY + "_" + (cloudUser ? cloudUser.id : "anon"); }
