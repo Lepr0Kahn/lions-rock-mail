@@ -48,8 +48,8 @@
    el("count-all").textContent=items.length;el("count-active").textContent=items.filter(p=>p.status==="active").length;el("count-released").textContent=items.filter(p=>p.status==="released").length;
    list("project-list",items);list("recent-projects",items.slice(0,5));
    const next=items.filter(p=>p.status==="active"&&p.target_date).sort((a,b)=>a.target_date.localeCompare(b.target_date))[0];
-   el("next-title").textContent=next?"Plan around "+next.title:items.some(p=>p.status==="active")?"Set your next target date":"Start your next project";
-   el("next-detail").textContent=next?"Your earliest active target is "+next.target_date+". Review the brief and the work still needed.":"A clear brief and target date give your next studio conversation a starting point.";
+   el("next-title").textContent=next?(isOwner?"Review ":"Plan around ")+next.title:items.some(p=>p.status==="active")?(isOwner?"Review project target dates":"Set your next target date"):(isOwner?"Build the studio project queue":"Start your next project");
+   el("next-detail").textContent=next?"The earliest active target is "+next.target_date+". Review the brief and the work still needed.":isOwner?"Create projects for artists, review briefs, and deliver studio files from the project queue.":"A clear brief and target date give your next studio conversation a starting point.";
    if(selected){const p=items.find(p=>p.id===selected);if(p)open(p.id);else show("projects");}
  }
  function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;show("detail");loadFiles(id);}
