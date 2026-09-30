@@ -1,0 +1,109 @@
+label>Your title</label></div>
+          <input id="senderTitle" value="Founder · The Lion's Rock Media Facility" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label>Accent color</label><span class="hint">Hex value</span></div>
+        <div class="color-row">
+          <input type="color" id="accent-color" value="#C24D2C" />
+          <input id="accent-hex" value="#C24D2C" />
+        </div>
+      </div>
+
+      <!-- Open in Apple Mail -->
+      <div class="panel" style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
+          <div>
+            <div class="panel-title">Microsoft Edge → Apple Mail</div>
+            <div class="panel-hint" style="margin-top:0;">No Google connection or OAuth. <b>Open Apple Mail</b> uses the standard mail link for recipient, subject and message. When audio is attached, use <b>Create attachment-ready .eml</b>; Edge downloads one Apple Mail draft containing the styled email and all selected tracks.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:var(--accent); font-size:10px; letter-spacing:0.22em; text-transform:uppercase; font-weight:700;">✓ No sign-in</div>
+        </div>
+        <div id="edge-note" style="margin:0 0 14px; padding:11px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.55;">Edge mode active. Direct Mail compose and attachment-ready .eml export use only standard browser features.</div>
+        <div class="two-col" style="margin-top: 8px;">
+          <div style="grid-column: 1 / -1;">
+            <div class="label-row"><label>Recipient(s)</label><span class="hint">comma-separated</span></div>
+            <input id="to" placeholder="someone@example.com, another@example.com" autocomplete="email" />
+          </div>
+          <div>
+            <div class="label-row"><label>Cc</label></div>
+            <input id="cc" />
+          </div>
+          <div>
+            <div class="label-row"><label>Bcc</label></div>
+            <input id="bcc" />
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-accent" id="send-mail">✉ Open Apple Mail</button>
+        <button class="btn btn-accent" id="edge-eml" style="background:#8f321e;">⬇ Create attachment-ready .eml</button>
+        <button class="btn btn-secondary" id="copy-html">⧉ Copy styled email</button>
+        <button class="btn btn-secondary" id="dl-eml">⬇ Apple Mail draft (.eml)</button>
+        <button class="btn btn-secondary" id="dl-html">⬇ .html</button>
+      </div>
+      <div style="color: var(--dim); font-size: 12px; max-width: 620px; line-height: 1.6; margin-top: 16px;">
+        <p style="margin: 0 0 10px 0;"><span style="color: var(--accent); font-weight: 700;">Open Apple Mail</span> — opens a normal compose window with To, Cc, Bcc, subject and message. This works through Edge&rsquo;s standard <b>mailto:</b> handoff.</p>
+        <p style="margin: 0;"><span style="color: var(--muted);">Create attachment-ready .eml</span> — use this when tracks are selected. Edge downloads one draft containing the styled HTML and the actual audio files. Open that downloaded <b>.eml</b> in Apple Mail.</p>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div>
+      <div class="preview-wrap">
+        <div class="section-eyebrow">Live Preview</div>
+        <div style="font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px;">📧 Live preview · 600px</div>
+        <div class="iphone">
+          <div class="iphone-screen">
+            <div class="mail-bar">
+              <span>&lt; Inbox</span>
+              <span style="color:#8e8e93;">Mail</span>
+            </div>
+            <div id="preview-root"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="how">
+  <div class="wrap">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-h2">Three taps. <em>Any device.</em></h2>
+    <p style="color: var(--muted); max-width: 540px; margin-top: 8px;">Configured for Microsoft Edge on Apple devices. Direct compose uses <b>mailto:</b>; attachment-ready messages use a standard <b>.eml</b> draft because browsers do not allow local attachments to be injected into Mail automatically.</p>
+    <div class="how-grid">
+      <div class="step">
+        <div class="n">01</div>
+        <div class="t">Write &amp; attach</div>
+        <div class="d">Fill recipient, subject and body, then add any audio files. No Google sign-in is required.</div>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <div class="t">Open Apple Mail</div>
+        <div class="d">Tap Open Apple Mail for a normal compose window. Microsoft Edge passes recipient, subject and message through the standard mail link.</div>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <div class="t">Styled draft fallback</div>
+        <div class="d">Need the full styled HTML and attachments together? Download the Apple Mail .eml draft and open it from Files/Finder.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">© <span id="year"></span> Lion's Rock Media Facility — Edge + Apple Mail Kit</div>
+</footer>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* =================================================================
+   Lion's Rock — Offline Email Kit (vanilla JS)
+   Standalone. Save this file anywhere. No internet required.
+   ================================================================= */
+
+const ASSET_LOGO = "data:image/png;base64,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
