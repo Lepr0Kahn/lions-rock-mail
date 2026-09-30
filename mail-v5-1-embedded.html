@@ -1409,15 +1409,18 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(typeof renderPreview==="function")renderPreview();
   }
 
-  function fillDocumentEmail(data){
+  function fillStudioEmail(data){
     if(typeof resetNewEmail==="function")resetNewEmail();
     fillClient({name:data.name||"",email:data.email||""});
     setField("subject",data.subject||"");
     setField("greeting",data.greeting||("Hi "+firstName(data.name)+","));
-    setField("body",data.body||"Please find your document attached.");
+    setField("body",data.body||"");
     setField("signoff",data.signoff||"With gratitude,");
-    addStudioDocument(data.attachment);
-    if(typeof toastMsg==="function")toastMsg("Document attached",data.attachment&&data.attachment.name?data.attachment.name:"Ready to send");
+    if(data.attachment)addStudioDocument(data.attachment);
+    if(typeof toastMsg==="function"){
+      if(data.attachment)toastMsg("Document attached",data.attachment&&data.attachment.name?data.attachment.name:"Ready to send");
+      else toastMsg("Email draft ready",data.email||"Review and send");
+    }
   }
   async function loadStudioClients(){
     const sel=document.getElementById("studio-client-select");
@@ -1442,7 +1445,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   window.addEventListener("message",function(e){
     if(e.origin!==location.origin || !e.data)return;
-    if(e.data.type==="lions-rock-mail-client"){ if(e.data.attachment) fillDocumentEmail(e.data); else fillClient({name:e.data.name||"",email:e.data.email||""}); }
+    if(e.data.type==="lions-rock-mail-client"){
+      if(e.data.attachment || e.data.subject || e.data.body || e.data.greeting || e.data.signoff) fillStudioEmail(e.data);
+      else fillClient({name:e.data.name||"",email:e.data.email||""});
+    }
     if(e.data.type==="lions-rock-refresh-clients") loadStudioClients();
   });
   window.addEventListener("focus",loadStudioClients);
