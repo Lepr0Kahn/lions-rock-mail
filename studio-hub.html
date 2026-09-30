@@ -166,7 +166,17 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
 
  function openClient(id){selectedClient=id;selectedProject=null;view="client";render();window.scrollTo(0,0)}
  function openProject(id){selectedProject=id;selectedClient=null;view="project";render();window.scrollTo(0,0)}
- function newDocument(c,projectId,docType){if(!c)return;post({type:"lions-rock-new-document",client:{id:c.id,name:c.name,email:c.email||"",phone:c.phone||"",address:c.address||""},projectId:projectId||null,docType:docType||"quote"})}
+ function newDocument(c,projectId,docType){
+   if(!c)return;
+   const p=projectId?projects.find(x=>x.id===projectId):null;
+   post({
+     type:"lions-rock-new-document",
+     client:{id:c.id,name:c.name,email:c.email||"",phone:c.phone||"",address:c.address||"",notes:c.notes||""},
+     projectId:projectId||null,
+     project:p?{id:p.id,client_id:p.client_id||null,name:p.name,project_type:p.project_type||"Project",status:p.status||"active",description:p.description||"",due_date:p.due_date||null}:null,
+     docType:docType||"quote"
+   });
+ }
 
  function fillClientSelect(selected){
    const sel=document.getElementById("f-project-client");
