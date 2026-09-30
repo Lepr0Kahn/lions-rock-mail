@@ -1,9 +1,7 @@
+const VERSION="lions-rock-mail-v5";
 self.addEventListener("install",()=>self.skipWaiting());
-self.addEventListener("activate",event=>event.waitUntil((async()=>{
-  const keys=await caches.keys();
-  await Promise.all(keys.map(k=>caches.delete(k)));
-  await self.registration.unregister();
-  const clientsList=await self.clients.matchAll({type:"window"});
-  clientsList.forEach(c=>c.navigate(c.url));
-})()));
-self.addEventListener("fetch",()=>{});
+self.addEventListener("activate",event=>event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch",event=>{
+  if(event.request.method!=="GET") return;
+  event.respondWith(fetch(event.request));
+});
