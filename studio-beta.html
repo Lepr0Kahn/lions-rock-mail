@@ -46,8 +46,8 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
   </div>
 </div>
 <div class="stage">
-  <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=2" title="Lions Rock Mail"></iframe>
-  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=2" title="Lions Rock Documents"></iframe>
+  <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=3" title="Lions Rock Mail"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=3" title="Lions Rock Documents"></iframe>
 </div>
 <script>
 (function(){
@@ -102,7 +102,18 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
    if(e.data.type==="lions-rock-email-client"){
      document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app==="mail"));
      mail.classList.add("active");docs.classList.remove("active");
-     pendingClient={name:e.data.name||"",email:e.data.email||""}; setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin),60);
+     pendingClient={
+       name:e.data.name||"",
+       email:e.data.email||"",
+       attachment:e.data.attachment||null,
+       subject:e.data.subject||"",
+       greeting:e.data.greeting||"",
+       body:e.data.body||"",
+       signoff:e.data.signoff||"",
+       documentNumber:e.data.documentNumber||"",
+       documentType:e.data.documentType||""
+     };
+     setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin),60);
    }
  });
  docs.addEventListener("load",()=>{
@@ -115,7 +126,7 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
  });
  mail.addEventListener("load",()=>{
    mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
-   if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin);
+   if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin);
    fitSoon(mail);
    try{
      const ro=new ResizeObserver(()=>fitFrame(mail));
