@@ -12,19 +12,24 @@
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
 body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:sticky;top:0;z-index:10}
 .head{height:66px;display:flex;align-items:center;gap:12px;padding:10px 18px}.head img{width:42px;height:42px;background:#fff;padding:3px}.brand{min-width:0;flex:1}.brand .name{font-family:Georgia,serif;font-size:14px;letter-spacing:.22em;text-transform:uppercase}.brand .sub{font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.global-search{position:relative;width:min(340px,32vw)}.global-search input{width:100%;background:#111;border:1px solid var(--border);color:#fff;padding:9px 11px;font:inherit;font-size:12px}.search-results{display:none;position:absolute;top:40px;left:0;right:0;background:#171616;border:1px solid var(--border);box-shadow:0 18px 40px rgba(0,0,0,.55);max-height:380px;overflow:auto;z-index:40}.search-results.open{display:block}.search-item{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}.search-item:hover{background:rgba(194,77,44,.12)}.search-kind{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.search-title{font-size:12px;font-weight:700;margin-top:2px}.search-sub{font-size:10px;color:var(--muted);margin-top:2px}
 .account{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.on{background:var(--green)}.pill{border:1px solid var(--border);padding:7px 10px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
 .authbox{display:none;align-items:center;gap:6px}.authbox input{width:150px;background:#111;border:1px solid var(--border);color:#fff;padding:8px}
 .nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:var(--accent);color:white}
 .stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
 .toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
-@media(max-width:720px){.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
+@media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
 </style>
 </head>
 <body>
 <div class="top">
   <div class="head">
     <img src="/icon-192.png" alt="Lions Rock">
-    <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Mail · Documents · Clients · Business</div></div>
+    <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Mail · Documents · Clients · Projects</div></div>
+    <div class="global-search">
+      <input id="global-search" placeholder="Search clients, projects, documents…">
+      <div class="search-results" id="search-results"></div>
+    </div>
     <div class="account">
       <span class="dot" id="cloud-dot"></span>
       <span class="label" id="cloud-label">Checking account…</span>
@@ -40,22 +45,24 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
     <button class="active" data-app="mail">Mail</button>
     <button data-app="documents" data-view="generator">Documents</button>
     <button data-app="documents" data-view="history">History</button>
-    <button data-app="documents" data-view="clients">Clients</button>
+    <button data-app="hub" data-view="clients">Clients</button>
+    <button data-app="hub" data-view="projects">Projects</button>
     <button data-app="documents" data-view="dashboard">Dashboard</button>
     <button data-app="documents" data-view="settings">Settings</button>
   </div>
 </div>
 <div class="stage">
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=3" title="Lions Rock Mail"></iframe>
-  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=3" title="Lions Rock Documents"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=4" title="Lions Rock Documents"></iframe>
+  <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=1" title="Lions Rock Clients and Projects"></iframe>
 </div>
 <script>
 (function(){
  const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame");
- let pendingView="generator",pendingClient=null;
+ const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame");
+ let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null;
  function fitFrame(frame){
    try{
      const d=frame.contentDocument;
@@ -73,12 +80,16 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
  }
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
  function setSession(session){
+   currentSession=session||null;
    const on=!!(session&&session.user);
    document.getElementById("cloud-dot").className="dot"+(on?" on":"");
    document.getElementById("cloud-label").textContent=on?session.user.email:"Studio account";
    document.getElementById("authbox").style.display=on?"none":"flex";
    document.getElementById("studio-signout").style.display=on?"inline-block":"none";
-   if(on) mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   if(on){
+     mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+     hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
+   }
  }
  async function init(){const s=await sb.auth.getSession();setSession(s.data&&s.data.session)}
  document.getElementById("studio-signin").onclick=async()=>{
@@ -88,20 +99,27 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
  };
  document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();};
  sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
+ function activate(appName,viewName,payload){
+   document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
+   mail.classList.toggle("active",appName==="mail");
+   docs.classList.toggle("active",appName==="documents");
+   hub.classList.toggle("active",appName==="hub");
+   if(appName==="documents"){
+     pendingView=viewName||"generator";
+     setTimeout(()=>{docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);if(payload)docs.contentWindow.postMessage(payload,location.origin);fitSoon(docs);},30);
+   }else if(appName==="hub"){
+     pendingHubView=viewName||"clients";
+     setTimeout(()=>{hub.contentWindow.postMessage(Object.assign({type:"lions-rock-hub-view",view:pendingHubView},payload||{}),location.origin);fitSoon(hub);},30);
+   }else fitSoon(mail);
+   window.scrollTo({top:0,behavior:"instant"});
+ }
  document.getElementById("nav").addEventListener("click",e=>{
    const b=e.target.closest("button[data-app]");if(!b)return;
-   document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));
-   const isMail=b.dataset.app==="mail";
-   mail.classList.toggle("active",isMail);docs.classList.toggle("active",!isMail);
-   if(!isMail){ pendingView=b.dataset.view||"generator"; setTimeout(()=>{docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);fitSoon(docs);},30); }
-   else fitSoon(mail);
-   window.scrollTo({top:0,behavior:"instant"});
+   activate(b.dataset.app,b.dataset.view||null);
  });
  window.addEventListener("message",e=>{
    if(e.origin!==location.origin||!e.data)return;
    if(e.data.type==="lions-rock-email-client"){
-     document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app==="mail"));
-     mail.classList.add("active");docs.classList.remove("active");
      pendingClient={
        name:e.data.name||"",
        email:e.data.email||"",
@@ -113,16 +131,29 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
        documentNumber:e.data.documentNumber||"",
        documentType:e.data.documentType||""
      };
+     activate("mail");
      setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin),60);
+   }
+   if(e.data.type==="lions-rock-new-document"){
+     activate("documents","generator",{type:"lions-rock-new-document",client:e.data.client||{},projectId:e.data.projectId||null,docType:e.data.docType||"quote"});
+   }
+   if(e.data.type==="lions-rock-open-document"){
+     activate("documents","generator",{type:"lions-rock-open-document",documentId:e.data.documentId});
+   }
+   if(e.data.type==="lions-rock-sync"){
+     docs.contentWindow.postMessage({type:"lions-rock-sync"},location.origin);
+     mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
    }
  });
  docs.addEventListener("load",()=>{
    docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);
    fitSoon(docs);
-   try{
-     const ro=new ResizeObserver(()=>fitFrame(docs));
-     ro.observe(docs.contentDocument.documentElement);
-   }catch(_){}
+   try{const ro=new ResizeObserver(()=>fitFrame(docs));ro.observe(docs.contentDocument.documentElement);}catch(_){}
+ });
+ hub.addEventListener("load",()=>{
+   hub.contentWindow.postMessage({type:"lions-rock-hub-view",view:pendingHubView},location.origin);
+   fitSoon(hub);
+   try{const ro=new ResizeObserver(()=>fitFrame(hub));ro.observe(hub.contentDocument.documentElement);}catch(_){}
  });
  mail.addEventListener("load",()=>{
    mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
@@ -133,7 +164,46 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
      ro.observe(mail.contentDocument.documentElement);
    }catch(_){}
  });
- window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:docs);});
+ window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:docs));});
+
+ const searchInput=document.getElementById("global-search"),searchResults=document.getElementById("search-results");
+ function closeSearch(){searchResults.classList.remove("open");searchResults.innerHTML="";}
+ function searchItem(kind,title,sub,id){
+   const el=document.createElement("div");el.className="search-item";el.dataset.kind=kind;el.dataset.id=id;
+   el.innerHTML='<div class="search-kind">'+kind+'</div><div class="search-title"></div><div class="search-sub"></div>';
+   el.querySelector(".search-title").textContent=title||"";
+   el.querySelector(".search-sub").textContent=sub||"";
+   return el;
+ }
+ async function runSearch(q){
+   q=String(q||"").trim();
+   if(q.length<2||!currentSession){closeSearch();return;}
+   const uid=currentSession.user.id,pat="%"+q.replace(/[%_]/g,"")+"%";
+   const [cr,pr,dr]=await Promise.all([
+     sb.from("clients").select("id,name,email,phone").eq("user_id",uid).or("name.ilike."+pat+",email.ilike."+pat+",phone.ilike."+pat).limit(6),
+     sb.from("projects").select("id,name,project_type,status,client_id").eq("user_id",uid).or("name.ilike."+pat+",project_type.ilike."+pat).limit(6),
+     sb.from("documents").select("id,doc_number,doc_type,client_name,total,currency").eq("user_id",uid).or("doc_number.ilike."+pat+",client_name.ilike."+pat).limit(6)
+   ]);
+   if(q!==searchInput.value.trim())return;
+   searchResults.innerHTML="";
+   const rows=[];
+   (cr.data||[]).forEach(c=>rows.push(searchItem("Client",c.name,c.email||c.phone||"",c.id)));
+   (pr.data||[]).forEach(p=>rows.push(searchItem("Project",p.name,(p.project_type||"Project")+" · "+(p.status||"active"),p.id)));
+   (dr.data||[]).forEach(d=>rows.push(searchItem(d.doc_type==="quote"?"Quote":"Invoice",d.doc_number,d.client_name||"",d.id)));
+   if(!rows.length){searchResults.innerHTML='<div class="search-item"><div class="search-sub">No matches</div></div>';}
+   else rows.forEach(x=>searchResults.appendChild(x));
+   searchResults.classList.add("open");
+ }
+ searchInput.addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>runSearch(searchInput.value),180)});
+ searchInput.addEventListener("keydown",e=>{if(e.key==="Escape"){searchInput.value="";closeSearch()}});
+ searchResults.addEventListener("click",e=>{
+   const item=e.target.closest(".search-item[data-id]");if(!item)return;
+   const kind=item.dataset.kind,id=item.dataset.id;closeSearch();searchInput.value="";
+   if(kind==="Client")activate("hub","clients",{clientId:id});
+   else if(kind==="Project")activate("hub","projects",{projectId:id});
+   else activate("documents","generator",{type:"lions-rock-open-document",documentId:id});
+ });
+ document.addEventListener("click",e=>{if(!e.target.closest(".global-search"))closeSearch()});
  init();
 })();
 </script>
