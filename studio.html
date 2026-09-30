@@ -10,13 +10,14 @@
 <meta name="application-name" content="Lions Rock Studio">
 <meta name="apple-mobile-web-app-title" content="Lions Rock Studio">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0d0c0c">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0d0c0c;--surface:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
-body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:sticky;top:0;z-index:10}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:sticky;top:0;z-index:10}
 .head{height:66px;display:flex;align-items:center;gap:12px;padding:10px 18px}.head img{width:42px;height:42px;background:#fff;padding:3px}.brand{min-width:0;flex:1}.brand .name{font-family:Georgia,serif;font-size:14px;letter-spacing:.22em;text-transform:uppercase}.brand .sub{font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:3px}
 .global-search{position:relative;width:min(340px,32vw)}.global-search input{width:100%;background:#111;border:1px solid var(--border);color:#fff;padding:9px 11px;font:inherit;font-size:12px}.search-results{display:none;position:absolute;top:40px;left:0;right:0;background:#171616;border:1px solid var(--border);box-shadow:0 18px 40px rgba(0,0,0,.55);max-height:380px;overflow:auto;z-index:40}.search-results.open{display:block}.search-item{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}.search-item:hover{background:rgba(194,77,44,.12)}.search-kind{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.search-title{font-size:12px;font-weight:700;margin-top:2px}.search-sub{font-size:10px;color:var(--muted);margin-top:2px}
 .account{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.on{background:var(--green)}.pill{border:1px solid var(--border);padding:7px 10px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
@@ -24,7 +25,7 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
 .nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:var(--accent);color:white}
 .stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
 .toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
-.login-gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(194,77,44,.13),transparent 32%),var(--bg)}
+.login-gate{min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(194,77,44,.13),transparent 32%),var(--bg)}
 .login-card{width:min(430px,100%);border:1px solid var(--border);background:rgba(20,19,19,.96);padding:34px 30px;box-shadow:0 28px 80px rgba(0,0,0,.48);text-align:center}
 .login-logo{width:86px;height:86px;object-fit:contain;background:#fff;padding:6px;margin:0 auto 20px}
 .login-title{font-family:Georgia,serif;font-size:27px;letter-spacing:.08em;margin:0 0 7px}
@@ -208,7 +209,15 @@ body.studio-authenticated .login-gate{display:none!important}
    hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
    setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))),60);
  }
- async function init(){const s=await sb.auth.getSession();await setSession(s.data&&s.data.session)}
+ async function init(){
+   if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches){
+     try{history.scrollRestoration="manual";}catch(_){}
+     window.scrollTo(0,0);
+     setTimeout(()=>window.scrollTo(0,0),120);
+   }
+   const s=await sb.auth.getSession();
+   await setSession(s.data&&s.data.session);
+ }
  async function signIn(email,password){
    const status=document.getElementById("gate-status"),button=document.getElementById("gate-signin");
    email=String(email||"").trim();
