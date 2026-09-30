@@ -116,3 +116,6 @@ Passed checks:
 Deployment is blocked: GitHub Vercel status for merged commit points to upgradeToPro=build-rate-limit. Last successful production remains bab1aaf (services/bookings). Production HTML was fetched and does not contain the new booking document bridge. Browser invoice/PDF/composer handoff is pending deployment; do not report it verified or live.
 
 Disposable new test service 0a4db48f-9a47-4ac9-bf60-ba94c90eb470 deactivated; booking 9e76ee44-6f2c-4717-b213-44bfa29b9c7d cancelled, zero associated invoices. Retained audit fixture; no real appointment, payment or email.
+
+
+Deployment retry requested on 2026-09-30 at 19:18 Barbados time. Retriggering the GitHub production build with application code unchanged.
