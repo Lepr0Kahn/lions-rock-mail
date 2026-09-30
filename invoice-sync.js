@@ -628,7 +628,7 @@
       return;
     }
     setCloudStatus("Creating account…", "syncing");
-    var res = await sb.auth.signUp({ email: email, password: password });
+    var res = await sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: "https://lions-rock-mail.vercel.app/invoice-v2-sync.html" } });
     if (res.error) {
       setCloudStatus("Account setup failed", "error");
       if (typeof window.toast === "function") window.toast(res.error.message, true);
