@@ -468,8 +468,8 @@ Talk soon.</textarea>
    Standalone. Save this file anywhere. No internet required.
    ================================================================= */
 
-const ASSET_LOGO = "/icon-192.png?v=3";
-const ASSET_SIGNATURE = "/signature.jpg?v=2";
+const ASSET_LOGO = "https://lions-rock-mail.vercel.app/icon-192.png?v=4";
+const ASSET_SIGNATURE = "https://lions-rock-mail.vercel.app/signature.jpg?v=3";
 
 const BRAND = "LION'S ROCK MEDIA FACILITY";
 const INSTAGRAM_BRAND = "https://instagram.com/lionsrockmedia";
@@ -926,7 +926,7 @@ function bind() {
       ].join(CRLF);
     }).join("");
 
-    const raw = headers + alt + atts + `--${mixedB}--` + CRLF;
+    const raw = headers + CRLF + alt + atts + `--${mixedB}--` + CRLF;
     return base64UrlFromMixed(raw);
   }
 
