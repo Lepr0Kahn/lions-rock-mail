@@ -46,8 +46,8 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
   </div>
 </div>
 <div class="stage">
-  <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=1" title="Lions Rock Mail"></iframe>
-  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=1" title="Lions Rock Documents"></iframe>
+  <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=2" title="Lions Rock Mail"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=2" title="Lions Rock Documents"></iframe>
 </div>
 <script>
 (function(){
@@ -55,6 +55,7 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame");
+ let pendingView="generator",pendingClient=null;
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
  function setSession(session){
    const on=!!(session&&session.user);
@@ -77,15 +78,20 @@ body{overflow:hidden}.top{height:118px;border-bottom:1px solid var(--border);bac
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));
    const isMail=b.dataset.app==="mail";
    mail.classList.toggle("active",isMail);docs.classList.toggle("active",!isMail);
-   if(!isMail) setTimeout(()=>docs.contentWindow.postMessage({type:"lions-rock-view",view:b.dataset.view||"generator"},location.origin),30);
+   if(!isMail){ pendingView=b.dataset.view||"generator"; setTimeout(()=>docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin),30); }
  });
  window.addEventListener("message",e=>{
    if(e.origin!==location.origin||!e.data)return;
    if(e.data.type==="lions-rock-email-client"){
      document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app==="mail"));
      mail.classList.add("active");docs.classList.remove("active");
-     setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:e.data.name||"",email:e.data.email||""},location.origin),60);
+     pendingClient={name:e.data.name||"",email:e.data.email||""}; setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin),60);
    }
+ });
+ docs.addEventListener("load",()=>docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin));
+ mail.addEventListener("load",()=>{
+   mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",name:pendingClient.name,email:pendingClient.email},location.origin);
  });
  init();
 })();
