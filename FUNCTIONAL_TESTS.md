@@ -87,3 +87,8 @@ The user will handle visual review after the functional layers are complete.
 - Artist-mode sign-in with the same Business-only account returned to the login gate, while subsequent Business-mode sign-in succeeded after reactivation.
 - Usability issue: denial/suspension explanation is overwritten by the asynchronous signed-out callback with 'Sign in to continue.' Enforcement works, but the reason should persist.
 - New-account first-password invite flow remains distinct from existing-account magic-link acceptance; do not mark it verified from an existing-account invite.
+
+
+### Denial-message regression fix
+
+Preserve the denial reason across the asynchronous SIGNED_OUT callback. Clear it before a fresh password sign-in and explicit Sign Out. Invalid/expired invite messages use the same preservation. JavaScript syntax passed. A regression harness exercised the actual setSession function with a queued signed-out callback: original failed; fixed version passed for suspension, unpaid account, and Artist workspace denial, repeated signed-out updates, and clearing the reason for ordinary sign-out.
