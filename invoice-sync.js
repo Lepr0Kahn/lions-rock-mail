@@ -7,6 +7,8 @@
   var DELETE_QUEUE_KEY = "lions_rock_cloud_delete_queue_v1";
   var INITIALIZED_PREFIX = "lions_rock_cloud_initialized_";
   var LAST_SYNC_KEY = "lions_rock_cloud_last_sync";
+  var USER_STORE_PREFIX = "lions_rock_business_v2_user_";
+  var ACTIVE_LOCAL_USER_KEY = "lions_rock_active_local_user";
 
   var sb = null;
   var cloudUser = null;
@@ -22,6 +24,54 @@
   function parseJson(s, fallback) { try { return JSON.parse(s); } catch (_) { return fallback; } }
   function asTime(v) { var n = Date.parse(v || ""); return isFinite(n) ? n : 0; }
   function cloneCloud(v) { return JSON.parse(JSON.stringify(v)); }
+  function deleteQueueKey() { return DELETE_QUEUE_KEY + "_" + (cloudUser ? cloudUser.id : "anon"); }
+  function userStoreKey(uid) { return USER_STORE_PREFIX + String(uid || ""); }
+
+  function persistCurrentUserStore() {
+    var uid = localStorage.getItem(ACTIVE_LOCAL_USER_KEY);
+    if (uid && window.STORE) {
+      try { localStorage.setItem(userStoreKey(uid), JSON.stringify(window.STORE)); } catch (_) {}
+    }
+  }
+
+  function switchLocalStoreForUser(uid) {
+    if (!uid || typeof window.migrateStore !== "function") return;
+    var mainKey = window.STORE_KEY || "lions_rock_business_v2";
+    var activeUid = localStorage.getItem(ACTIVE_LOCAL_USER_KEY);
+    var mainRaw = localStorage.getItem(mainKey);
+
+    // First upgrade from the old single-user local store: assign it to the
+    // first authenticated account on this browser (the existing owner).
+    if (!activeUid && mainRaw) {
+      localStorage.setItem(userStoreKey(uid), mainRaw);
+      activeUid = uid;
+    }
+
+    if (activeUid && activeUid !== uid && mainRaw) {
+      localStorage.setItem(userStoreKey(activeUid), mainRaw);
+    }
+
+    var incoming = localStorage.getItem(userStoreKey(uid));
+    var nextStore;
+    if (incoming) {
+      nextStore = window.migrateStore(parseJson(incoming, {}));
+      hadLocalAtLoad = true;
+    } else {
+      nextStore = window.migrateStore({});
+      hadLocalAtLoad = false;
+    }
+
+    cloudApplying = true;
+    try {
+      window.STORE = nextStore;
+      window.SERVICES = window.STORE.services;
+      localStorage.setItem(mainKey, JSON.stringify(nextStore));
+      localStorage.setItem(ACTIVE_LOCAL_USER_KEY, uid);
+    } finally {
+      cloudApplying = false;
+    }
+    refreshAppAfterCloud();
+  }
 
   function setCloudStatus(message, tone) {
     var el = byId("cloud-status");
@@ -95,10 +145,10 @@
 
   function queueTombstone(entityType, entityKey) {
     if (!entityKey) return;
-    var q = parseJson(localStorage.getItem(DELETE_QUEUE_KEY), []);
+    var q = parseJson(localStorage.getItem(deleteQueueKey()), []);
     q = q.filter(function (x) { return !(x.entity_type === entityType && x.entity_key === String(entityKey)); });
     q.push({ entity_type: entityType, entity_key: String(entityKey), deleted_at: nowIso() });
-    localStorage.setItem(DELETE_QUEUE_KEY, JSON.stringify(q));
+    localStorage.setItem(deleteQueueKey(), JSON.stringify(q));
   }
 
   function captureDeletes(before, after) {
@@ -131,6 +181,7 @@
       }
 
       originalSaveStore();
+      persistCurrentUserStore();
       if (!cloudApplying) {
         captureDeletes(before, window.STORE);
         scheduleSync();
@@ -506,7 +557,7 @@
   }
 
   async function flushDeleteQueue() {
-    var q = parseJson(localStorage.getItem(DELETE_QUEUE_KEY), []);
+    var q = parseJson(localStorage.getItem(deleteQueueKey()), []);
     if (!q.length) return;
     var rows = q.map(function (x) {
       return { user_id: cloudUser.id, entity_type: x.entity_type, entity_key: String(x.entity_key), deleted_at: x.deleted_at || nowIso() };
@@ -521,7 +572,7 @@
       else if (x.entity_type === "service") res = await sb.from("services").delete().eq("local_id", x.entity_key);
       if (res && res.error) throw res.error;
     }
-    localStorage.removeItem(DELETE_QUEUE_KEY);
+    localStorage.removeItem(deleteQueueKey());
   }
 
   function mergeRemoteIntoLocal(mapped) {
@@ -556,6 +607,7 @@
       window.STORE = merged;
       window.SERVICES = window.STORE.services;
       originalSaveStore();
+      persistCurrentUserStore();
     } finally {
       cloudApplying = false;
     }
@@ -615,13 +667,19 @@
   }
 
   async function handleSession(session) {
-    cloudUser = session && session.user ? session.user : null;
-    setAuthUi(session);
-    if (!cloudUser) {
+    var nextUser = session && session.user ? session.user : null;
+    if (!nextUser) {
+      persistCurrentUserStore();
+      cloudUser = null;
+      setAuthUi(session);
       if (syncInterval) clearInterval(syncInterval);
       syncInterval = null;
       return;
     }
+
+    cloudUser = nextUser;
+    switchLocalStoreForUser(cloudUser.id);
+    setAuthUi(session);
     setCloudStatus(navigator.onLine ? "Signed in · preparing sync…" : "Signed in · offline", navigator.onLine ? "syncing" : "offline");
     await syncAll("login");
     if (syncInterval) clearInterval(syncInterval);
@@ -644,23 +702,8 @@
   }
 
   async function signUp() {
-    var email = (byId("cloud-email") && byId("cloud-email").value || "").trim();
-    var password = (byId("cloud-password") && byId("cloud-password").value || "");
-    if (!email || password.length < 6) {
-      if (typeof window.toast === "function") window.toast("Use a valid email and a password of at least 6 characters", true);
-      return;
-    }
-    setCloudStatus("Creating account…", "syncing");
-    var res = await sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: "https://lions-rock-mail.vercel.app/invoice-v2-sync.html" } });
-    if (res.error) {
-      setCloudStatus("Account setup failed", "error");
-      if (typeof window.toast === "function") window.toast(res.error.message, true);
-      return;
-    }
-    if (!res.data.session) {
-      setCloudStatus("Check your email to confirm, then sign in", "online");
-      if (typeof window.toast === "function") window.toast("Account created — check your email for the confirmation link");
-    }
+    setCloudStatus("Access is by approved invitation only", "offline");
+    if (typeof window.toast === "function") window.toast("Apply for access from the Lions Rock Studio sign-in page.", true);
   }
 
   async function signOut() {
