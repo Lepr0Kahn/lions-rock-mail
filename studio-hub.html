@@ -134,7 +134,7 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
    const invoices=ds.filter(d=>d.doc_type==="invoice"),quoted=ds.filter(d=>d.doc_type==="quote").reduce((n,d)=>n+Number(d.total||0),0);
    const invoiced=invoices.reduce((n,d)=>n+Number(d.total||0),0),paid=invoices.reduce((n,d)=>n+Number(d.amount_paid||0),0),due=invoices.reduce((n,d)=>n+Number(d.balance_due||0),0);
    const cur=(ds[0]&&ds[0].currency)||"BBD";
-   app.innerHTML='<div class="back" id="back">← All clients</div><div class="profile-head"><div><h2>'+esc(c.name)+'</h2><div class="meta">'+esc(c.email||"No email")+' · '+esc(c.phone||"No phone")+(c.address?'<br>'+esc(c.address):'')+'</div></div><div class="actions"><button class="btn small" id="edit-client">Edit</button><button class="btn small" id="email-client">Email</button><button class="btn small" id="new-quote">New Quote</button><button class="btn primary small" id="new-invoice">New Invoice</button></div></div>'+
+   app.innerHTML='<div class="back" id="back">← All clients</div><div class="profile-head"><div><h2>'+esc(c.name)+'</h2><div class="meta">'+esc(c.email||"No email")+' · '+esc(c.phone||"No phone")+(c.address?'<br>'+esc(c.address):'')+'</div></div><div class="actions"><button class="btn small" id="edit-client">Edit</button><button class="btn small" id="email-client">Email</button><button class="btn small" id="new-quote">New Quote</button><button class="btn primary small" id="new-invoice">New Invoice</button><button class="btn danger small" id="delete-client">Delete Client</button></div></div>'+
    '<div class="stats"><div class="stat"><div class="k">Projects</div><div class="v">'+ps.length+'</div></div><div class="stat"><div class="k">Quoted</div><div class="v">'+money(quoted,cur)+'</div></div><div class="stat"><div class="k">Paid</div><div class="v">'+money(paid,cur)+'</div></div><div class="stat"><div class="k">Outstanding</div><div class="v">'+money(due,cur)+'</div></div></div>'+
    '<div class="cols"><div class="panel"><div class="panel-title">Projects</div>'+(ps.length?ps.map(p=>'<div class="row"><div class="row-main"><div class="row-title link" data-open-project="'+p.id+'">'+esc(p.name)+'</div><div class="row-sub">'+esc(p.project_type||"Project")+' · '+esc(statusLabel(p.status))+'</div></div><span class="badge '+esc(p.status)+'">'+esc(statusLabel(p.status))+'</span></div>').join(""):'<div class="notice">No projects yet.</div>')+'<div style="margin-top:12px"><button class="btn small" id="client-new-project">+ Project</button></div></div>'+
    '<div class="panel"><div class="panel-title">Documents</div>'+(ds.length?ds.map(d=>'<div class="row"><div class="row-main"><div class="row-title link" data-open-doc="'+d.id+'">'+esc(d.doc_number)+'</div><div class="row-sub">'+esc(docStatus(d))+' · '+esc(d.doc_date||"")+'</div></div><div class="money">'+money(d.total,d.currency)+'</div></div>').join(""):'<div class="notice">No quotes or invoices yet.</div>')+'</div></div>'+
@@ -144,6 +144,7 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
    document.getElementById("email-client").onclick=()=>post({type:"lions-rock-email-client",name:c.name,email:c.email||""});
    document.getElementById("new-quote").onclick=()=>newDocument(c,null,"quote");
    document.getElementById("new-invoice").onclick=()=>newDocument(c,null,"invoice");
+   document.getElementById("delete-client").onclick=()=>deleteClient(c,ps.length,ds.length);
    document.getElementById("client-new-project").onclick=()=>openProjectForm(null,c.id);
    app.querySelectorAll("[data-open-project]").forEach(el=>el.onclick=()=>openProject(el.dataset.openProject));
    app.querySelectorAll("[data-open-doc]").forEach(el=>el.onclick=()=>post({type:"lions-rock-open-document",documentId:el.dataset.openDoc}));
@@ -163,6 +164,24 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
    document.getElementById("project-invoice").onclick=()=>newDocument(c,p.id,"invoice");
    document.getElementById("delete-project").onclick=()=>deleteProject(p,ds.length);
    app.querySelectorAll("[data-open-doc]").forEach(el=>el.onclick=()=>post({type:"lions-rock-open-document",documentId:el.dataset.openDoc}));
+ }
+
+ async function deleteClient(c,projectCount,documentCount){
+   if(!session||!c)return;
+   let extra="";
+   if(projectCount||documentCount){
+     extra="\n\nTheir existing "+projectCount+" project"+(projectCount===1?"":"s")+" and "+documentCount+" document"+(documentCount===1?"":"s")+" will NOT be deleted. They will remain in Studio but will no longer be linked to this client.";
+   }
+   const ok=window.confirm('Delete client "'+c.name+'"?'+extra+'\n\nThis cannot be undone.');
+   if(!ok)return;
+
+   const r=await sb.rpc("delete_client_safely",{p_client_id:c.id});
+   if(r.error){alert(r.error.message);return}
+
+   selectedClient=null;
+   view="clients";
+   await load();
+   syncDocs();
  }
 
  async function deleteProject(p,documentCount){
