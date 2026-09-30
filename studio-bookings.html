@@ -10,7 +10,7 @@ let owner=false,uid,services=[],variants=[],names=new Map(),generation=0;
 const message=t=>{el("notice").textContent=t;resize();};
 const time=t=>new Intl.DateTimeFormat("en-GB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(t));
 function option(select,value,label){const o=document.createElement("option");o.value=value;o.textContent=label;select.append(o);}
-function resize(){parent.postMessage({type:"lions-rock-booking-height",height:document.documentElement.scrollHeight},location.origin);}
+function resize(){parent.postMessage({type:"lions-rock-booking-height",height:Math.ceil(document.body.getBoundingClientRect().height)},location.origin);}
 async function load(){
  const version=++generation;const session=(await sb.auth.getSession()).data.session;
  el("workspace").classList.add("hidden");if(!session){message("Sign in to Studio to access bookings.");return;}
