@@ -370,6 +370,10 @@
             <label>Quick Pick from Directory</label>
             <select id="client-picker"><option value="">— Choose existing client —</option></select>
           </div>
+          <div class="field" id="project-picker-wrap" style="display:none;">
+            <label>Project / Song</label>
+            <select id="project-picker"><option value="">— No project —</option></select>
+          </div>
           <div class="field">
             <label>Client Name / Artist</label>
             <input type="text" id="client-name" placeholder="John Doe">
@@ -585,6 +589,7 @@ function migrateStore(raw) {
     version: 2,
     documents: Array.isArray(raw.documents) ? raw.documents : [],
     clients: Array.isArray(raw.clients) ? raw.clients : [],
+    projects: Array.isArray(raw.projects) ? raw.projects : [],
     services: Array.isArray(raw.services) ? raw.services : clone(DEFAULT_SERVICES),
     settings: Object.assign({}, DEFAULT_SETTINGS, raw.settings || {})
   };
@@ -620,7 +625,7 @@ var SERVICES = STORE.services;
 
 var state = {
   view:'generator', docType:'quote', paid:false, editingId:null,
-  selected:{}, customItems:[], editingClientId:null, currentClientId:null
+  selected:{}, customItems:[], editingClientId:null, currentClientId:null, currentProjectId:null
 };
 
 function getStatusFromNumbers(type,total,amountPaid,dueDate){
@@ -703,6 +708,27 @@ function buildClientPicker(){
   wrap.style.display='block';
   sel.innerHTML='<option value="">— Choose existing client —</option>'+STORE.clients.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');}).map(function(c){return '<option value="'+c.id+'">'+escapeHtml(c.name)+'</option>';}).join('');
 }
+function buildProjectPicker(){
+  var wrap=$('project-picker-wrap'),sel=$('project-picker');
+  if(!wrap||!sel)return;
+  var rows=(STORE.projects||[]).filter(function(p){
+    return !state.currentClientId || !p.client_id || p.client_id===state.currentClientId;
+  }).filter(function(p){return p.status!=='archived';});
+  if(!rows.length){
+    wrap.style.display='none';
+    sel.innerHTML='<option value="">— No project —</option>';
+    state.currentProjectId=null;
+    return;
+  }
+  wrap.style.display='block';
+  rows.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  sel.innerHTML='<option value="">— No project —</option>'+rows.map(function(p){
+    return '<option value="'+p.id+'">'+escapeHtml(p.name)+(p.project_type?' · '+escapeHtml(p.project_type):'')+'</option>';
+  }).join('');
+  if(state.currentProjectId && rows.some(function(p){return p.id===state.currentProjectId;}))sel.value=state.currentProjectId;
+  else if(state.currentProjectId)state.currentProjectId=null;
+}
+
 function upsertClientFromForm(){
   var payload={name:($('client-name').value||'').trim(),email:($('client-email').value||'').trim(),phone:($('client-phone').value||'').trim(),address:($('client-address').value||'').trim()};
   if(!payload.name)return null;
@@ -770,12 +796,12 @@ function togglePaid(){
 }
 
 function resetGenerator(){
-  state.selected={};state.customItems=[];state.paid=false;state.editingId=null;state.currentClientId=null;
+  state.selected={};state.customItems=[];state.paid=false;state.editingId=null;state.currentClientId=null;state.currentProjectId=null;
   $('client-name').value='';$('client-email').value='';$('client-phone').value='';$('client-address').value='';
   $('discount').value='0';$('tax').value='0';$('deposit-pct').value=STORE.settings.default_deposit_pct;$('amount-paid').value='0';$('payment-date').value='';
   $('doc-date').value=todayISO();$('notes').value='Every selection includes a free consultation.\nA '+STORE.settings.default_deposit_pct+'% deposit is required before any work begins.';
-  $('currency-display').value=STORE.settings.currency; $('client-picker').value='';
-  setDocType('quote'); buildServicesList();buildCustomList();buildClientPicker();renderPreview();
+  $('currency-display').value=STORE.settings.currency; $('client-picker').value=''; if($('project-picker'))$('project-picker').value='';
+  setDocType('quote'); buildServicesList();buildCustomList();buildClientPicker();buildProjectPicker();renderPreview();
 }
 
 function saveDoc(){
@@ -793,6 +819,8 @@ function saveDoc(){
     type:state.docType, paid:paid, payment_status:status, amount_paid:+x.amountPaid.toFixed(2), payment_date:$('payment-date').value||null,
     deposit_pct:x.depositPct, doc_number:docNumber, doc_date:$('doc-date').value, due_date:$('doc-due').value||null,
     client_id:clientId, client_name:$('client-name').value.trim(), client_email:$('client-email').value.trim(), client_phone:$('client-phone').value.trim(), client_address:$('client-address').value.trim(),
+    project_id:state.currentProjectId||null,
+    project_name:(STORE.projects||[]).find(function(p){return p.id===state.currentProjectId;})?.name||'',
     items:x.items, discount:x.discount, tax_pct:x.taxPct, notes:$('notes').value, subtotal:+x.subtotal.toFixed(2), tax:+x.tax.toFixed(2), total:+x.total.toFixed(2),
     paid_at:paid?($('payment-date').value?new Date($('payment-date').value+'T12:00:00').toISOString():now):null, updated_at:now
   };
@@ -802,13 +830,13 @@ function saveDoc(){
 }
 
 function loadDocIntoGenerator(doc){
-  state.editingId=doc.id;state.docType=doc.type;state.paid=!!doc.paid;state.currentClientId=doc.client_id||null;state.selected={};state.customItems=[];
+  state.editingId=doc.id;state.docType=doc.type;state.paid=!!doc.paid;state.currentClientId=doc.client_id||null;state.currentProjectId=doc.project_id||null;state.selected={};state.customItems=[];
   var flat=[];SERVICES.forEach(function(sec){sec.items.forEach(function(it){flat.push(it);});});
   (doc.items||[]).forEach(function(it){var match=flat.find(function(c){return (it.service_id&&c.id===it.service_id)||(c.name===it.name&&Number(c.price)===Number(it.price));});if(match)state.selected[match.id]=it.qty;else state.customItems.push({name:it.name,qty:it.qty,price:it.price});});
   $('doc-number').value=doc.doc_number||'';$('doc-date').value=doc.doc_date||todayISO();$('doc-due').value=doc.due_date||'';
   $('client-name').value=doc.client_name||'';$('client-email').value=doc.client_email||'';$('client-phone').value=doc.client_phone||'';$('client-address').value=doc.client_address||'';
   $('discount').value=doc.discount||0;$('tax').value=doc.tax_pct||0;$('deposit-pct').value=doc.deposit_pct!=null?doc.deposit_pct:STORE.settings.default_deposit_pct;$('amount-paid').value=doc.amount_paid||0;$('payment-date').value=(doc.payment_date||doc.paid_at||'').split('T')[0];$('notes').value=doc.notes||'';$('currency-display').value=STORE.settings.currency;
-  setDocType(doc.type);buildServicesList();buildCustomList();renderPreview();switchView('generator');
+  setDocType(doc.type);buildServicesList();buildCustomList();buildClientPicker();buildProjectPicker();renderPreview();switchView('generator');
 }
 
 function convertQuoteRecord(doc){
@@ -823,11 +851,11 @@ function renderHistory(){
   var rows=STORE.documents.slice().sort(function(a,b){return (b.created_at||'').localeCompare(a.created_at||'');});
   if(typeFilter)rows=rows.filter(function(r){return r.type===typeFilter;});
   if(statusFilter)rows=rows.filter(function(r){return documentStatus(r)===statusFilter;});
-  if(q)rows=rows.filter(function(r){return (r.doc_number||'').toLowerCase().includes(q)||(r.client_name||'').toLowerCase().includes(q)||(r.client_email||'').toLowerCase().includes(q);});
+  if(q)rows=rows.filter(function(r){return (r.doc_number||'').toLowerCase().includes(q)||(r.client_name||'').toLowerCase().includes(q)||(r.client_email||'').toLowerCase().includes(q)||(r.project_name||'').toLowerCase().includes(q);});
   var el=$('history-content');if(rows.length===0){el.innerHTML='<div class="empty-state">No matching documents.</div>';return;}
-  var html='<table class="data-table"><thead><tr><th>Type</th><th>Number</th><th>Client</th><th>Date</th><th style="text-align:right;">Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  var html='<table class="data-table"><thead><tr><th>Type</th><th>Number</th><th>Client / Project</th><th>Date</th><th style="text-align:right;">Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
   rows.forEach(function(r){var st=documentStatus(r),isInv=r.type==='invoice';var bc=!isInv?'quote':(st==='paid'?'paid':st==='partial'?'partial':st==='overdue'?'overdue':'invoice');var bl=!isInv?'QUOTE':(st==='paid'?'RECEIPT':'INVOICE');var statusCell=st==='quote'?'<span style="color:var(--muted);">QUOTE</span>':st==='paid'?'<span style="color:var(--green);font-weight:700;">PAID</span>':st==='partial'?'<span style="color:#55a7ff;font-weight:700;">PARTIAL</span>':st==='overdue'?'<span style="color:#ff5f59;font-weight:700;">OVERDUE</span>':'<span style="color:#ffa500;">DUE</span>';
-    html+='<tr><td><span class="badge '+bc+'">'+bl+'</span></td><td style="font-family:monospace;">'+escapeHtml(r.doc_number)+'</td><td>'+escapeHtml(r.client_name||'—')+'</td><td>'+fmtDate(r.doc_date)+'</td><td style="text-align:right;font-weight:700;">'+fmtMoney(r.total)+'</td><td>'+statusCell+'</td><td><div class="row-actions"><button class="btn" data-action="edit" data-id="'+r.id+'">Open</button>'+(r.type==='quote'?'<button class="btn" data-action="convert" data-id="'+r.id+'">→ Invoice</button>':'')+((r.type==='invoice'&&st!=='paid')?'<button class="btn" data-action="pay" data-id="'+r.id+'">Mark Paid</button>':'')+'<button class="btn" data-action="dup" data-id="'+r.id+'">Duplicate</button><button class="btn" data-action="del" data-id="'+r.id+'">Del</button></div></td></tr>';
+    html+='<tr><td><span class="badge '+bc+'">'+bl+'</span></td><td style="font-family:monospace;">'+escapeHtml(r.doc_number)+'</td><td>'+escapeHtml(r.client_name||'—')+(r.project_name?'<div style="font-size:.7rem;color:var(--muted);margin-top:2px;">'+escapeHtml(r.project_name)+'</div>':'')+'</td><td>'+fmtDate(r.doc_date)+'</td><td style="text-align:right;font-weight:700;">'+fmtMoney(r.total)+'</td><td>'+statusCell+'</td><td><div class="row-actions"><button class="btn" data-action="edit" data-id="'+r.id+'">Open</button>'+(r.type==='quote'?'<button class="btn" data-action="convert" data-id="'+r.id+'">→ Invoice</button>':'')+((r.type==='invoice'&&st!=='paid')?'<button class="btn" data-action="pay" data-id="'+r.id+'">Mark Paid</button>':'')+'<button class="btn" data-action="dup" data-id="'+r.id+'">Duplicate</button><button class="btn" data-action="del" data-id="'+r.id+'">Del</button></div></td></tr>';
   });
   html+='</tbody></table>';el.innerHTML=html;
   el.querySelectorAll('button[data-action]').forEach(function(b){b.addEventListener('click',function(e){var id=e.currentTarget.getAttribute('data-id'),action=e.currentTarget.getAttribute('data-action'),doc=STORE.documents.find(function(d){return d.id===id;});if(!doc)return;if(action==='edit')loadDocIntoGenerator(doc);else if(action==='convert'){var inv=convertQuoteRecord(doc);loadDocIntoGenerator(inv);toast('Converted to invoice');}else if(action==='pay'){doc.amount_paid=Number(doc.total||0);doc.paid=true;doc.payment_status='paid';doc.payment_date=todayISO();doc.paid_at=new Date().toISOString();doc.doc_number=nextDocNumber('invoice',true);doc.updated_at=new Date().toISOString();saveStore();renderHistory();renderDashboard();toast('Marked paid');}else if(action==='del'){if(!confirm('Delete this document permanently?'))return;STORE.documents=STORE.documents.filter(function(d){return d.id!==id;});saveStore();renderHistory();renderDashboard();toast('Deleted');}else if(action==='dup'){var copy=clone(doc);copy.id=uuid();copy.paid=false;copy.amount_paid=0;copy.payment_status=copy.type==='invoice'?'due':'quote';copy.payment_date=null;copy.paid_at=null;copy.doc_number=nextDocNumber(copy.type,false);copy.doc_date=todayISO();copy.due_date=plusDaysISO(copy.type==='invoice'?STORE.settings.invoice_due_days:STORE.settings.quote_validity_days,copy.doc_date);copy.created_at=new Date().toISOString();copy.updated_at=copy.created_at;STORE.documents.push(copy);saveStore();loadDocIntoGenerator(copy);toast('Duplicated as new draft');}});});
@@ -890,7 +918,8 @@ function init(){
   document.querySelectorAll('#main-nav button').forEach(function(b){b.addEventListener('click',function(){switchView(b.getAttribute('data-view'));});});document.querySelectorAll('#type-toggle button').forEach(function(b){b.addEventListener('click',function(){setDocType(b.getAttribute('data-type'));});});
   $('paid-btn').addEventListener('click',togglePaid);$('convert-btn').addEventListener('click',convertCurrentQuote);
   ['doc-number','doc-date','doc-due','client-name','client-email','client-phone','client-address','discount','tax','deposit-pct','amount-paid','payment-date','notes'].forEach(function(id){$(id).addEventListener('input',function(){if(id==='doc-date'&&!state.editingId)$('doc-due').value=plusDaysISO(state.docType==='invoice'?STORE.settings.invoice_due_days:STORE.settings.quote_validity_days,$('doc-date').value);renderPreview();});});
-  $('client-picker').addEventListener('change',function(e){var c=STORE.clients.find(function(x){return x.id===e.target.value;});if(!c){state.currentClientId=null;return;}state.currentClientId=c.id;$('client-name').value=c.name||'';$('client-email').value=c.email||'';$('client-phone').value=c.phone||'';$('client-address').value=c.address||'';renderPreview();});
+  $('client-picker').addEventListener('change',function(e){var c=STORE.clients.find(function(x){return x.id===e.target.value;});if(!c){state.currentClientId=null;state.currentProjectId=null;buildProjectPicker();return;}state.currentClientId=c.id;state.currentProjectId=null;$('client-name').value=c.name||'';$('client-email').value=c.email||'';$('client-phone').value=c.phone||'';$('client-address').value=c.address||'';buildProjectPicker();renderPreview();});
+  if($('project-picker'))$('project-picker').addEventListener('change',function(e){state.currentProjectId=e.target.value||null;renderPreview();});
   $('add-custom-btn').addEventListener('click',function(){state.customItems.push({name:'',qty:1,price:0});buildCustomList();});
   $('reset-btn').addEventListener('click',function(){if(confirm('Clear everything and start over?'))resetGenerator();});
   $('save-btn').addEventListener('click',function(){saveDoc();renderDashboard();});
@@ -903,7 +932,7 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
-<script src="/invoice-sync.js?v=2"></script>
+<script src="/invoice-sync.js?v=3"></script>
 <script>
 (function(){
   function switchRequested(view){
@@ -914,6 +943,28 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(e.origin!==location.origin || !e.data)return;
     if(e.data.type==="lions-rock-view") switchRequested(e.data.view||"generator");
     if(e.data.type==="lions-rock-sync" && document.getElementById("cloud-sync")) document.getElementById("cloud-sync").click();
+    if(e.data.type==="lions-rock-open-document"){
+      var d=(window.STORE&&STORE.documents||[]).find(function(x){return x.id===e.data.documentId;});
+      if(d && typeof window.loadDocIntoGenerator==="function")window.loadDocIntoGenerator(d);
+      else if(document.getElementById("cloud-sync")){document.getElementById("cloud-sync").click();setTimeout(function(){var d2=(window.STORE&&STORE.documents||[]).find(function(x){return x.id===e.data.documentId;});if(d2&&typeof window.loadDocIntoGenerator==="function")window.loadDocIntoGenerator(d2);},1300);}
+    }
+    if(e.data.type==="lions-rock-new-document"){
+      if(typeof window.resetGenerator==="function")window.resetGenerator();
+      var c=e.data.client||{};
+      state.currentClientId=c.id||null;
+      state.currentProjectId=e.data.projectId||null;
+      if(document.getElementById("client-name"))document.getElementById("client-name").value=c.name||"";
+      if(document.getElementById("client-email"))document.getElementById("client-email").value=c.email||"";
+      if(document.getElementById("client-phone"))document.getElementById("client-phone").value=c.phone||"";
+      if(document.getElementById("client-address"))document.getElementById("client-address").value=c.address||"";
+      if(typeof window.buildClientPicker==="function")window.buildClientPicker();
+      if(document.getElementById("client-picker")&&state.currentClientId)document.getElementById("client-picker").value=state.currentClientId;
+      if(typeof window.buildProjectPicker==="function")window.buildProjectPicker();
+      if(document.getElementById("project-picker")&&state.currentProjectId)document.getElementById("project-picker").value=state.currentProjectId;
+      if(typeof window.setDocType==="function")window.setDocType(e.data.docType==="invoice"?"invoice":"quote");
+      if(typeof window.renderPreview==="function")window.renderPreview();
+      if(typeof window.switchView==="function")window.switchView("generator");
+    }
   });
 
   function safeFilePart(value){
