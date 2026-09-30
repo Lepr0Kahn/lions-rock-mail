@@ -75,3 +75,15 @@ The user will handle visual review after the functional layers are complete.
 - Additional rolled-back database assertions passed: invited user can read only their own test invite, Owner can read both test invites, pending invite grants no Artist entitlement, and member membership rows are isolated.
 - Authenticated invite creation/claim and wrong-workspace browser tests still require a dedicated non-owner test session.
 - Build-log retrieval was unavailable through the connected Vercel tool; no clean build-log scan is claimed.
+
+
+## Live Business account verification — 2026-09-30 22:10–22:13 UTC
+
+- Claimed Business Tools invitation confirmed for tarikdelves@gmail.com (member, active, artist disabled).
+- Password recovery request was recorded by Supabase; user completed the reset on their phone. New password sign-in passed in the production browser.
+- Business workspace rendered with Admin, Mail, and Artist Member navigation hidden; Clients view contained no Owner clients.
+- Database assertions passed for Business permission, Artist/Owner denial, cross-account clients/projects/documents/memberships isolation, suspension, and reactivation (rolled back).
+- Live suspension test returned the browser to sign-in. Membership was restored to active immediately afterward.
+- Artist-mode sign-in with the same Business-only account returned to the login gate, while subsequent Business-mode sign-in succeeded after reactivation.
+- Usability issue: denial/suspension explanation is overwritten by the asynchronous signed-out callback with 'Sign in to continue.' Enforcement works, but the reason should persist.
+- New-account first-password invite flow remains distinct from existing-account magic-link acceptance; do not mark it verified from an existing-account invite.
