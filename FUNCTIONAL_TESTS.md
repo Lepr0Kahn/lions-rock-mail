@@ -59,33 +59,9 @@ These need a real browser/Auth-session pass after the functional merge:
 - clicking a generated invite link
 - first-time password setup
 - existing-account invite acceptance
-- sign-out / sign-in persistence
+- non-owner sign-out / sign-in persistence
 - wrong-workspace login messaging
 - iPhone/PWA visual behavior
 - live Vercel deployment behavior
 
 The user will handle visual review after the functional layers are complete.
-
-## Additional verification — 2026-09-30
-
-Database assertions passed in one rolled-back transaction:
-
-- Owner has both workspace entitlements.
-- Existing non-owner has Business Tools and no Artist Member entitlement.
-- Business account can read its own temporary client row; no cross-account client rows are visible.
-- Simulated artist-only account cannot read the temporary business client row.
-- Suspension blocks both access functions and client access; reactivation restores access.
-- Expired membership blocks both workspace access functions.
-- Original account entitlements were checked again after rollback; temporary data did not persist.
-
-Live browser observations:
-
-- Beta URL redirects to `/studio?v=5`.
-- Workspace selector and empty-credential validation work.
-- Secure sign-in used the Owner account, so wrong-workspace rejection was not tested.
-- Owner reached Artist Member and Admin navigation; the Owner session survived a reload.
-- Immediately after initial sign-in, Admin displayed "Sign in to Lions Rock Studio first". A page reload allowed Admin to load. The Admin iframe lacked an Auth state listener.
-
-Proposed fix: refresh Admin after Auth events, deferring queries outside the Auth callback. `node admin-auth-check.cjs` reproduces the failure on the original script and verifies sign-in loading and sign-out closure on the changed script with mocked Auth/DOM.
-
-This fix has not been verified in a live deployment. Invite creation/claim, first-password setup, wrong-workspace rejection and authenticated non-owner browser isolation remain unverified end-to-end. The Vercel connector still denies deployment access; the public browser can reach the app.
