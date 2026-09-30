@@ -1,10 +1,12 @@
 {
-  "name": "Lions Rock Mail",
-  "short_name": "LR Mail",
-  "description": "Lions Rock Media branded Gmail sender for studio messages and audio delivery.",
-  "start_url": "/?source=app",
+  "id": "/studio.html",
+  "name": "Lions Rock Studio",
+  "short_name": "Lions Rock",
+  "description": "Lions Rock Studio management app for mail, clients, projects, quotes, invoices and payments.",
+  "start_url": "/studio.html?source=app",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0d0c0c",
   "theme_color": "#0d0c0c",
   "icons": [
@@ -12,7 +14,7 @@
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
