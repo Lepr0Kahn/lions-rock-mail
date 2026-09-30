@@ -59,7 +59,7 @@ These need a real browser/Auth-session pass after the functional merge:
 - clicking a generated invite link
 - first-time password setup
 - existing-account invite acceptance
-- sign-out / sign-in persistence
+- non-owner sign-out / sign-in persistence
 - wrong-workspace login messaging
 - iPhone/PWA visual behavior
 - live Vercel deployment behavior

@@ -162,6 +162,8 @@
 
  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});
  document.getElementById("refresh").onclick=load;
+ // Recheck access when the parent signs in or out. Keep queries outside the Auth callback.
+ sb.auth.onAuthStateChange(()=>setTimeout(load,0));
  load();
 })();
 </script>
