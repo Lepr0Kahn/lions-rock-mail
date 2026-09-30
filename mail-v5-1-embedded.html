@@ -1236,51 +1236,6 @@ function buildEmailHtml(imageMode="hosted"){
 </td>
 </tr>
 </table>
-<script>
-(function(){
-  const STUDIO_URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
-  const STUDIO_KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
-  let studioSb=null;
-  function fire(el){ if(!el)return; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }
-  function firstName(name){ return String(name||"").trim().split(/\s+/)[0]||""; }
-  function fillClient(c){
-    if(!c)return;
-    const to=document.getElementById("to");
-    const fn=document.getElementById("first-name");
-    if(to && c.email){to.value=c.email;fire(to);}
-    if(fn){fn.value=firstName(c.name);fire(fn);}
-    if(typeof window.renderPreview==="function") window.renderPreview();
-  }
-  async function loadStudioClients(){
-    const sel=document.getElementById("studio-client-select");
-    if(!sel || !window.supabase)return;
-    try{
-      if(!studioSb) studioSb=window.supabase.createClient(STUDIO_URL,STUDIO_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-      const s=await studioSb.auth.getSession();
-      const user=s.data&&s.data.session&&s.data.session.user;
-      if(!user){sel.innerHTML='<option value="">Sign in to Lions Rock Studio first</option>';return;}
-      const r=await studioSb.from("clients").select("id,name,email,phone").eq("user_id",user.id).order("name");
-      if(r.error)throw r.error;
-      sel.innerHTML='<option value="">Choose client…</option>';
-      (r.data||[]).forEach(c=>{
-        const o=document.createElement("option");
-        o.value=c.id;o.textContent=c.name+(c.email?" · "+c.email:"");o.dataset.client=JSON.stringify(c);sel.appendChild(o);
-      });
-      sel.onchange=function(){
-        const o=sel.options[sel.selectedIndex];
-        if(o&&o.dataset.client) fillClient(JSON.parse(o.dataset.client));
-      };
-    }catch(e){console.warn("Studio clients:",e);}
-  }
-  window.addEventListener("message",function(e){
-    if(e.origin!==location.origin || !e.data)return;
-    if(e.data.type==="lions-rock-mail-client") fillClient({name:e.data.name||"",email:e.data.email||""});
-    if(e.data.type==="lions-rock-refresh-clients") loadStudioClients();
-  });
-  window.addEventListener("focus",loadStudioClients);
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",loadStudioClients);else loadStudioClients();
-})();
-</script>
 </body>
 </html>`;
 }
@@ -1412,5 +1367,50 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderTracks();renderPreview();initGoogle();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
 });
-</script>\n</body>
+</script>\n<script>
+(function(){
+  const STUDIO_URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
+  const STUDIO_KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
+  let studioSb=null;
+  function fire(el){ if(!el)return; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }
+  function firstName(name){ return String(name||"").trim().split(/\s+/)[0]||""; }
+  function fillClient(c){
+    if(!c)return;
+    const to=document.getElementById("to");
+    const fn=document.getElementById("first-name");
+    if(to && c.email){to.value=c.email;fire(to);}
+    if(fn){fn.value=firstName(c.name);fire(fn);}
+    if(typeof window.renderPreview==="function") window.renderPreview();
+  }
+  async function loadStudioClients(){
+    const sel=document.getElementById("studio-client-select");
+    if(!sel || !window.supabase)return;
+    try{
+      if(!studioSb) studioSb=window.supabase.createClient(STUDIO_URL,STUDIO_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+      const s=await studioSb.auth.getSession();
+      const user=s.data&&s.data.session&&s.data.session.user;
+      if(!user){sel.innerHTML='<option value="">Sign in to Lions Rock Studio first</option>';return;}
+      const r=await studioSb.from("clients").select("id,name,email,phone").eq("user_id",user.id).order("name");
+      if(r.error)throw r.error;
+      sel.innerHTML='<option value="">Choose client…</option>';
+      (r.data||[]).forEach(c=>{
+        const o=document.createElement("option");
+        o.value=c.id;o.textContent=c.name+(c.email?" · "+c.email:"");o.dataset.client=JSON.stringify(c);sel.appendChild(o);
+      });
+      sel.onchange=function(){
+        const o=sel.options[sel.selectedIndex];
+        if(o&&o.dataset.client) fillClient(JSON.parse(o.dataset.client));
+      };
+    }catch(e){console.warn("Studio clients:",e);}
+  }
+  window.addEventListener("message",function(e){
+    if(e.origin!==location.origin || !e.data)return;
+    if(e.data.type==="lions-rock-mail-client") fillClient({name:e.data.name||"",email:e.data.email||""});
+    if(e.data.type==="lions-rock-refresh-clients") loadStudioClients();
+  });
+  window.addEventListener("focus",loadStudioClients);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",loadStudioClients);else loadStudioClients();
+})();
+</script>
+</body>
 </html>
