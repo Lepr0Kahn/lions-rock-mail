@@ -805,15 +805,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
       <div class="panel" style="margin-bottom: 24px;">
         <div style="display:flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px;">
           <div>
-            <div class="panel-title">Audio Attachments</div>
-            <div class="panel-hint" style="margin-top: 0;">Embedded into the <b>.eml</b> draft as real attachments. Recipient gets the audio files. Nothing leaves this device until you send.</div>
+            <div class="panel-title">Attachments</div>
+            <div class="panel-hint" style="margin-top: 0;">Audio and studio documents are attached as real files. Nothing leaves this device until you send.</div>
           </div>
           <input type="file" id="music-input" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff" multiple style="display:none" />
           <button class="btn btn-accent btn-small" id="music-btn">♪ Add tracks</button>
         </div>
         <div id="tracks-empty" class="empty">
           <div style="font-size: 24px; opacity: 0.4; margin-bottom: 8px;">♫</div>
-          <div style="font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);">No tracks attached</div>
+          <div style="font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);">No attachments</div>
           <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">MP3 · WAV · M4A · FLAC · OGG · up to 25MB total</div>
         </div>
         <div id="tracks-list"></div>
@@ -1086,9 +1086,9 @@ function clearTrackUrls(){tracks.forEach(t=>{if(t.url)try{URL.revokeObjectURL(t.
 function updateSizeNote(){
   const el=$("size-note");if(!el)return;
   const total=tracks.reduce((n,t)=>n+t.size,0);
-  if(!total){el.textContent="No audio attached.";return;}
+  if(!total){el.textContent="No attachments.";return;}
   const encoded=Math.ceil(total*4/3);
-  el.textContent=tracks.length+" track"+(tracks.length===1?"":"s")+" · "+fmt(total)+" selected · roughly "+fmt(encoded)+" after email encoding"+(total>16*1024*1024?" — getting large; consider a smaller export.":".");
+  el.textContent=tracks.length+" attachment"+(tracks.length===1?"":"s")+" · "+fmt(total)+" selected · roughly "+fmt(encoded)+" after email encoding"+(total>16*1024*1024?" — getting large; consider smaller files.":".");
 }
 function resetNewEmail(){
   ["to","cc","bcc","first-name"].forEach(id=>{const e=$(id);if(e)e.value="";});
@@ -1157,12 +1157,13 @@ function buildEmailHtml(imageMode="hosted"){
       </td>
     </tr>`).join("");
 
+  const attachmentLabel=tracks.some(t=>!String(t.mime||"").startsWith("audio/"))?"Attachments enclosed":"Audio enclosed";
   const attBlock=tracks.length?`
     <tr>
       <td style="padding:0 36px 24px 36px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #eeeae2;background:#fbf8f2;">
           <tr>
-            <td style="padding:14px 18px 6px 18px;font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:0.22em;color:${accent};text-transform:uppercase;font-weight:700;">&#9836; Audio enclosed</td>
+            <td style="padding:14px 18px 6px 18px;font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:0.22em;color:${accent};text-transform:uppercase;font-weight:700;">${attachmentLabel}</td>
           </tr>
           ${attRows}
           <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
@@ -1239,7 +1240,7 @@ function buildEmailHtml(imageMode="hosted"){
 </body>
 </html>`;
 }
-function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Audio attached: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
+function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Attachments: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
 function buildRaw(overrides={}){
   const s={...getState(),...overrides};
   const mixed="mix_"+Date.now()+"_"+Math.random().toString(36).slice(2);
@@ -1305,7 +1306,7 @@ function renderTracks(){
   empty.style.display="none";
   list.innerHTML=tracks.map((t,i)=>
     '<div class="track">'+
-      '<div class="track-mark">♪</div>'+
+      '<div class="track-mark">'+(String(t.mime||"").toLowerCase()==="application/pdf"?"PDF":"♪")+'</div>'+
       '<div class="track-info">'+
         '<div class="track-name">'+esc(t.name)+'</div>'+
         '<div class="track-meta">'+esc(t.mime)+' · '+fmt(t.size)+'</div>'+
@@ -1327,7 +1328,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ["subject","preheader","greeting","body","signoff","senderName","senderTitle","accent-color","accent-hex"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",renderPreview);});
   const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>20*1024*1024){toastMsg("Audio too large","Keep total under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}clearTrackUrls();tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f),url:URL.createObjectURL(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
   const sign=$("gmail-signin");if(sign)sign.onclick=()=>{if(!tokenClient){gmailNote("Google is not ready yet.",true);initGoogle();return;}gmailNote("Opening Google authorization…");tokenClient.requestAccessToken({prompt:"consent"});};
-  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" track"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
+  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" attachment"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
   const copy=$("copy-html");if(copy)copy.onclick=async()=>{try{const h=buildEmailHtml(),t=buildPlain();if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([h],{type:"text/html"}),"text/plain":new Blob([t],{type:"text/plain"})})]);}else await navigator.clipboard.writeText(t);toastMsg("Copied");}catch(e){toastMsg("Copy failed",e.message,true);}};
   const dl=$("dl-html");if(dl)dl.onclick=()=>{const u=URL.createObjectURL(new Blob([buildEmailHtml()],{type:"text/html;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-email.html";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("HTML downloaded");};
   const eml=$("dl-eml");if(eml)eml.onclick=()=>{const s=getState();const raw=["To: "+s.to,"Cc: "+s.cc,"Bcc: "+s.bcc,"Subject: "+s.subject,"MIME-Version: 1.0",'Content-Type: text/html; charset="UTF-8"',"",buildEmailHtml()].join("\r\n");const u=URL.createObjectURL(new Blob([raw],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft downloaded");};
@@ -1382,6 +1383,40 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(fn){fn.value=firstName(c.name);fire(fn);}
     if(typeof window.renderPreview==="function") window.renderPreview();
   }
+
+  function setField(id,value){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.value=value||"";
+    fire(el);
+  }
+
+  function addStudioDocument(att){
+    if(!att || !att.base64 || !att.name)return;
+    tracks=tracks.filter(t=>t.kind!=="studio-document");
+    const size=Number(att.size)||Math.floor(String(att.base64).length*3/4);
+    tracks.push({
+      name:String(att.name),
+      size:size,
+      mime:att.mime||"application/pdf",
+      base64:String(att.base64),
+      url:null,
+      kind:"studio-document"
+    });
+    if(typeof renderTracks==="function")renderTracks();
+    if(typeof renderPreview==="function")renderPreview();
+  }
+
+  function fillDocumentEmail(data){
+    if(typeof resetNewEmail==="function")resetNewEmail();
+    fillClient({name:data.name||"",email:data.email||""});
+    setField("subject",data.subject||"");
+    setField("greeting",data.greeting||("Hi "+firstName(data.name)+","));
+    setField("body",data.body||"Please find your document attached.");
+    setField("signoff",data.signoff||"With gratitude,");
+    addStudioDocument(data.attachment);
+    if(typeof toastMsg==="function")toastMsg("Document attached",data.attachment&&data.attachment.name?data.attachment.name:"Ready to send");
+  }
   async function loadStudioClients(){
     const sel=document.getElementById("studio-client-select");
     if(!sel || !window.supabase)return;
@@ -1405,7 +1440,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   window.addEventListener("message",function(e){
     if(e.origin!==location.origin || !e.data)return;
-    if(e.data.type==="lions-rock-mail-client") fillClient({name:e.data.name||"",email:e.data.email||""});
+    if(e.data.type==="lions-rock-mail-client"){ if(e.data.attachment) fillDocumentEmail(e.data); else fillClient({name:e.data.name||"",email:e.data.email||""}); }
     if(e.data.type==="lions-rock-refresh-clients") loadStudioClients();
   });
   window.addEventListener("focus",loadStudioClients);
