@@ -33,7 +33,7 @@ body{overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-in
 .login-field{text-align:left;margin:0 0 14px}.login-field label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:700}
 .login-field input,.login-field textarea{width:100%;background:#0e0e0e;border:1px solid var(--border);color:#fff;padding:13px 12px;font:inherit;font-size:14px;outline:none}.login-field textarea{min-height:88px;resize:vertical}.login-field input:focus,.login-field textarea:focus{border-color:var(--accent)}
 .login-button{width:100%;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:13px 14px;font:inherit;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:5px}.login-button.secondary{background:transparent;border-color:var(--border);color:var(--text);margin-top:10px}.login-button:disabled{opacity:.55;cursor:wait}
-.login-help{font-size:11px;color:var(--muted);line-height:1.55;margin:15px 0}.login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.login-link{background:none;border:0;color:#e7a58e;text-decoration:underline;font:inherit;font-size:11px;cursor:pointer;margin-top:12px}.gate-section{display:none}.gate-section.active{display:block}
+.login-help{font-size:11px;color:var(--muted);line-height:1.55;margin:15px 0}.login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 18px}.mode-button{border:1px solid var(--border);background:#101010;color:var(--muted);padding:11px 8px;font:inherit;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}.mode-button.active{border-color:var(--accent);background:rgba(194,77,44,.14);color:#fff}.login-link{background:none;border:0;color:#e7a58e;text-decoration:underline;font:inherit;font-size:11px;cursor:pointer;margin-top:12px}.gate-section{display:none}.gate-section.active{display:block}
 .login-status{min-height:18px;color:var(--muted);font-size:11px;margin-top:13px;line-height:1.5}.login-status.err{color:#ff9388}
 .login-foot{font-size:10px;color:var(--dim);margin-top:24px;letter-spacing:.08em}
 body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{display:none!important}
@@ -49,6 +49,11 @@ body.studio-authenticated .login-gate{display:none!important}
     <div class="login-sub">Studio Management System</div>
 
     <div class="gate-section active" id="signin-view">
+      <div class="login-help"><b>Private access only.</b><br>Choose the workspace you were invited to.</div>
+      <div class="mode-grid">
+        <button class="mode-button active" id="mode-business" type="button">Business Tools</button>
+        <button class="mode-button" id="mode-artist" type="button">Artist Member</button>
+      </div>
       <div class="login-field">
         <label for="gate-email">Email</label>
         <input id="gate-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com">
@@ -57,8 +62,8 @@ body.studio-authenticated .login-gate{display:none!important}
         <label for="gate-password">Password</label>
         <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
       </div>
-      <button class="login-button" id="gate-signin">Sign In</button>
-      <button class="login-button secondary" id="show-apply">Apply for Access</button>
+      <button class="login-button" id="gate-signin">Sign In to Business Tools</button>
+      <button class="login-button secondary" id="show-apply" style="display:none">Apply for Access</button>
       <div class="login-status" id="gate-status">Checking your session…</div>
     </div>
 
@@ -92,7 +97,7 @@ body.studio-authenticated .login-gate{display:none!important}
 <div class="top">
   <div class="head">
     <img src="/icon-192.png" alt="Lions Rock">
-    <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Mail · Documents · Clients · Projects</div></div>
+    <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Private Member & Business Access</div></div>
     <div class="global-search">
       <input id="global-search" placeholder="Search clients, projects, documents…">
       <div class="search-results" id="search-results"></div>
@@ -110,12 +115,13 @@ body.studio-authenticated .login-gate{display:none!important}
   </div>
   <div class="nav" id="nav">
     <button class="active" data-app="mail" id="mail-nav">Mail</button>
-    <button data-app="documents" data-view="generator">Documents</button>
-    <button data-app="documents" data-view="history">History</button>
-    <button data-app="hub" data-view="clients">Clients</button>
-    <button data-app="hub" data-view="projects">Projects</button>
-    <button data-app="documents" data-view="dashboard">Dashboard</button>
-    <button data-app="documents" data-view="settings">Settings</button>
+    <button data-app="member" id="member-nav" style="display:none">Member</button>
+    <button data-app="documents" data-view="generator" data-scope="business">Documents</button>
+    <button data-app="documents" data-view="history" data-scope="business">History</button>
+    <button data-app="hub" data-view="clients" data-scope="business">Clients</button>
+    <button data-app="hub" data-view="projects" data-scope="business">Projects</button>
+    <button data-app="documents" data-view="dashboard" data-scope="business">Dashboard</button>
+    <button data-app="documents" data-view="settings" data-scope="business">Settings</button>
     <button data-app="admin" id="admin-nav" style="display:none">Admin</button>
   </div>
 </div>
@@ -123,16 +129,21 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=7" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=7" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=5" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=2" title="Lions Rock Access Administration"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=1" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=3" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
 (function(){
  const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),admin=document.getElementById("admin-frame");
+ const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),member=document.getElementById("member-frame"),admin=document.getElementById("admin-frame");
  let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null;
- let inviteMode=new URLSearchParams(location.search).get("invite")==="1";
+ const query=new URLSearchParams(location.search);
+ let inviteMode=query.get("invite")==="1";
+ let inviteAccess=query.get("access")||"";
+ let loginMode=inviteAccess||localStorage.getItem("lions-rock-access-mode")||"business_tools";
+ if(!["business_tools","artist_member"].includes(loginMode))loginMode="business_tools";
  function fitFrame(frame){
    try{
      const d=frame.contentDocument;
@@ -152,6 +163,15 @@ body.studio-authenticated .login-gate{display:none!important}
  function showGateSection(id){
    ["signin-view","apply-view","invite-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
+ function setLoginMode(mode){
+   loginMode=mode==="artist_member"?"artist_member":"business_tools";
+   localStorage.setItem("lions-rock-access-mode",loginMode);
+   document.getElementById("mode-business").classList.toggle("active",loginMode==="business_tools");
+   document.getElementById("mode-artist").classList.toggle("active",loginMode==="artist_member");
+   document.getElementById("gate-signin").textContent=loginMode==="artist_member"?"Sign In as Artist Member":"Sign In to Business Tools";
+ }
+ function canBusiness(m){return !!m&&(m.role==="owner"||m.business_tools_enabled===true)}
+ function canArtist(m){return !!m&&(m.role==="owner"||m.artist_member_enabled===true)}
  async function setSession(session){
    currentSession=session||null;
    currentMembership=null;
@@ -172,17 +192,27 @@ body.studio-authenticated .login-gate{display:none!important}
    if(status){status.classList.remove("err");status.textContent="Checking access…";}
 
    const m=await sb.from("app_memberships")
-     .select("role,access_status,payment_status,expires_at,business_name")
+     .select("role,access_status,payment_status,expires_at,business_name,business_tools_enabled,artist_member_enabled,plan")
      .eq("user_id",session.user.id)
      .maybeSingle();
 
    const active=!!m.data &&
      m.data.access_status==="active" &&
      ["paid","comped"].includes(m.data.payment_status) &&
-     (!m.data.expires_at || new Date(m.data.expires_at)>new Date());
+     (!m.data.expires_at || new Date(m.data.expires_at)>new Date()) &&
+     (m.data.role==="owner"||m.data.business_tools_enabled===true||m.data.artist_member_enabled===true);
 
    if(m.error||!active){
-     const reason=m.data?.access_status==="suspended"?"Your Lions Rock Studio access is suspended.":m.data?.payment_status==="unpaid"?"Your account is awaiting payment activation.":"This account has not been activated by Lions Rock.";
+     const reason=m.data?.access_status==="suspended"?"Your Lions Rock access is suspended.":m.data?.payment_status==="unpaid"?"Your account is awaiting activation.":"This account has not been activated by Lions Rock.";
+     await sb.auth.signOut();
+     showGateSection("signin-view");
+     if(status){status.textContent=reason;status.classList.add("err");}
+     return;
+   }
+
+   const businessOK=canBusiness(m.data),artistOK=canArtist(m.data);
+   if(m.data.role!=="owner" && ((loginMode==="business_tools"&&!businessOK)||(loginMode==="artist_member"&&!artistOK))){
+     const reason=loginMode==="artist_member"?"This account does not have Artist Member access.":"This account does not have Business Tools access.";
      await sb.auth.signOut();
      showGateSection("signin-view");
      if(status){status.textContent=reason;status.classList.add("err");}
@@ -195,19 +225,31 @@ body.studio-authenticated .login-gate{display:none!important}
    document.getElementById("authbox").style.display="none";
    document.getElementById("studio-signout").style.display="inline-block";
    document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
-   document.getElementById("mail-nav").style.display=m.data.role==="owner"?"":"none";
+   document.getElementById("mail-nav").style.display=m.data.role==="owner"&&loginMode==="business_tools"?"":"none";
+   document.getElementById("member-nav").style.display=artistOK?"":"none";
+   document.querySelectorAll('[data-scope="business"]').forEach(x=>x.style.display=businessOK?"":"none");
+   document.querySelector(".global-search").style.display=businessOK&&loginMode==="business_tools"?"":"none";
 
    if(inviteMode){
+     if(inviteAccess)setLoginMode(inviteAccess);
      showGateSection("invite-view");
-     const i=document.getElementById("invite-status");i.textContent="Invitation accepted. Set your password to continue.";i.classList.remove("err");
+     const i=document.getElementById("invite-status");
+     i.textContent="Private invitation accepted. Set the password you will use to sign in.";
+     i.classList.remove("err");
      return;
    }
 
    document.body.classList.add("studio-authenticated");
-   if(m.data.role!=="owner" && mail.classList.contains("active")) activate("hub","clients");
+   if(loginMode==="artist_member"&&artistOK){
+     activate("member");
+   }else if(m.data.role==="owner"){
+     activate("mail");
+   }else{
+     activate("hub","clients");
+   }
    mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
    hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
-   setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))),60);
+   setTimeout(()=>fitSoon(member.classList.contains("active")?member:(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs)))),60);
  }
  async function init(){
    if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches){
@@ -234,6 +276,9 @@ body.studio-authenticated .login-gate{display:none!important}
    }
    if(button){button.disabled=false;button.textContent="Sign In";}
  }
+ setLoginMode(loginMode);
+ document.getElementById("mode-business").onclick=()=>setLoginMode("business_tools");
+ document.getElementById("mode-artist").onclick=()=>setLoginMode("artist_member");
  document.getElementById("gate-signin").onclick=()=>signIn(document.getElementById("gate-email").value,document.getElementById("gate-password").value);
  ["gate-email","gate-password"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("gate-signin").click();}));
  document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
@@ -273,7 +318,9 @@ body.studio-authenticated .login-gate{display:none!important}
    button.disabled=true;button.textContent="Saving…";
    const r=await sb.auth.updateUser({password:p});
    if(r.error){out.textContent=r.error.message;out.classList.add("err");button.disabled=false;button.textContent="Set Password & Open Studio";return}
-   inviteMode=false;
+   try{await sb.rpc("mark_studio_invite_claimed");}catch(_){}
+   if(inviteAccess)setLoginMode(inviteAccess);
+   inviteMode=false;inviteAccess="";
    history.replaceState({},document.title,"/studio.html");
    document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
    await setSession((await sb.auth.getSession()).data.session);
@@ -282,10 +329,14 @@ body.studio-authenticated .login-gate{display:none!important}
 
  sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
  function activate(appName,viewName,payload){
+   if(appName==="member"&&!canArtist(currentMembership))return;
+   if((appName==="documents"||appName==="hub")&&!canBusiness(currentMembership))return;
+   if(appName==="mail"&&currentMembership?.role!=="owner")return;
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
    mail.classList.toggle("active",appName==="mail");
    docs.classList.toggle("active",appName==="documents");
    hub.classList.toggle("active",appName==="hub");
+   member.classList.toggle("active",appName==="member");
    admin.classList.toggle("active",appName==="admin");
    if(appName==="documents"){
      pendingView=viewName||"generator";
@@ -296,6 +347,8 @@ body.studio-authenticated .login-gate{display:none!important}
    }else if(appName==="admin"){
      if(currentMembership?.role!=="owner")return;
      fitSoon(admin);
+   }else if(appName==="member"){
+     fitSoon(member);
    }else fitSoon(mail);
    window.scrollTo({top:0,behavior:"instant"});
  }
@@ -341,6 +394,10 @@ body.studio-authenticated .login-gate{display:none!important}
    fitSoon(hub);
    try{const ro=new ResizeObserver(()=>fitFrame(hub));ro.observe(hub.contentDocument.documentElement);}catch(_){}
  });
+ member.addEventListener("load",()=>{
+   fitSoon(member);
+   try{const ro=new ResizeObserver(()=>fitFrame(member));ro.observe(member.contentDocument.documentElement);}catch(_){}
+ });
  admin.addEventListener("load",()=>{
    fitSoon(admin);
    try{const ro=new ResizeObserver(()=>fitFrame(admin));ro.observe(admin.contentDocument.documentElement);}catch(_){}
@@ -354,7 +411,7 @@ body.studio-authenticated .login-gate{display:none!important}
      ro.observe(mail.contentDocument.documentElement);
    }catch(_){}
  });
- window.addEventListener("resize",()=>{fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs)));});
+ window.addEventListener("resize",()=>{fitSoon(member.classList.contains("active")?member:(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))));});
 
  const searchInput=document.getElementById("global-search"),searchResults=document.getElementById("search-results");
  function closeSearch(){searchResults.classList.remove("open");searchResults.innerHTML="";}
