@@ -24,10 +24,40 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
 .nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:var(--accent);color:white}
 .stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
 .toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
+.login-gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(194,77,44,.13),transparent 32%),var(--bg)}
+.login-card{width:min(430px,100%);border:1px solid var(--border);background:rgba(20,19,19,.96);padding:34px 30px;box-shadow:0 28px 80px rgba(0,0,0,.48);text-align:center}
+.login-logo{width:86px;height:86px;object-fit:contain;background:#fff;padding:6px;margin:0 auto 20px}
+.login-title{font-family:Georgia,serif;font-size:27px;letter-spacing:.08em;margin:0 0 7px}
+.login-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+.login-field{text-align:left;margin:0 0 14px}.login-field label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:700}
+.login-field input{width:100%;background:#0e0e0e;border:1px solid var(--border);color:#fff;padding:13px 12px;font:inherit;font-size:14px;outline:none}.login-field input:focus{border-color:var(--accent)}
+.login-button{width:100%;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:13px 14px;font:inherit;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:5px}.login-button:disabled{opacity:.55;cursor:wait}
+.login-status{min-height:18px;color:var(--muted);font-size:11px;margin-top:13px;line-height:1.5}.login-status.err{color:#ff9388}
+.login-foot{font-size:10px;color:var(--dim);margin-top:24px;letter-spacing:.08em}
+body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{display:none!important}
+body.studio-authenticated .login-gate{display:none!important}
 @media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
 </style>
 </head>
 <body>
+<div class="login-gate" id="login-gate">
+  <div class="login-card">
+    <img class="login-logo" src="/icon-192.png" alt="Lions Rock">
+    <h1 class="login-title">Lions Rock Studio</h1>
+    <div class="login-sub">Studio Management System</div>
+    <div class="login-field">
+      <label for="gate-email">Email</label>
+      <input id="gate-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com">
+    </div>
+    <div class="login-field">
+      <label for="gate-password">Password</label>
+      <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
+    </div>
+    <button class="login-button" id="gate-signin">Sign In</button>
+    <div class="login-status" id="gate-status">Checking your session…</div>
+    <div class="login-foot">THE LION'S ROCK MEDIA FACILITY</div>
+  </div>
+</div>
 <div class="top">
   <div class="head">
     <img src="/icon-192.png" alt="Lions Rock">
@@ -88,22 +118,43 @@ body{overflow:auto;-webkit-overflow-scrolling:touch}.top{height:118px;border-bot
  function setSession(session){
    currentSession=session||null;
    const on=!!(session&&session.user);
+   document.body.classList.toggle("studio-authenticated",on);
    document.getElementById("cloud-dot").className="dot"+(on?" on":"");
    document.getElementById("cloud-label").textContent=on?session.user.email:"Studio account";
-   document.getElementById("authbox").style.display=on?"none":"flex";
+   document.getElementById("authbox").style.display="none";
    document.getElementById("studio-signout").style.display=on?"inline-block":"none";
+   const status=document.getElementById("gate-status");
+   if(status){
+     status.classList.remove("err");
+     status.textContent=on?"Opening Studio…":"Sign in to continue.";
+   }
    if(on){
      mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
      hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
+     setTimeout(()=>fitSoon(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:docs)),60);
    }
  }
  async function init(){const s=await sb.auth.getSession();setSession(s.data&&s.data.session)}
- document.getElementById("studio-signin").onclick=async()=>{
-   const email=document.getElementById("studio-email").value.trim(),password=document.getElementById("studio-password").value;
-   if(!email||!password){toast("Enter email and password");return}
-   const r=await sb.auth.signInWithPassword({email,password}); if(r.error)toast(r.error.message);
- };
- document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();};
+ async function signIn(email,password){
+   const status=document.getElementById("gate-status"),button=document.getElementById("gate-signin");
+   email=String(email||"").trim();
+   password=String(password||"");
+   if(!email||!password){
+     if(status){status.textContent="Enter your email and password.";status.classList.add("err");}
+     return;
+   }
+   if(button){button.disabled=true;button.textContent="Signing In…";}
+   if(status){status.textContent="Signing in…";status.classList.remove("err");}
+   const r=await sb.auth.signInWithPassword({email,password});
+   if(r.error){
+     if(status){status.textContent=r.error.message;status.classList.add("err");}
+   }
+   if(button){button.disabled=false;button.textContent="Sign In";}
+ }
+ document.getElementById("gate-signin").onclick=()=>signIn(document.getElementById("gate-email").value,document.getElementById("gate-password").value);
+ ["gate-email","gate-password"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("gate-signin").click();}));
+ document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
+ document.getElementById("studio-signout").onclick=async()=>{await sb.auth.signOut();document.getElementById("gate-password").value="";};
  sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
  function activate(appName,viewName,payload){
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
