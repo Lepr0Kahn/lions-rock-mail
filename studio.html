@@ -142,6 +142,7 @@ body.studio-authenticated .login-gate{display:none!important}
  const query=new URLSearchParams(location.search);
  let inviteMode=query.get("invite")==="1";
  let inviteAccess=query.get("access")||"";
+ let inviteExisting=query.get("existing")==="1";
  let loginMode=inviteAccess||localStorage.getItem("lions-rock-access-mode")||"business_tools";
  if(!["business_tools","artist_member"].includes(loginMode))loginMode="business_tools";
  function fitFrame(frame){
@@ -195,6 +196,41 @@ body.studio-authenticated .login-gate{display:none!important}
      .select("role,access_status,payment_status,expires_at,business_name,business_tools_enabled,artist_member_enabled,plan")
      .eq("user_id",session.user.id)
      .maybeSingle();
+
+   if(inviteMode){
+     if(!["business_tools","artist_member"].includes(inviteAccess)){
+       await sb.auth.signOut();
+       showGateSection("signin-view");
+       if(status){status.textContent="This invitation link is invalid.";status.classList.add("err");}
+       return;
+     }
+     const pending=await sb.from("studio_invites")
+       .select("id,access_type,status,expires_at")
+       .eq("user_id",session.user.id)
+       .eq("access_type",inviteAccess)
+       .eq("status","pending")
+       .order("invited_at",{ascending:false})
+       .limit(1)
+       .maybeSingle();
+     const validInvite=!!pending.data && new Date(pending.data.expires_at)>new Date();
+     if(pending.error||!validInvite){
+       await sb.auth.signOut();
+       showGateSection("signin-view");
+       if(status){status.textContent="This private invitation is invalid or has expired.";status.classList.add("err");}
+       return;
+     }
+     currentMembership=m.data||null;
+     setLoginMode(inviteAccess);
+     showGateSection("invite-view");
+     const pw=document.getElementById("invite-password"),cf=document.getElementById("invite-confirm");
+     pw.closest(".login-field").style.display=inviteExisting?"none":"";
+     cf.closest(".login-field").style.display=inviteExisting?"none":"";
+     document.getElementById("invite-save").textContent=inviteExisting?"Accept Invite & Open":"Set Password & Open Studio";
+     const i=document.getElementById("invite-status");
+     i.textContent=inviteExisting?"Your private invitation is ready. Accept it to add this workspace to your account.":"Private invitation accepted. Create the password you will use to sign in.";
+     i.classList.remove("err");
+     return;
+   }
 
    const active=!!m.data &&
      m.data.access_status==="active" &&
@@ -313,18 +349,30 @@ body.studio-authenticated .login-gate{display:none!important}
 
  document.getElementById("invite-save").onclick=async()=>{
    const p=document.getElementById("invite-password").value,c=document.getElementById("invite-confirm").value,out=document.getElementById("invite-status"),button=document.getElementById("invite-save");
-   if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return}
-   if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return}
-   button.disabled=true;button.textContent="Saving…";
-   const r=await sb.auth.updateUser({password:p});
-   if(r.error){out.textContent=r.error.message;out.classList.add("err");button.disabled=false;button.textContent="Set Password & Open Studio";return}
-   try{await sb.functions.invoke("studio-claim-invite",{body:{}});}catch(_){}
-   if(inviteAccess)setLoginMode(inviteAccess);
-   inviteMode=false;inviteAccess="";
-   history.replaceState({},document.title,"/studio.html");
-   document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
-   await setSession((await sb.auth.getSession()).data.session);
-   button.disabled=false;button.textContent="Set Password & Open Studio";
+   if(!inviteExisting){
+     if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return}
+     if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return}
+   }
+   button.disabled=true;button.textContent=inviteExisting?"Accepting…":"Saving…";
+   try{
+     if(!inviteExisting){
+       const r=await sb.auth.updateUser({password:p});
+       if(r.error)throw r.error;
+     }
+     const claim=await sb.functions.invoke("studio-claim-invite",{body:{access_type:inviteAccess}});
+     if(claim.error)throw claim.error;
+     if(claim.data?.error)throw new Error(claim.data.error);
+     if(inviteAccess)setLoginMode(inviteAccess);
+     inviteMode=false;inviteAccess="";inviteExisting=false;
+     history.replaceState({},document.title,"/studio.html");
+     document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
+     await setSession((await sb.auth.getSession()).data.session);
+   }catch(e){
+     out.textContent=e.message||String(e);out.classList.add("err");
+   }finally{
+     button.disabled=false;
+     button.textContent=inviteExisting?"Accept Invite & Open":"Set Password & Open Studio";
+   }
  };
 
  sb.auth.onAuthStateChange((_e,s)=>setTimeout(()=>setSession(s),0));
