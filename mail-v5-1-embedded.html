@@ -116,7 +116,7 @@
   }
   .color-row { display: flex; gap: 16px; align-items: center; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
 
   /* Buttons */
   .btn {
@@ -266,6 +266,29 @@
     content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent);
   }
   .tool-note { color:var(--dim); font-size:11px; line-height:1.55; margin-top:12px; }
+
+  /* iPhone / narrow embedded view: keep labels and native selects from colliding. */
+  .field select {
+    display:block;
+    min-height:44px;
+    line-height:1.35;
+    padding:11px 34px 11px 0;
+    margin-top:2px;
+    position:relative;
+    z-index:0;
+  }
+  .field .label-row {
+    position:relative;
+    z-index:1;
+    gap:8px 14px;
+  }
+  @media (max-width: 760px) {
+    .quick-tools .two-col { grid-template-columns:1fr !important; gap:0; }
+    .quick-tools .label-row { flex-wrap:wrap; align-items:flex-start; }
+    .quick-tools .label-row .hint { margin-left:auto; text-align:right; }
+    .quick-tools .field { min-width:0; margin-bottom:18px; }
+    .quick-tools select { width:100%; max-width:100%; }
+  }
   .track audio { width:100%; height:30px; margin-top:8px; display:block; }
   .track-info { overflow:hidden; }
   .send-success {
