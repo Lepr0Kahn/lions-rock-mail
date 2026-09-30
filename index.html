@@ -468,8 +468,8 @@ Talk soon.</textarea>
    Standalone. Save this file anywhere. No internet required.
    ================================================================= */
 
-const ASSET_LOGO = "/icon-192.png";
-const ASSET_SIGNATURE = "/signature.jpg";
+const ASSET_LOGO = "/icon-192.png?v=3";
+const ASSET_SIGNATURE = "/signature.jpg?v=2";
 
 const BRAND = "LION'S ROCK MEDIA FACILITY";
 const INSTAGRAM_BRAND = "https://instagram.com/lionsrockmedia";
@@ -662,7 +662,15 @@ function buildEmailHtml() {
   </td></tr>
 </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;"><tr><td align="center" style="padding:18px 12px 0 12px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#a19d98;letter-spacing:0.16em;text-transform:uppercase;">&copy; ${new Date().getFullYear()} Lion&rsquo;s Rock Media Facility</td></tr></table>
-</td></tr></table></body></html>`;
+</td></tr></table><script id="lions-rock-cache-cleanup">
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+}
+if ("caches" in window) {
+  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+}
+</script>
+</body></html>`;
 }
 
 function buildPlainText() {
