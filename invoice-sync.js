@@ -140,6 +140,7 @@
 
   function refreshAppAfterCloud() {
     try { if (typeof window.buildClientPicker === "function") window.buildClientPicker(); } catch (_) {}
+    try { if (typeof window.buildProjectPicker === "function") window.buildProjectPicker(); } catch (_) {}
     try { if (typeof window.buildServicesList === "function") window.buildServicesList(); } catch (_) {}
     try { if (typeof window.renderPreview === "function") window.renderPreview(); } catch (_) {}
     try {
@@ -220,6 +221,7 @@
       return {
         id: d.id,
         client_id: d.client_id || null,
+        project_id: d.project_id || null,
         type: d.doc_type,
         paid: localStatus === "paid",
         payment_status: localStatus,
@@ -247,6 +249,21 @@
       };
     });
 
+    var projects = (remote.projects || []).map(function (p) {
+      return {
+        id: p.id,
+        client_id: p.client_id || null,
+        name: p.name || "",
+        project_type: p.project_type || "Project",
+        status: p.status || "active",
+        description: p.description || "",
+        start_date: p.start_date || null,
+        due_date: p.due_date || null,
+        created_at: p.created_at,
+        updated_at: p.updated_at
+      };
+    });
+
     var settings = null;
     if (remote.settings) {
       var s = remote.settings;
@@ -269,6 +286,7 @@
 
     return {
       clients: clients,
+      projects: projects,
       documents: docs,
       services: rebuildServices(remote.services || []),
       services_updated_at: serviceUpdated ? new Date(serviceUpdated).toISOString() : null,
@@ -281,6 +299,7 @@
     var uid = cloudUser.id;
     var results = await Promise.all([
       sb.from("clients").select("*").eq("user_id", uid),
+      sb.from("projects").select("*").eq("user_id", uid),
       sb.from("documents").select("*").eq("user_id", uid),
       sb.from("document_items").select("*").eq("user_id", uid),
       sb.from("services").select("*").eq("user_id", uid),
@@ -292,11 +311,12 @@
     }
     return {
       clients: results[0].data || [],
-      documents: results[1].data || [],
-      items: results[2].data || [],
-      services: results[3].data || [],
-      settings: results[4].data || null,
-      tombstones: results[5].data || []
+      projects: results[1].data || [],
+      documents: results[2].data || [],
+      items: results[3].data || [],
+      services: results[4].data || [],
+      settings: results[5].data || null,
+      tombstones: results[6].data || []
     };
   }
 
@@ -372,6 +392,7 @@
         id: d.id,
         user_id: uid,
         client_id: d.client_id || null,
+        project_id: d.project_id || null,
         doc_type: d.type === "invoice" ? "invoice" : "quote",
         doc_number: d.doc_number,
         status: cloudDocStatus(d),
@@ -513,6 +534,7 @@
     var localDocs = (merged.documents || []).filter(function (d) { return !remoteDocKeys.has(String(d.id)); });
 
     merged.clients = mergeById(localClients, mapped.clients);
+    merged.projects = mapped.projects || [];
     merged.documents = mergeById(localDocs, mapped.documents);
 
     var localSettingsTime = asTime(merged.settings && merged.settings.updated_at);
