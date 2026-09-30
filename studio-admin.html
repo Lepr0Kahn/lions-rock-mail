@@ -73,9 +73,9 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.head{display:flex;gap:12
    content.innerHTML=apps.map(a=>{
      const contact=[a.email,a.phone].filter(Boolean).join(" · ");
      let actions='';
-     if(a.status==="pending")actions+='<button class="btn amber" data-act="approve" data-id="'+a.id+'">Approve</button><button class="btn red" data-act="decline" data-id="'+a.id+'">Decline</button>';
-     if(["approved","awaiting_payment"].includes(a.status)&&a.payment_status==="unpaid")actions+='<button class="btn green" data-act="paid" data-id="'+a.id+'">Mark Paid</button><button class="btn" data-act="comp" data-id="'+a.id+'">Comp Access</button>';
-     if(["paid","approved","awaiting_payment"].includes(a.status)&&["paid","comped"].includes(a.payment_status))actions+='<button class="btn primary" data-act="activate" data-id="'+a.id+'">Activate & Invite</button>';
+     if(a.status==="pending")actions+='<button class="btn amber" data-act="approve" data-id="'+a.id+'">Approve & Draft Payment Email</button><button class="btn red" data-act="decline" data-id="'+a.id+'">Decline</button>';
+     if(["approved","awaiting_payment"].includes(a.status)&&a.payment_status==="unpaid")actions+='<button class="btn green" data-act="paid" data-id="'+a.id+'">Mark Paid & Invite</button><button class="btn" data-act="comp" data-id="'+a.id+'">Comp & Invite</button>';
+     if(["paid","approved","awaiting_payment"].includes(a.status)&&["paid","comped"].includes(a.payment_status))actions+='<button class="btn primary" data-act="activate" data-id="'+a.id+'">Send Invite</button>';
      if(a.status==="active")actions+='<span class="tag active">Invitation sent</span>';
      return '<div class="row"><div><div class="name">'+esc(a.full_name)+'</div><div class="meta">'+esc(a.business_name)+'<br>'+esc(contact)+(a.website?'<br>'+esc(a.website):'')+'</div></div><div>'+tag(a.status)+' '+tag(a.payment_status)+'<div class="meta">Applied '+esc(dt(a.submitted_at))+'</div></div><div class="meta">'+(a.about?esc(a.about):'No application note.')+'</div><div class="actions">'+actions+'</div></div>';
    }).join("");
@@ -92,21 +92,49 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.head{display:flex;gap:12
  function wireActions(){
    content.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>appAction(b.dataset.act,b.dataset.id,b));
  }
+ async function activateAndInvite(id){
+   const r=await sb.functions.invoke("studio-activate-member",{body:{application_id:id}});
+   if(r.error)throw r.error;
+   if(r.data&&r.data.error)throw new Error(r.data.error);
+   return r.data;
+ }
  async function appAction(act,id,button){
    button.disabled=true;
    try{
      const now=new Date().toISOString();
+     const application=apps.find(x=>x.id===id);
      let q=null;
      if(act==="approve")q=sb.from("studio_applications").update({status:"awaiting_payment",approved_at:now}).eq("id",id);
      if(act==="decline")q=sb.from("studio_applications").update({status:"declined"}).eq("id",id);
      if(act==="paid")q=sb.from("studio_applications").update({status:"paid",payment_status:"paid",paid_at:now}).eq("id",id);
      if(act==="comp")q=sb.from("studio_applications").update({status:"paid",payment_status:"comped",paid_at:now}).eq("id",id);
-     if(q){const r=await q;if(r.error)throw r.error;msg(act==="approve"?"Approved — now awaiting payment.":act==="paid"?"Payment confirmed.":act==="comp"?"Access comped.":"Application declined.");}
-     if(act==="activate"){
-       const r=await sb.functions.invoke("studio-activate-member",{body:{application_id:id}});
+
+     if(q){
+       const r=await q;
        if(r.error)throw r.error;
-       if(r.data&&r.data.error)throw new Error(r.data.error);
-       msg("Member activated and invitation email sent.");
+     }
+
+     if(act==="approve"){
+       msg("Approved. A payment email draft is ready for you to review and send.");
+       if(application){
+         window.parent.postMessage({
+           type:"lions-rock-email-client",
+           name:application.full_name||"",
+           email:application.email||"",
+           subject:"Lions Rock Studio Access — Payment",
+           greeting:"Hi "+String(application.full_name||"").trim().split(/\s+/)[0]+",",
+           body:"Your application for Lions Rock Studio has been approved.\n\nThe next step is payment. Please add the payment amount and payment instructions here before sending this email.\n\nOnce payment is confirmed, your private Studio account invitation will be sent.",
+           signoff:"With gratitude,"
+         },location.origin);
+       }
+     }else if(act==="paid" || act==="comp"){
+       await activateAndInvite(id);
+       msg(act==="paid"?"Payment confirmed — invitation email sent.":"Comp access activated — invitation email sent.");
+     }else if(act==="activate"){
+       await activateAndInvite(id);
+       msg("Invitation email sent.");
+     }else if(act==="decline"){
+       msg("Application declined.");
      }
      await load();
    }catch(e){msg(e.message||String(e),true)}
