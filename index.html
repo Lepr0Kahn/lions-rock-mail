@@ -468,8 +468,8 @@ Talk soon.</textarea>
    Standalone. Save this file anywhere. No internet required.
    ================================================================= */
 
-const ASSET_LOGO = "/icon-192.png?v=20260930-2";
-const ASSET_SIGNATURE = "/signature.jpg?v=20260930-2";
+const ASSET_LOGO = "https://lions-rock-mail.vercel.app/icon-192.png?v=6";
+const ASSET_SIGNATURE = "https://lions-rock-mail.vercel.app/signature.jpg?v=5";
 
 const BRAND = "LION'S ROCK MEDIA FACILITY";
 const INSTAGRAM_BRAND = "https://instagram.com/lionsrockmedia";
@@ -662,15 +662,7 @@ function buildEmailHtml() {
   </td></tr>
 </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;"><tr><td align="center" style="padding:18px 12px 0 12px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#a19d98;letter-spacing:0.16em;text-transform:uppercase;">&copy; ${new Date().getFullYear()} Lion&rsquo;s Rock Media Facility</td></tr></table>
-</td></tr></table><script id="lions-rock-cache-cleanup">
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
-}
-if ("caches" in window) {
-  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
-}
-</script>
-</body></html>`;
+</td></tr></table></body></html>`;
 }
 
 function buildPlainText() {
@@ -957,13 +949,6 @@ function bind() {
   }
 
   function initGoogle() {
-    if (location.origin === "https://lions-rock-mail.vercel.app") {
-      setGmailRuntimeNote(
-        '<b>Hosted Gmail mode:</b> this site is running from the correct HTTPS origin. ' +
-        'Google sign-in will work only after <code>https://lions-rock-mail.vercel.app</code> ' +
-        'is added to the OAuth client\'s Authorized JavaScript origins and the Gmail API is enabled.', true
-      );
-    }
     // Google OAuth cannot be authorized from a file:// page. The browser must
     // give Google a real origin such as http://localhost:8000 or an HTTPS site.
     if (location.protocol === "file:") {
@@ -1012,3 +997,221 @@ function bind() {
               state.gmail.email = j.email || "";
             }
           } catch (_) { /* email display is non-fatal */ }
+
+          updateGmailUi();
+          toast("Gmail connected", "You can now send from this Gmail account.");
+        },
+        error_callback: (err) => {
+          const detail = err?.message || err?.type || "Google authorization could not be completed.";
+          toast("Google authorization failed", detail, true);
+        },
+      });
+      googleReady = true;
+      setGmailRuntimeNote("", false);
+    } catch (e) {
+      console.error("Google OAuth initialization failed", e);
+      setGmailRuntimeNote("<b>Google OAuth initialization failed.</b> Check the OAuth client configuration.", true);
+    }
+  }
+
+  function gmailSignIn() {
+    if (location.protocol === "file:") {
+      setGmailRuntimeNote(
+        '<b>Run this page through a local web server first.</b> For example, from the folder containing this file run ' +
+        '<code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/lions-rock-offline.html</code>.', true
+      );
+      return;
+    }
+    if (!state.gmail.tokenClient || !googleReady) {
+      return toast("Google is still loading", "Make sure you are online, then try again.", true);
+    }
+    // First authorization asks for consent. Subsequent requests can reuse the
+    // Google session without forcing the consent dialog every time.
+    state.gmail.tokenClient.requestAccessToken({ prompt: "consent" });
+  }
+
+  function gmailSignOut() {
+    const token = state.gmail.accessToken;
+    if (token && window.google?.accounts?.oauth2?.revoke) {
+      window.google.accounts.oauth2.revoke(token, () => {});
+    }
+    state.gmail.accessToken = null;
+    state.gmail.email = "";
+    updateGmailUi();
+    toast("Signed out of Gmail.");
+  }
+
+  async function sendWithGmail() {
+    if (!state.gmail.accessToken) return gmailSignIn();
+    if (!state.to.trim()) return toast("Recipient required", "Add at least one email address.", true);
+    if (state.gmail.sending) return;
+    state.gmail.sending = true;
+    const btn = $("send-gmail");
+    const originalText = btn.textContent;
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const html = buildEmailHtml();
+      const plain = buildPlainText();
+      const raw = buildGmailRaw({
+        to: state.to.trim(),
+        cc: state.cc.trim(),
+        bcc: state.bcc.trim(),
+        subject: state.subject || "A note from Lion's Rock Media Facility",
+        html, plaintext: plain,
+        attachments: state.tracks.map(t => ({ name: t.name, mime: t.type, base64: t.base64 })),
+      });
+      const resp = await fetch(GMAIL_SEND_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${state.gmail.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ raw }),
+      });
+      if (resp.status === 401) {
+        state.gmail.accessToken = null; state.gmail.email = ""; updateGmailUi();
+        return toast("Session expired", "Sign in again and re-tap Send.", true);
+      }
+      if (!resp.ok) {
+        let detail = "Gmail rejected the message.";
+        try {
+          const errJson = await resp.json();
+          detail = errJson?.error?.message || detail;
+        } catch (_) {
+          try { detail = (await resp.text()).slice(0, 240) || detail; } catch (_) {}
+        }
+        if (resp.status === 403) {
+          detail += " Make sure the Gmail API is enabled and this OAuth client has the gmail.send scope authorized.";
+        }
+        return toast("Send failed", detail, true);
+      }
+      await resp.json();
+      toast("Email sent!", `Delivered to ${state.to}${state.tracks.length ? ` with ${state.tracks.length} attachment${state.tracks.length>1?"s":""}` : ""}. Check your Sent folder.`);
+    } catch (e) {
+      toast("Send failed", String(e), true);
+    } finally {
+      state.gmail.sending = false;
+      btn.disabled = false; btn.textContent = originalText;
+    }
+  }
+
+  // Wire recipient inputs
+  ["to","cc","bcc"].forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener("input", () => { state[id] = el.value; });
+    }
+  });
+
+  $("send-gmail").addEventListener("click", sendWithGmail);
+  updateGmailUi();
+  initGoogle();
+
+  // Helper: copy styled email (rich) to clipboard
+  async function copyRich() {
+    const html = buildEmailHtml();
+    const text = buildPlainText();
+    try {
+      if (window.ClipboardItem && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([text], { type: "text/plain" }),
+        })]);
+        return { ok: true, rich: true };
+      }
+      await navigator.clipboard.writeText(text);
+      return { ok: true, rich: false };
+    } catch (e) { return { ok: false, rich: false }; }
+  }
+
+  // Smart "Send via Mail" — legacy handler (button removed; kept as no-op to avoid errors)
+  const legacyMailBtn = $("send-mail");
+  if (legacyMailBtn) legacyMailBtn.addEventListener("click", async () => {
+    const files = state.tracks.map(t => {
+      if (t.file instanceof File) return t.file;
+      const bin = atob(t.base64);
+      const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return new File([u8], t.name, { type: t.type });
+    });
+    const text = buildPlainText();
+    if (files.length && navigator.canShare && navigator.canShare({ files })) {
+      await copyRich();
+      try {
+        await navigator.share({ title: state.subject || "From The Lion's Rock Media Facility", text, files });
+        toast("Sharing — pick Mail.", "Audio attached. Body on clipboard.");
+        return;
+      } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    const res = await copyRich();
+    const subj = encodeURIComponent(state.subject || "");
+    const bodyHint = res.rich ? "[Paste — styled email is on your clipboard.]" : text;
+    window.location.href = `mailto:?subject=${subj}&body=${encodeURIComponent(bodyHint)}`;
+  });
+
+  $("dl-eml").addEventListener("click", () => {
+    const blob = new Blob([buildEml()], { type: "application/octet-stream" });
+    triggerDownload(blob, safeFileName(state.subject) + ".eml");
+    toast("Draft ready.", "Check your Downloads. Open the .eml in your default mail app (best on desktop).");
+  });
+
+  $("copy-html").addEventListener("click", async () => {
+    const res = await copyRich();
+    if (res.ok && res.rich) toast("Copied as styled email.", "Open your mail app, start a new message, paste into the body.");
+    else if (res.ok) toast("Copied (plain text).", "Browser doesn't support rich copy.");
+    else toast("Couldn't copy.", "Try the .eml download instead.", true);
+  });
+
+  $("dl-html").addEventListener("click", () => {
+    const blob = new Blob([buildEmailHtml()], { type: "text/html;charset=utf-8" });
+    triggerDownload(blob, "lions-rock-email-template.html");
+    toast("Template downloaded.");
+  });
+}
+
+function renderTracks() {
+  const list = $("tracks-list");
+  const empty = $("tracks-empty");
+  if (!state.tracks.length) {
+    list.innerHTML = ""; empty.style.display = "block"; return;
+  }
+  empty.style.display = "none";
+  const totalSize = state.tracks.reduce((a, t) => a + t.size, 0);
+  list.innerHTML = state.tracks.map(t => `
+    <div class="track">
+      <div class="track-mark">♪</div>
+      <div class="track-info">
+        <div class="track-name">${escapeHtml(t.name)}</div>
+        <div class="track-meta">${escapeHtml((t.type || "").replace("audio/", ""))} · ${t.sizeLabel}</div>
+      </div>
+      <button class="track-remove" data-id="${escapeHtml(t.id)}" title="Remove">✕</button>
+    </div>
+  `).join("") + `<div class="track-total">Total: ${formatBytes(totalSize)} / 25 MB</div>`;
+
+  list.querySelectorAll(".track-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      state.tracks = state.tracks.filter(t => t.id !== id);
+      renderTracks(); renderPreview();
+    });
+  });
+}
+
+/* ---------------- INIT ---------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  $("year").textContent = new Date().getFullYear();
+  bind();
+  renderTracks();
+  renderPreview();
+});
+</script>
+<script id="lions-rock-cache-cleanup">
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+}
+if ("caches" in window) {
+  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+}
+</script>
+</body>
+</html>
