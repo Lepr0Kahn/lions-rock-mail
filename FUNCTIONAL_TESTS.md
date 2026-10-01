@@ -348,3 +348,11 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - tests/vault-invoice-handoff.cjs tests the current studio.html handler: invoice number, recipient, price/items and generator payload; wrong iframe and non-Owner rejection; suspension during document fetch and account switch during item fetch cancel handoff; query failure shows an error.
 - Fixed storage NULL-master-filename edge case. Expanded transactional SQL regression verifies an artist with a released lease cannot read an unrelated asset when the catalogue master filename is cleared. Existing lease/payment/numbering checks also passed; fixtures rolled back.
 - Actual Supabase audio byte transfer/playback remains pending an authenticated live browser session. Source and metadata checks are not an audio end-to-end pass.
+
+## Owner payment records and receipts — 2026-10-01
+
+- tests/invoice-payment-ledger.sql passed preserving existing paid amounts as opening balances, cash/bank partial/full entries, idempotent retry, refund/correction limits, immutable entry permissions, prevention of paid-balance overwrite and invoice deletion, unchanged invoice number, unique per-invoice entry references and non-Owner denial. Fixtures rolled back.
+- Reuses public.payments; no real account entries imported/created. Invoices opt into ledger on first entry or explicit opening-balance preparation. Opening balance is clearly unverified; no new receipt is assigned to it.
+- Payment receipts and refund/correction records print from the entry amount/date/method and invoice snapshot. They are manually recorded evidence, not processor-confirmed settlement. Refund record performs no money transfer. References such as INV-0003-P001 are entry references attached to the existing invoice number, not a new invoice sequence.
+- Ledger invoices retain their account/type/currency and payment history. Void instead of deleting. Legacy direct paid-amount edits on invoices without a ledger retain their prior behavior.
+- Live authenticated browser cash/audio/provider verification remains pending. No payment-provider credentials or charge/refund execution enabled.
