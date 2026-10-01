@@ -68,7 +68,7 @@ if r.status<>'requested' then raise exception 'Request closed';end if;
 select * into member from public.app_memberships where user_id=r.user_id and access_status='active' and artist_member_enabled and payment_status in('paid','comped') and deleted_at is null and(expires_at is null or expires_at>now());
 if member.user_id is null then raise exception 'Artist access is inactive';end if;
 insert into public.documents(user_id,doc_type,status,doc_date,currency,deposit_pct,subtotal,total,balance_due,client_name,client_email,notes)
-values(auth.uid(),'invoice','open',current_date,r.currency,100,r.price_snapshot,r.price_snapshot,r.price_snapshot,coalesce(nullif(member.business_name,''),member.email),member.email,'Instrumental lease: '||r.title_snapshot||E'\nLicence terms: '||r.terms_snapshot) returning id into docid;
+values(auth.uid(),'invoice','open',(now() at time zone 'America/Barbados')::date,r.currency,100,r.price_snapshot,r.price_snapshot,r.price_snapshot,coalesce(nullif(member.business_name,''),member.email),member.email,'Instrumental lease: '||r.title_snapshot||E'\nLicence terms: '||r.terms_snapshot) returning id into docid;
 insert into public.document_items(document_id,user_id,name,description,qty,unit_price,line_total) values(docid,auth.uid(),'Instrumental lease — '||r.title_snapshot,r.terms_snapshot,1,r.price_snapshot,r.price_snapshot);
 update public.studio_instrumental_requests set status='approved',invoice_id=docid where id=r.id;return docid;
 elsif decision='release' then
