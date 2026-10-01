@@ -7,7 +7,7 @@ create or replace function public.reserve_document_number(document_id uuid,docum
 declare u uuid:=auth.uid(); p text; n bigint; existing text; existing_type text;
 begin
  if u is null or not private.has_active_studio_access() then raise exception 'Active Business Tools access required' using errcode='42501';end if;
- if document_id is null or document_type not in ('invoice','quote') then raise exception 'Invalid document';end if;
+ if document_id is null or document_type is null or document_type not in ('invoice','quote') then raise exception 'Invalid document';end if;
  p:=case when document_type='quote' then 'QUO' else 'INV' end;
  perform pg_advisory_xact_lock(hashtextextended('studio-document-numbers-'||u::text,0));
  select d.doc_number,d.doc_type into existing,existing_type from public.documents d where d.id=document_id and d.user_id=u;
@@ -42,3 +42,8 @@ begin
 end;$fn$;
 revoke all on function private.assign_document_number() from public,anon,authenticated;
 create trigger assign_document_number before insert or update on public.documents for each row execute function private.assign_document_number();
+insert into private.document_number_counters(user_id,prefix,last_value)
+select user_id,case when doc_number like 'QUO-%' then 'QUO' else 'INV' end,max(substring(doc_number from '([0-9]+)$')::bigint)
+from public.documents where doc_number~'^(INV|RCP|QUO)-[0-9]+$'
+group by user_id,case when doc_number like 'QUO-%' then 'QUO' else 'INV' end
+on conflict(user_id,prefix) do update set last_value=greatest(private.document_number_counters.last_value,excluded.last_value);
