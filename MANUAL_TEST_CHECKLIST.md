@@ -27,6 +27,9 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Upload actual reference audio, retrieve it, and compare bytes. Owner delivers master/MP3; Artist cannot deliver/reissue a master.
 - [ ] Expired project delivery refuses new downloads; Owner reissue restores them.
 - [ ] Vault draft cannot publish without both audio objects and licence terms. Published preview actually plays.
+- [ ] Choose a clean master, set BPM, optionally select your own short audio tag and beats per bar (default 4). Generate/listen; tag occurs at the start and every eight bars. At 120 BPM/4 beats per bar, repeats at 16/32/48 seconds. At 60 BPM, every 32 seconds.
+- [ ] Save with automatic generation: clean master remains unchanged; published preview is a separate WAV capped at 90 seconds. Compare downloaded master bytes with original. Change BPM/tag/master and regenerate; cancel or switch item/account mid-generation and confirm no stale preview publishes.
+- [ ] Without a custom tag, hear the tone at eight-bar intervals. Unsupported codecs/silent or long tags fail with a clear message; prepared manual preview remains available. Test on Mac and iPhone, including generation from an existing saved master. Custom tag is not retained as a studio preset.
 - [ ] Artist requests once; Owner approves; retry produces one shared-number invoice. Another Artist cannot access the request/master.
 - [ ] Unpaid/part-paid lease refuses release; recorded full payment plus explicit release enables actual master download.
 - [ ] Refund/payment correction/void removes financial download eligibility. Already downloaded copies cannot be recalled.

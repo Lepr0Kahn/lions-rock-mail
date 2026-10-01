@@ -21,7 +21,7 @@ Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live bro
 
 ## Remaining work
 
-- Vault catalogue/lease request/invoice/release, recorded payments/refunds/corrections and printing are implemented. Actual byte playback/download and live printing remain unverified. Automatic tagged previews/exclusive licensing remain outstanding.
+- Vault catalogue/lease request/invoice/release, recorded payments/refunds/corrections and printing are implemented. Actual byte playback/download and live printing remain unverified. Browser-generated BPM/bar-based custom-tag previews are implemented; actual playback/upload and phone performance remain unverified. Exclusive licensing remains outstanding.
 - Guardian/minor invoice approval and financial projections are implemented. Cash intent and recorded settlement use existing invoice/payment systems. Guardian identity is bearer-link recipient asserted; operational email, online checkout and dual formal receipts remain outstanding. Guardian booking approval is through invoice review after studio confirmation; it is not a separate approval gate before booking confirmation.
 - Payment-provider selection/configuration and sandbox/production charges/refunds.
 - Explain-only Direction Engine and external operational notifications.
