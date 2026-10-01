@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "status": "review_only",
+  "runtime_enabled": false,
+  "source": "Lepr0Kahn/LIONS-ROCK-OS-FOR-SAGE/backend/rewards.py",
+  "reviewed_at": "2026-10-01",
+  "xp_policy": {
+    "membership_granted": {
+      "points": 50,
+      "limit": "once"
+    },
+    "profile_complete": {
+      "points": 100,
+      "limit": "once"
+    },
+    "project_created": {
+      "first_points": 150,
+      "subsequent_points": 50,
+      "limit": "one per project"
+    },
+    "material_uploaded": {
+      "first_points": 100,
+      "subsequent_points": 0,
+      "limit": "first eligible material only"
+    },
+    "session_booked": {
+      "points": 75,
+      "limit": "one per confirmed booking"
+    },
+    "session_completed": {
+      "points": 200,
+      "enabled": false,
+      "reason": "Attendance not recorded"
+    },
+    "master_delivered": {
+      "points": 250,
+      "limit": "one per project proposed; avoid master/MP3/reissue duplication"
+    },
+    "master_collected": {
+      "points": 100,
+      "limit": "one per project proposed"
+    },
+    "invoice_settled": {
+      "points": 75,
+      "limit": "one per fully paid eligible invoice; correction removes eligibility"
+    },
+    "release_published": {
+      "points": 500,
+      "limit": "one per project"
+    },
+    "cycle_completed": {
+      "points": 300,
+      "enabled": false,
+      "reason": "No authoritative full-cycle completion event"
+    }
+  },
+  "levels": [
+    [
+      1,
+      "Initiate",
+      0
+    ],
+    [
+      2,
+      "Apprentice",
+      250
+    ],
+    [
+      3,
+      "Contender",
+      600
+    ],
+    [
+      4,
+      "Craftsman",
+      1200
+    ],
+    [
+      5,
+      "Professional",
+      2000
+    ],
+    [
+      6,
+      "Headliner",
+      3200
+    ],
+    [
+      7,
+      "Cornerstone",
+      5000
+    ],
+    [
+      8,
+      "Lion",
+      7500
+    ]
+  ],
+  "benefits": [
+    {
+      "id": "mix_discount_10",
+      "name": "10% off next mix",
+      "level": 2,
+      "source_capacity": 20,
+      "valid_days": 60,
+      "hours": 0,
+      "source_value_bbd": 55,
+      "proposed_value_bbd": 35,
+      "enabled": false
+    },
+    {
+      "id": "free_instrumental_lease",
+      "name": "Complimentary instrumental lease",
+      "level": 3,
+      "source_capacity": 10,
+      "valid_days": 90,
+      "hours": 0,
+      "source_value_bbd": 150,
+      "proposed_value_bbd": null,
+      "enabled": false
+    },
+    {
+      "id": "priority_booking",
+      "name": "Priority booking window",
+      "level": 4,
+      "source_capacity": 10,
+      "valid_days": 180,
+      "hours": 0,
+      "source_value_bbd": 0,
+      "proposed_value_bbd": 0,
+      "enabled": false
+    },
+    {
+      "id": "recording_block_2h",
+      "name": "Complimentary 2-hour recording block",
+      "level": 5,
+      "source_capacity": 6,
+      "valid_days": 90,
+      "hours": 2,
+      "source_value_bbd": 350,
+      "proposed_value_bbd": null,
+      "enabled": false
+    },
+    {
+      "id": "free_single_mix",
+      "name": "Free mix on next single",
+      "level": 6,
+      "source_capacity": 4,
+      "valid_days": 120,
+      "hours": 2,
+      "source_hours": 3,
+      "source_value_bbd": 550,
+      "proposed_value_bbd": 350,
+      "enabled": false
+    },
+    {
+      "id": "showcase_slot",
+      "name": "Lounge showcase slot",
+      "level": 7,
+      "source_capacity": 4,
+      "valid_days": 180,
+      "hours": 2,
+      "source_value_bbd": 250,
+      "proposed_value_bbd": null,
+      "enabled": false
+    },
+    {
+      "id": "promotional_feature",
+      "name": "Promotional feature",
+      "level": 8,
+      "source_capacity": 2,
+      "valid_days": 365,
+      "hours": 4,
+      "source_value_bbd": 400,
+      "proposed_value_bbd": null,
+      "enabled": false
+    }
+  ]
+}
