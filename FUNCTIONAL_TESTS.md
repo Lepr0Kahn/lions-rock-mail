@@ -164,3 +164,12 @@ Vercel Google sign-in and device verification completed. Promotion of READY prev
 Owner authenticated in the built preview. Default Management Dashboard verified. Existing INV-0001 opened in the readonly-number generator; Email Client completed online sync/final-number confirmation and attached Lions-Rock-Invoice-INV-0001.pdf (140.8 KB) with matching subject/body. No email sent. Zero-value Mark Paid resets to due on sync under existing total-based status logic; do not claim persisted paid browser test from it. SQL positive-path paid status number preservation already passed.
 
 Source inspection additionally found that duplicating a booking invoice retained its unique booking_id. New copies now detach that link; actual duplicate branch regression passed. This follow-up is in main but absent from the earlier READY preview. Remaining: production frontend release, two real concurrent browser sessions, a distinct Artist sign-in flow and iPhone-specific visual checks.
+
+
+## Owner management Action Center — PR #9
+
+Adapted the role-aware Action Center concept from LIONS-ROCK-OS-FOR-SAGE (memory/PRD.md and admin analytics). Owner Management Dashboard now queues active booking requests, upcoming confirmed sessions, own unpaid invoices and non-archived-project studio deliveries expiring within seven days. Total balances are grouped by currency; expired holds, zero balances, paid and void invoices are excluded. Lists show up to five items with full counts; session timestamps use Barbados time. Actions open existing bookings, invoices and project deliveries, retaining the existing generator and Mail tools.
+
+Data comes from public.studio_management_overview, SECURITY INVOKER with empty search_path and live Owner/Business/Artist guards. Anonymous execute is revoked. Member/Business accounts cannot call management data, and member UI keeps this section hidden. Invoice navigation validates originating frame, Owner role and database account ownership. No payment or outbound email action added.
+
+Before/after-migration SQL rollback tests passed for pending/expired holds, upcoming sessions, expiring deliveries, overdue dates, BBD/USD separation, paid/void exclusions and Business/Artist denial. All existing fixture changes rolled back. Both page scripts parsed. Database function installed; frontend pending Vercel quota reset. New Action Center browser/mobile verification is not yet claimed.
