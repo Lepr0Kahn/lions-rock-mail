@@ -272,6 +272,7 @@
       return {
         id: d.id,
         booking_id: d.booking_id || null,
+        artist_project_id: d.artist_project_id || null,
         currency: d.currency || "BBD",
         client_id: d.client_id || null,
         project_id: d.project_id || null,
@@ -446,6 +447,7 @@
         id: d.id,
         user_id: uid,
         booking_id: d.booking_id || null,
+        artist_project_id: d.artist_project_id || null,
         client_id: d.client_id || null,
         project_id: d.project_id || null,
         doc_type: d.type === "invoice" ? "invoice" : "quote",

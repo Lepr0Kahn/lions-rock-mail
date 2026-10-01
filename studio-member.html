@@ -39,7 +39,7 @@
 <div class="field"><label for="project-date">Target date</label><input id="project-date" type="date"></div>
 <div class="field"><label for="project-brief">Brief</label><textarea id="project-brief" rows="5" maxlength="10000"></textarea></div>
 <button id="create-project" class="primary">Create project</button></form></div></section>
-<section id="detail" class="hidden"><button id="back-projects">Back to projects</button><div class="card" style="margin-top:20px"><div id="detail-kind" class="eyebrow"></div><h2 id="detail-title"></h2><p id="detail-date" class="muted"></p><p id="detail-brief" class="brief"></p><div class="field"><label for="detail-status">Project status</label><select id="detail-status"><option value="active">Active</option><option value="released">Released</option><option value="archived">Archived</option></select></div><button id="save-status" class="primary">Save status</button></div>
+<section id="detail" class="hidden"><button id="back-projects">Back to projects</button><div class="card" style="margin-top:20px"><div id="detail-kind" class="eyebrow"></div><h2 id="detail-title"></h2><p id="detail-date" class="muted"></p><p id="detail-brief" class="brief"></p><div class="field"><label for="detail-status">Project status</label><select id="detail-status"><option value="active">Active</option><option value="released">Released</option><option value="archived">Archived</option></select></div><button id="save-status" class="primary">Save status</button><div class="field"><label for="budget-amount">Project budget</label><input id="budget-amount" type="number" min="0" step="0.01" placeholder="Optional"></div><div class="field"><label for="budget-currency">Budget currency</label><select id="budget-currency"><option value="BBD">BBD</option><option value="USD">USD</option></select></div><p class="muted">Your planned budget is separate from a quote or charge. Leave blank to clear it.</p><button id="save-budget" class="primary">Save budget</button> <button id="project-quote" class="hidden">Open project quote</button></div>
 <div class="layout"><div class="card"><h2>Files &amp; deliveries</h2><div id="file-list"></div></div>
 <form id="upload-form" class="card"><div class="eyebrow">Upload to project</div>
 <div class="field"><label for="upload-file">File — up to 50 MB</label><input id="upload-file" type="file" required></div>
@@ -73,7 +73,9 @@
    el("next-detail").textContent=next?"The earliest active target is "+next.target_date+". Review the brief and the work still needed.":isOwner?"Create projects for artists, review briefs, and deliver studio files from the project queue.":"A clear brief and target date give your next studio conversation a starting point.";
    if(selected){const p=items.find(p=>p.id===selected);if(p)open(p.id);else show("projects");}
  }
- function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;show("detail");loadFiles(id);}
+ el("project-quote").onclick=()=>{if(isOwner&&selected)window.parent.postMessage({type:"lions-rock-project-quote",projectId:selected},location.origin);};
+ el("save-budget").onclick=async()=>{if(!selected)return;const button=el("save-budget"),projectId=selected,raw=el("budget-amount").value.trim(),amount=raw===""?null:Number(raw);if(amount!==null&&(!Number.isFinite(amount)||amount<0)){notice("Enter a budget of zero or more.",true);return;}button.disabled=true;try{const r=await sb.from("artist_projects").update({budget_amount:amount,budget_currency:amount===null?null:el("budget-currency").value}).eq("id",projectId).select("id").single();if(r.error)throw r.error;await load();notice("Project budget saved.");}catch(error){notice(error.message||"Could not save budget.",true);}finally{button.disabled=false;}};
+ function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;el("budget-amount").value=p.budget_amount??"";el("budget-currency").value=p.budget_currency||"BBD";el("project-quote").classList.toggle("hidden",!isOwner);show("detail");loadFiles(id);}
  function renderOperations(data){
    if(!isOwner)return;
    el("ops-pending").textContent=data.pending_count;
@@ -195,7 +197,7 @@
    if(member.error)return deny("Could not check artist access. Refresh to retry.");
    if(!m||m.access_status!=="active"||!["paid","comped"].includes(m.payment_status)||(m.expires_at&&new Date(m.expires_at)<=new Date())||(m.role!=="owner"&&!m.artist_member_enabled))return deny("Active Artist Member access is required.");
    uid=session.user.id;isOwner=m.role==="owner";
-   let query=sb.from("artist_projects").select("id,user_id,title,kind,brief,target_date,status,created_at").order("created_at",{ascending:false});
+   let query=sb.from("artist_projects").select("id,user_id,title,kind,brief,target_date,status,created_at,budget_amount,budget_currency").order("created_at",{ascending:false});
    if(!isOwner)query=query.eq("user_id",uid);
    const result=await query;
    if(version!==generation)return;
