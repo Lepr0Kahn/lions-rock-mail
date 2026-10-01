@@ -1,5 +1,9 @@
 # MFA endpoint status
 
-studio-create-invite v5 deployed: caller-scoped owner_mfa_status RPC checks the verified caller token before link generation and service-role mutations. Lookup errors and denied status return 403. Existing Auth getUser and active Owner checks remain. Function deployment succeeded; live authenticated request testing remains pending.
+Reviewed live source: studio-activate-member v2 and studio-apply v2 are closed, return HTTP 410 and perform no activation or application writes. OPTIONS remains available.
 
-studio-activate-member v2 still needs review and caller MFA gate. studio-claim-invite and public studio-apply require separate review of their intended non-management flows. No Owner MFA requirement has been enabled. Activation UI remains unavailable until coverage and end-to-end testing are complete.
+studio-create-invite v5 and studio-claim-invite v3 now use caller-token-scoped owner_mfa_status RPC before service-role mutations. Failed checks and disallowed sessions return 403. Existing Auth getUser verification remains. Both deployed successfully. Normal members with no required setting remain allowed by this gate and retain the original invitation checks.
+
+node tests/mfa-endpoints.cjs passes source-extracted guard tests for denied, lookup-error and permitted statuses and verifies token-scoped authorization. This is a mock guard test, not a live invite creation/claim test. No real invites were sent or claimed during testing.
+
+No Owner MFA requirement has been enabled. Live primary/backup enrollment, fresh login, invitation flows, remaining privileged RPC coverage and activation/recovery controls remain pending. Do not enable the private setting manually before those checks pass.
