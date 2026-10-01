@@ -61,6 +61,8 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Booking, delivery, vault and recorded payment events reach intended recipients once. Clicking opens the correct view; unread/mark-all-read refresh and sign-out clearing work.
 - [ ] Owner analytics 7/30/90-day windows and BBD/USD balances match fixtures; Artist cannot enter analytics.
 - [ ] XP/levels/badges reflect new authoritative evidence. Repeated saves/delivery reissues do not inflate XP; archive/reversal/correction removes invalid credit.
+- [ ] Direction guidance shows five evidence-cited actions and current stage rationale. Thin/missing records are stated; repeated refresh does not change authoritative scores/rewards. Buttons open the expected workspace only.
+- [ ] Owner selects another Artist and guidance changes; denied/removed Artist does not leave old guidance visible. Minor business guidance refers to guardian; no monetary figures appear.
 - [ ] Financial reward benefits remain disabled.
 
 ## Remaining build-dependent checks
