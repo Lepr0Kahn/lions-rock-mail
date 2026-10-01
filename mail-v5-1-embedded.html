@@ -1487,7 +1487,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }catch(e){console.warn("Studio clients:",e);}
   }
   window.addEventListener("message",function(e){
-    if(e.origin!==location.origin || !e.data)return;
+    if(e.origin!==location.origin || e.source!==window.parent || !e.data)return;
     if(e.data.type==="lions-rock-mail-client"){
       if(e.data.attachment || e.data.subject || e.data.body || e.data.greeting || e.data.signoff) fillStudioEmail(e.data);
       else fillClient({name:e.data.name||"",email:e.data.email||""});

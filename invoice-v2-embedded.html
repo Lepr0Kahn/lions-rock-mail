@@ -1044,13 +1044,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
 
       var originalText=b.textContent;
+      var wasInert=document.body.inert;
+      document.body.inert=true;
       b.disabled=true;
       b.textContent="Preparing PDF…";
       try{
         var doc=(typeof window.saveDoc==="function")?window.saveDoc():null;
         if(!doc) return;
         doc=await window.finalizeStudioDocument(doc);
-        if(typeof window.renderPreview==="function")window.renderPreview();
+        email=String(doc.client_email||"").trim();
+        name=doc.client_name||"";
+        if(!email)throw new Error("Add the client email first");
+        if(typeof window.loadDocIntoGenerator==="function")window.loadDocIntoGenerator(doc);
+        else if(typeof window.renderPreview==="function")window.renderPreview();
         await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});
         var attachment=await buildPdfAttachment(doc);
         var copy=emailCopy(doc);
@@ -1073,6 +1079,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         console.error("Email document PDF:",err);
         if(typeof window.toast==="function")window.toast("Could not prepare PDF: "+(err.message||err),true);
       }finally{
+        document.body.inert=wasInert;
         b.disabled=false;
         b.textContent=originalText;
       }
