@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0d0c0c">
+<script src="payment-receipt.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0d0c0c;--surface:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b}
@@ -138,7 +139,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=9" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=21" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=22" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=6" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -465,6 +466,7 @@ body.studio-authenticated .login-gate{display:none!important}
    const b=e.target.closest("button[data-app]");if(!b)return;
    activate(b.dataset.app,b.dataset.view||null);
  });
+ let receiptEmailGeneration=0;
  window.addEventListener("message",async e=>{
    if(e.origin!==location.origin||!e.data)return;
    if(e.data.type==="lions-rock-hub-view-changed"){
@@ -508,6 +510,20 @@ body.studio-authenticated .login-gate{display:none!important}
        if(r.error)throw r.error;
        activate("documents","generator",{type:"lions-rock-booking-document",...r.data});
      }catch(error){toast(error.message||"Could not open the booking invoice.");}
+     return;
+   }
+   if(e.data.type==="lions-rock-receipt-email"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     const account=currentSession?.user?.id, invoiceId=e.data.invoiceId, entryId=e.data.entryId;
+     if(!account||! /^[0-9a-f-]{36}$/i.test(invoiceId||"")||! /^[0-9a-f-]{36}$/i.test(entryId||""))return;
+     const request=++receiptEmailGeneration;
+     try{
+       const [d,p]=await Promise.all([sb.from("documents").select("id,user_id,doc_type,doc_number,client_name,client_email,currency").eq("user_id",account).eq("id",invoiceId).single(),sb.from("payments").select("*").eq("user_id",account).eq("document_id",invoiceId).eq("id",entryId).single()]);
+       if(request!==receiptEmailGeneration||currentSession?.user?.id!==account||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+       if(d.error||p.error)throw Error("Could not load this receipt. Refresh payments and retry.");
+       const draft=LionsRockReceipt.draft(p.data,d.data);pendingClient=draft;activate("mail");
+       setTimeout(()=>{if(request!==receiptEmailGeneration||currentSession?.user?.id!==account||currentMembership?.role!=="owner"||!canBusiness(currentMembership)||pendingClient!==draft)return;mail.contentWindow.postMessage({type:"lions-rock-mail-client",...draft},location.origin);},60);
+     }catch(error){if(request===receiptEmailGeneration&&currentSession?.user?.id===account)toast(error.message||"Could not prepare receipt.");}
      return;
    }
    if(e.data.type==="lions-rock-guardian-email"){

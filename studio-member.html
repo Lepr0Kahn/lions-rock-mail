@@ -502,7 +502,7 @@
    entries.forEach(p=>{
      if(["payment","opening"].includes(p.kind)){const remaining=Number(p.amount)+entries.filter(x=>x.source_payment_id===p.id).reduce((n,x)=>n+Number(x.amount),0);if(remaining>0){const o=document.createElement("option");o.value=p.id;o.textContent=(p.receipt_number||"Opening balance")+" · "+d.currency+" "+remaining.toFixed(2)+" remaining";source.append(o);}}
      const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=(p.receipt_number||"Opening balance")+" · "+p.kind+" · "+d.currency+" "+Number(p.amount).toFixed(2);const detail=document.createElement("p");detail.textContent=p.payment_date+" · "+p.method+" · "+(p.notes||"");row.append(title,detail);
-     if(p.receipt_number){const b=document.createElement("button");b.textContent="Print receipt / record";b.onclick=()=>printPaymentReceipt(p,d);row.append(b);}root.append(row);
+     if(p.receipt_number){const email=document.createElement("button");email.textContent="Prepare receipt email";email.onclick=()=>{if(!isOwner||!uid||el("payment-invoice").value!==d.id)return;window.parent.postMessage({type:"lions-rock-receipt-email",invoiceId:d.id,entryId:p.id},location.origin);};row.append(email);const b=document.createElement("button");b.textContent="Print receipt / record";b.onclick=()=>printPaymentReceipt(p,d);row.append(b);}root.append(row);
    });
    el("payment-source-field").classList.toggle("hidden",el("payment-kind").value==="payment");
  }

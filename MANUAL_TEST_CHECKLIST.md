@@ -75,3 +75,11 @@ Online payment provider sandbox/production setup, guardian outbound notification
 - Confirm sign-out and tab changes clear setup details. Non-Owners cannot open setup.
 - Management-wide MFA enforcement and recovery remain pending; enrollment alone does not require MFA for all API/database access.
 - Automated mock enrollment/verification/stale-view tests passed. Live Auth enrollment and phone QR scanning remain unverified.
+
+
+## Receipt email handoff
+- Owner Payments: Prepare receipt email for a recorded payment, refund and correction. Check distinct subject and record labels, invoice number, currency and amount.
+- Confirm recipient equals the saved invoice recipient; linked minor invoices must use the guardian's saved email. Missing email requires correction before drafting.
+- Confirm Mail clears prior attachments/CC/BCC and includes the readable .txt record. Review before manually sending.
+- Opening balances must not offer a receipt. Check account changes prevent delayed drafts.
+- Live Gmail send, iPhone attachment viewing and printed receipt remain pending.

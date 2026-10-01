@@ -404,3 +404,7 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - tests/career-direction.cjs passed evidence-backed actions, identity/project cases, missing evidence, retained stage, minor guidance, unchanged inputs/no authority fields, current-source render/error clearing and stale navigation rejection. JS/inline HTML parse passed.
 - Member dashboard shows next steps; Owner management shows selected Artist direction review. Buttons navigate only; no booking confirmation, publishing, payment or reward action is invoked. Existing server progress/tracks supply access checks.
 - Live authenticated UI remains unverified. AI-backed generation/provider activation is outstanding; this feature is explicitly labelled rule-based and does not claim a connected AI provider. Manual checklist updated.
+
+
+### Receipt email handoff
+`node tests/payment-receipt.cjs` passed against current source: payment/refund/correction labels, guardian recipient, UTF-8 text attachment, opening balance and invalid recipient rejection, ownership mismatch, wrong-frame rejection, and delayed account-change rejection. Shell inline scripts parse. No database writes or payment transfers are performed; shell re-reads Owner-scoped invoice and ledger entry before drafting. Live Mail/Gmail/phone verification remains pending. Receipt uses current saved invoice client/recipient, not an immutable historical contact snapshot.
