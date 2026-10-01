@@ -355,7 +355,7 @@
         <div class="panel">
           <div class="panel-title">Document Details</div>
           <div class="field-row">
-            <div class="field"><label>Document #</label><input type="text" id="doc-number"></div>
+            <div class="field"><label>Document #</label><small>Draft number is confirmed on sync. Connect before printing or emailing.</small><input type="text" id="doc-number" readonly></div>
             <div class="field"><label id="date-label">Quote Date</label><input type="date" id="doc-date"></div>
           </div>
           <div class="field">
@@ -639,7 +639,7 @@ function calcTotals(){
 }
 
 function nextDocNumber(type, paid) {
-  var prefix=type==='invoice'?(paid?'RCP':'INV'):'QUO';
+  var prefix=type==='invoice'?'INV':'QUO';
   var pattern=new RegExp('^'+prefix+'-(\\d+)$');
   var maxSeq=0;
   STORE.documents.forEach(function(doc){var m=(doc.doc_number||'').match(pattern); if(m)maxSeq=Math.max(maxSeq,parseInt(m[1],10));});
@@ -777,7 +777,7 @@ function setDocType(t){
 function updatePaidButton(){var b=$('paid-btn');if(!b)return;var x=calcTotals();state.paid=x.status==='paid';if(state.paid){b.textContent='Unmark as Paid';b.classList.add('unpaid');}else{b.textContent='Mark as Paid';b.classList.remove('unpaid');}}
 function togglePaid(){
   if(state.docType!=='invoice')return; var x=calcTotals();
-  if(x.status==='paid'){$('amount-paid').value='0';$('payment-date').value='';state.paid=false;if(/^RCP-/.test($('doc-number').value))$('doc-number').value=nextDocNumber('invoice',false);}else{$('amount-paid').value=x.total.toFixed(2);$('payment-date').value=todayISO();state.paid=true;if(!/^RCP-/.test($('doc-number').value))$('doc-number').value=nextDocNumber('invoice',true);}
+  if(x.status==='paid'){$('amount-paid').value='0';$('payment-date').value='';state.paid=false;}else{$('amount-paid').value=x.total.toFixed(2);$('payment-date').value=todayISO();state.paid=true;}
   renderPreview();
 }
 
@@ -798,8 +798,6 @@ function saveDoc(){
   var clientId=upsertClientFromForm();
   var status=x.status, paid=status==='paid', now=new Date().toISOString();
   var docNumber=($('doc-number').value||'').trim()||nextDocNumber(state.docType,paid);
-  if(state.docType==='invoice'&&paid&&!/^RCP-/.test(docNumber))docNumber=nextDocNumber('invoice',true);
-  if(state.docType==='invoice'&&!paid&&/^RCP-/.test(docNumber))docNumber=nextDocNumber('invoice',false);
   if(STORE.documents.some(function(d){return d.id!==state.editingId&&d.doc_number===docNumber;})){docNumber=nextDocNumber(state.docType,paid);toast('Document number adjusted to avoid a duplicate');}
   $('doc-number').value=docNumber;
   var record={
@@ -847,7 +845,7 @@ function renderHistory(){
     html+='<tr><td><span class="badge '+bc+'">'+bl+'</span></td><td style="font-family:monospace;">'+escapeHtml(r.doc_number)+'</td><td>'+escapeHtml(r.client_name||'—')+(r.project_name?'<div style="font-size:.7rem;color:var(--muted);margin-top:2px;">'+escapeHtml(r.project_name)+'</div>':'')+'</td><td>'+fmtDate(r.doc_date)+'</td><td style="text-align:right;font-weight:700;">'+fmtMoney(r.total)+'</td><td>'+statusCell+'</td><td><div class="row-actions"><button class="btn" data-action="edit" data-id="'+r.id+'">Open</button>'+(r.type==='quote'?'<button class="btn" data-action="convert" data-id="'+r.id+'">→ Invoice</button>':'')+((r.type==='invoice'&&st!=='paid')?'<button class="btn" data-action="pay" data-id="'+r.id+'">Mark Paid</button>':'')+'<button class="btn" data-action="dup" data-id="'+r.id+'">Duplicate</button><button class="btn" data-action="del" data-id="'+r.id+'">Del</button></div></td></tr>';
   });
   html+='</tbody></table>';el.innerHTML=html;
-  el.querySelectorAll('button[data-action]').forEach(function(b){b.addEventListener('click',function(e){var id=e.currentTarget.getAttribute('data-id'),action=e.currentTarget.getAttribute('data-action'),doc=STORE.documents.find(function(d){return d.id===id;});if(!doc)return;if(action==='edit')loadDocIntoGenerator(doc);else if(action==='convert'){var inv=convertQuoteRecord(doc);loadDocIntoGenerator(inv);toast('Converted to invoice');}else if(action==='pay'){doc.amount_paid=Number(doc.total||0);doc.paid=true;doc.payment_status='paid';doc.payment_date=todayISO();doc.paid_at=new Date().toISOString();doc.doc_number=nextDocNumber('invoice',true);doc.updated_at=new Date().toISOString();saveStore();renderHistory();renderDashboard();toast('Marked paid');}else if(action==='del'){if(!confirm('Delete this document permanently?'))return;STORE.documents=STORE.documents.filter(function(d){return d.id!==id;});saveStore();renderHistory();renderDashboard();toast('Deleted');}else if(action==='dup'){var copy=clone(doc);copy.id=uuid();copy.paid=false;copy.amount_paid=0;copy.payment_status=copy.type==='invoice'?'due':'quote';copy.payment_date=null;copy.paid_at=null;copy.doc_number=nextDocNumber(copy.type,false);copy.doc_date=todayISO();copy.due_date=plusDaysISO(copy.type==='invoice'?STORE.settings.invoice_due_days:STORE.settings.quote_validity_days,copy.doc_date);copy.created_at=new Date().toISOString();copy.updated_at=copy.created_at;STORE.documents.push(copy);saveStore();loadDocIntoGenerator(copy);toast('Duplicated as new draft');}});});
+  el.querySelectorAll('button[data-action]').forEach(function(b){b.addEventListener('click',function(e){var id=e.currentTarget.getAttribute('data-id'),action=e.currentTarget.getAttribute('data-action'),doc=STORE.documents.find(function(d){return d.id===id;});if(!doc)return;if(action==='edit')loadDocIntoGenerator(doc);else if(action==='convert'){var inv=convertQuoteRecord(doc);loadDocIntoGenerator(inv);toast('Converted to invoice');}else if(action==='pay'){doc.amount_paid=Number(doc.total||0);doc.paid=true;doc.payment_status='paid';doc.payment_date=todayISO();doc.paid_at=new Date().toISOString();doc.updated_at=new Date().toISOString();saveStore();renderHistory();renderDashboard();toast('Marked paid');}else if(action==='del'){if(!confirm('Delete this document permanently?'))return;STORE.documents=STORE.documents.filter(function(d){return d.id!==id;});saveStore();renderHistory();renderDashboard();toast('Deleted');}else if(action==='dup'){var copy=clone(doc);copy.id=uuid();copy.paid=false;copy.amount_paid=0;copy.payment_status=copy.type==='invoice'?'due':'quote';copy.payment_date=null;copy.paid_at=null;copy.doc_number=nextDocNumber(copy.type,false);copy.doc_date=todayISO();copy.due_date=plusDaysISO(copy.type==='invoice'?STORE.settings.invoice_due_days:STORE.settings.quote_validity_days,copy.doc_date);copy.created_at=new Date().toISOString();copy.updated_at=copy.created_at;STORE.documents.push(copy);saveStore();loadDocIntoGenerator(copy);toast('Duplicated as new draft');}});});
 }
 
 function renderClients(){
@@ -912,8 +910,8 @@ function init(){
   $('add-custom-btn').addEventListener('click',function(){state.customItems.push({name:'',qty:1,price:0});buildCustomList();});
   $('reset-btn').addEventListener('click',function(){if(confirm('Clear everything and start over?'))resetGenerator();});
   $('save-btn').addEventListener('click',function(){saveDoc();renderDashboard();});
-  $('print-preview-btn').addEventListener('click',function(){window.print();});
-  $('print-btn').addEventListener('click',function(){var doc=saveDoc();if(doc){renderDashboard();setTimeout(function(){window.print();},80);}});
+  $('print-preview-btn').addEventListener('click',async function(){try{var doc=saveDoc();if(doc){await window.finalizeStudioDocument(doc);renderPreview();window.print();}}catch(e){toast(e.message,true);}});
+  $('print-btn').addEventListener('click',async function(){try{var doc=saveDoc();if(doc){await window.finalizeStudioDocument(doc);renderPreview();renderDashboard();window.print();}}catch(e){toast(e.message,true);}});
   $('history-search').addEventListener('input',renderHistory);$('filter-type').addEventListener('change',renderHistory);$('filter-status').addEventListener('change',renderHistory);$('new-doc-btn').addEventListener('click',function(){resetGenerator();switchView('generator');});
   $('client-form').addEventListener('submit',function(e){e.preventDefault();submitClientForm();});$('cf-submit').addEventListener('click',function(e){e.preventDefault();submitClientForm();});$('cf-cancel').addEventListener('click',function(){state.editingClientId=null;$('client-form-title').textContent='New Client';$('cf-name').value='';$('cf-email').value='';$('cf-phone').value='';$('cf-address').value='';$('cf-cancel').style.display='none';$('cf-submit').textContent='Add Client';});
   $('save-settings-btn').addEventListener('click',saveSettingsFromForm);$('add-service-btn').addEventListener('click',addService);$('reset-services-btn').addEventListener('click',resetServices);
@@ -921,7 +919,7 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
-<script src="/invoice-sync.js?v=6"></script>
+<script src="/invoice-sync.js?v=7"></script>
 <script>
 (function(){
   function switchRequested(view){
@@ -1051,6 +1049,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       try{
         var doc=(typeof window.saveDoc==="function")?window.saveDoc():null;
         if(!doc) return;
+        doc=await window.finalizeStudioDocument(doc);
         if(typeof window.renderPreview==="function")window.renderPreview();
         await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});
         var attachment=await buildPdfAttachment(doc);

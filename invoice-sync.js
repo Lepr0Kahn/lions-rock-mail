@@ -499,38 +499,20 @@
     return rows;
   }
 
-  function resolveDocumentNumberConflicts(remoteDocs) {
-    var used = new Map();
-    (remoteDocs || []).forEach(function (d) { if (d.doc_number) used.set(d.doc_number, String(d.id)); });
-
-    function nextFor(prefix) {
-      var max = 0;
-      Array.from(used.keys()).concat((window.STORE.documents || []).map(function (d) { return d.doc_number || ""; })).forEach(function (n) {
-        var m = String(n).match(new RegExp("^" + prefix + "-(\\\\d+)$"));
-        if (m) max = Math.max(max, parseInt(m[1], 10));
-      });
-      var candidate;
-      do { max += 1; candidate = prefix + "-" + String(max).padStart(4, "0"); } while (used.has(candidate));
-      return candidate;
-    }
-
-    var changed = false;
-    (window.STORE.documents || []).forEach(function (d) {
-      if (!d.doc_number) return;
-      var owner = used.get(d.doc_number);
-      if (owner && owner !== String(d.id)) {
-        var prefix = d.type === "quote" ? "QUO" : ((d.payment_status === "paid" || d.paid) ? "RCP" : "INV");
-        d.doc_number = nextFor(prefix);
-        d.updated_at = nowIso();
-        changed = true;
+  async function reserveDocumentNumbers(remoteDocs) {
+    var existing = new Map((remoteDocs || []).map(function(d){return [String(d.id),d.doc_number];}));
+    for (var d of (window.STORE.documents || [])) {
+      var number = existing.get(String(d.id));
+      if (!number) {
+        var allocation = await sb.rpc("reserve_document_number", {document_id:d.id,document_type:d.type==="quote"?"quote":"invoice"});
+        if (allocation.error) throw allocation.error;
+        number = allocation.data;
       }
-      used.set(d.doc_number, String(d.id));
-    });
-    if (changed && originalSaveStore) {
-      cloudApplying = true;
-      try { originalSaveStore(); } finally { cloudApplying = false; }
-      if (typeof window.toast === "function") window.toast("A document number conflict was resolved for cloud sync");
+      if (number) d.doc_number = number;
+      if (window.state && window.state.editingId === d.id && byId("doc-number")) byId("doc-number").value = d.doc_number;
     }
+    cloudApplying = true;
+    try { originalSaveStore(); } finally { cloudApplying = false; }
   }
 
   async function upsertInChunks(table, rows, options) {
@@ -542,7 +524,7 @@
   }
 
   async function pushLocal(remoteForConflicts) {
-    resolveDocumentNumberConflicts((remoteForConflicts && remoteForConflicts.documents) || []);
+    await reserveDocumentNumbers((remoteForConflicts && remoteForConflicts.documents) || []);
 
     var settingsRes = await sb.from("business_settings").upsert(mapSettingsForCloud(), { onConflict: "user_id" });
     if (settingsRes.error) throw settingsRes.error;
@@ -617,7 +599,7 @@
     refreshAppAfterCloud();
   }
 
-  async function syncAll(reason) {
+  async function runSyncAll(reason) {
     if (!cloudUser || !sb || cloudBusy) return;
     if (!navigator.onLine) {
       setCloudStatus("Offline · changes saved locally", "offline");
@@ -653,6 +635,7 @@
       localStorage.setItem(LAST_SYNC_KEY, nowIso());
       hadLocalAtLoad = true;
       setCloudStatus("Synced · " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), "online");
+      return true;
     } catch (err) {
       console.error("Lions Rock cloud sync:", err);
       setCloudStatus("Sync error · local copy is safe", "error");
@@ -662,6 +645,29 @@
       if (syncButton) syncButton.disabled = false;
     }
   }
+
+  var syncFlight = null;
+  function syncAll(reason) {
+    if (syncFlight) return syncFlight;
+    syncFlight = runSyncAll(reason).finally(function(){syncFlight=null;});
+    return syncFlight;
+  }
+  window.finalizeStudioDocument = async function(doc) {
+    if (!cloudUser || !navigator.onLine) throw new Error("Connect and sign in to finalize the document number. Your draft is saved locally.");
+    clearTimeout(syncTimer);
+    // A sync already in progress may have taken its snapshot before this save.
+    await syncAll("document");
+    if (!await syncAll("document")) throw new Error("Sync the saved draft before printing or emailing it.");
+    var result = await sb.from("documents").select("id,doc_number").eq("id",doc.id).eq("user_id",cloudUser.id).single();
+    if (result.error || !result.data) throw new Error("Could not confirm the final document number. Your draft is saved.");
+    var current = (window.STORE.documents || []).find(function(d){return d.id===doc.id;});
+    if (!current) throw new Error("Saved document is unavailable.");
+    current.doc_number = result.data.doc_number;
+    byId("doc-number").value = current.doc_number;
+    cloudApplying = true;
+    try { originalSaveStore(); } finally { cloudApplying = false; }
+    return current;
+  };
 
   function scheduleSync() {
     if (!cloudUser || cloudApplying) return;
