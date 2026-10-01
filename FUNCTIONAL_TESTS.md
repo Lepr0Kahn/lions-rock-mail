@@ -155,3 +155,12 @@ Frontend reserves offline draft numbers on sync. Print Preview, Save & PDF and E
 Passed: actual frontend allocator functions in isolated Node VM; HTML/JS syntax; SQL rollback tests before and after migration for idempotence, sequential counters, independent quote prefix, trigger enforcement, paid number preservation, cross-account/Artist denial, mixed generator insert→booking RPC→reopen, and high-water preservation after deletion. Anonymous execute revoked. Private tables have RLS and no direct grants; no-policy info is intentional. Authenticated definer allocator is intentional and checks live Business entitlement and account ownership.
 
 Database migration applied. Preview build is currently blocked by Vercel build-rate-limit. Production frontend deployment and live browser regression for this fix remain pending; earlier booking/PDF verification belongs to PR #7. Two real concurrent browser sessions and iPhone-specific checks are not yet claimed.
+
+
+### Signed-in preview and release attempt — 2026-10-01 UTC
+
+Vercel Google sign-in and device verification completed. Promotion of READY preview dpl_EiaSh2XiDgUncijTuW2rqgwtsYGr (b785a4c) rejected with: Resource is limited - try again in 24 hours (more than 100, code api-deployments-young-hobby-team-24h). Production frontend release remains blocked; shared counter database migration is active.
+
+Owner authenticated in the built preview. Default Management Dashboard verified. Existing INV-0001 opened in the readonly-number generator; Email Client completed online sync/final-number confirmation and attached Lions-Rock-Invoice-INV-0001.pdf (140.8 KB) with matching subject/body. No email sent. Zero-value Mark Paid resets to due on sync under existing total-based status logic; do not claim persisted paid browser test from it. SQL positive-path paid status number preservation already passed.
+
+Source inspection additionally found that duplicating a booking invoice retained its unique booking_id. New copies now detach that link; actual duplicate branch regression passed. This follow-up is in main but absent from the earlier READY preview. Remaining: production frontend release, two real concurrent browser sessions, a distinct Artist sign-in flow and iPhone-specific visual checks.
