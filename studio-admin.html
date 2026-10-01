@@ -30,6 +30,7 @@
   <div class="tabs">
     <button class="tab active" data-view="invite">Create Invite</button>
     <button class="tab" data-view="members">Access List</button>
+    <button class="tab" data-view="removed">Removed Members</button>
   </div>
   <div class="panel" id="content"><div class="empty">Loading…</div></div>
 </div>
@@ -40,7 +41,7 @@
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const content=document.getElementById("content");
- let session=null,members=[],view="invite",lastLink="";
+ let session=null,members=[],removedMembers=[],view="invite",lastLink="";
 
  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
  function dt(s){if(!s)return"—";try{return new Date(s).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});}catch(_){return s}}
@@ -59,7 +60,8 @@
    if(!await requireOwner())return;
    const r=await sb.from("app_memberships").select("*").order("created_at",{ascending:false});
    if(r.error){content.innerHTML='<div class="empty">Could not load access records.</div>';return}
-   members=(r.data||[]).filter(x=>x.role!=="owner");
+   members=(r.data||[]).filter(x=>x.role!=="owner"&&!x.deleted_at);
+   removedMembers=(r.data||[]).filter(x=>x.role!=="owner"&&x.deleted_at);
    document.getElementById("s-active").textContent=members.filter(x=>x.access_status==="active").length;
    document.getElementById("s-business").textContent=members.filter(x=>x.business_tools_enabled).length;
    document.getElementById("s-artist").textContent=members.filter(x=>x.artist_member_enabled).length;
@@ -69,7 +71,7 @@
 
  function render(){
    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
-   view==="members"?renderMembers():renderInvite();
+   view==="invite"?renderInvite():renderMembers();
  }
 
  function renderInvite(){
@@ -102,6 +104,7 @@
      payment_status:document.getElementById("invite-payment").value
    };
    if(!payload.email){toast("Enter an email address.",true);return}
+   if(removedMembers.some(m=>m.email?.toLowerCase()===payload.email.toLowerCase())){toast("Restore this person from Removed Members before creating another invite.",true);return}
    btn.disabled=true;btn.textContent="Creating…";
    try{
      const r=await sb.functions.invoke("studio-create-invite",{body:payload});
@@ -130,27 +133,39 @@
  }
 
  function renderMembers(){
-   if(!members.length){content.innerHTML='<div class="empty">No invited users yet.</div>';return}
-   content.innerHTML=members.map(m=>{
+   const rows=view==="removed"?removedMembers:members;
+   if(!rows.length){content.innerHTML='<div class="empty">No invited users yet.</div>';return}
+   content.innerHTML=rows.map(m=>{
      const types=[];
      if(m.business_tools_enabled)types.push(tag("Business Tools","business"));
      if(m.artist_member_enabled)types.push(tag("Artist Member","artist"));
-     const action=m.access_status==="active"
+     const action=m.deleted_at?'<button class="btn green" data-member-act="restore" data-id="'+m.id+'">Restore Membership</button>':m.access_status==="active"
        ?'<button class="btn red" data-member-act="suspend" data-id="'+m.id+'">Suspend</button>'
        :'<button class="btn green" data-member-act="reactivate" data-id="'+m.id+'">Reactivate</button>';
      return '<div class="row">'+
        '<div><div class="name">'+esc(m.business_name||m.email)+'</div><div class="meta">'+esc(m.email)+'</div></div>'+
        '<div>'+types.join("")+'<div class="meta">Plan: '+esc(m.plan||"—")+'</div></div>'+
        '<div>'+tag(m.access_status,m.access_status)+' '+tag(m.payment_status,m.payment_status)+'<div class="meta">Invited '+esc(dt(m.invited_at))+'<br>Claimed '+esc(dt(m.invite_claimed_at))+'</div></div>'+
-       '<div class="actions">'+action+'</div>'+
+       '<div><div class="field"><label for="member-type-'+m.id+'">Membership type</label><select id="member-type-'+m.id+'"><option value="business_tools"'+(m.business_tools_enabled?' selected':'')+'>Business Tools</option><option value="artist_member"'+(!m.business_tools_enabled&&m.artist_member_enabled?' selected':'')+'>Artist Member</option></select></div><div class="actions">'+(m.deleted_at?'':'<button class="btn primary" data-member-act="switch" data-id="'+m.id+'">Save Type</button>')+action+(m.deleted_at?'':'<button class="btn red" data-member-act="remove" data-id="'+m.id+'">Delete Membership</button>')+'</div>'+(m.deleted_at?'<div class="meta">Removed '+esc(dt(m.deleted_at))+'. Restore returns suspended access; reactivate separately.</div>':'')+'</div>'+
      '</div>';
    }).join("");
    content.querySelectorAll("[data-member-act]").forEach(b=>b.onclick=()=>memberAction(b.dataset.memberAct,b.dataset.id,b));
  }
 
  async function memberAction(act,id,button){
+   const member=[...members,...removedMembers].find(m=>m.id===id);if(!member)return;
+   const accessType=document.getElementById("member-type-"+id)?.value;
+   if(act==="remove"&&!confirm("Delete membership for "+member.email+"? This revokes Artist and Business access and moves them to Removed Members. Their account, invoices, projects and files are retained. You can restore the membership later."))return;
+   if(act==="switch"&&!confirm("Change "+member.email+" to "+(accessType==="artist_member"?"Artist Member":"Business Tools")+" only? Access to the other workspace will be removed. Existing records are retained."))return;
+   if(act==="restore"&&!confirm("Restore "+member.email+" as "+(accessType==="artist_member"?"Artist Member":"Business Tools")+"? Access stays suspended until you reactivate it."))return;
    button.disabled=true;
    try{
+     if(["switch","remove","restore"].includes(act)){
+       const result=await sb.rpc("manage_studio_membership",{member_id:id,operation:act,access_type:accessType});
+       if(result.error)throw result.error;
+       toast(act==="switch"?"Membership type updated.":act==="remove"?"Membership removed; records retained.":"Membership restored with suspended access.");
+       await load();return;
+     }
      const status=act==="suspend"?"suspended":"active";
      const r=await sb.from("app_memberships").update({access_status:status,updated_at:new Date().toISOString()}).eq("id",id);
      if(r.error)throw r.error;
