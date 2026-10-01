@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync(process.argv[2]||'mail-v5-1-embedded.html','utf8');
+const script=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].at(-1)[1];
+const reset=html.slice(html.indexOf('function resetNewEmail(){'),html.indexOf('function esc('));
+let listener;
+const fields={};
+for(const id of ['to','cc','bcc','first-name','subject','greeting','body','signoff','music-input','template-select','send-success'])fields[id]={value:'old',style:{},dispatchEvent(){}};
+const parent={},window={parent,addEventListener(type,fn){if(type==='message')listener=fn;},renderPreview(){}};
+const ctx={window,document:{readyState:'complete',getElementById:id=>fields[id]||null},location:{origin:'https://example.com'},Event:class{},tracks:[{name:'old.pdf',kind:'studio-document'}],$:id=>fields[id],clearTrackUrls(){},applyTemplate(){},renderTracks(){},renderPreview(){},toastMsg(){}};
+vm.createContext(ctx);vm.runInContext(reset+script,ctx);
+function send(data,source=parent,origin='https://example.com'){listener({origin,source,data:{type:'lions-rock-mail-client',...data}});}
+const doc={name:'Final Client',email:'final@example.com',subject:"Lion's Rock Invoice INV-0042",greeting:'Hi {{First Name}},',body:'Invoice INV-0042 attached.',signoff:'With gratitude,',attachment:{name:'Lions-Rock-Invoice-INV-0042.pdf',base64:'JVBERi0=',mime:'application/pdf',kind:'studio-document'}};
+send(doc,{});
+assert.equal(fields.to.value,'old');assert.equal(ctx.tracks[0].name,'old.pdf');
+send(doc,parent,'https://other.example.com');assert.equal(fields.to.value,'old');
+send(doc);
+assert.equal(fields.to.value,'final@example.com');assert.equal(fields['first-name'].value,'Final');
+assert.equal(fields.cc.value,'');assert.equal(fields.bcc.value,'');
+assert.equal(fields.subject.value,doc.subject);assert.equal(fields.body.value,doc.body);
+assert.equal(ctx.tracks.length,1);assert.equal(ctx.tracks[0].name,doc.attachment.name);assert.equal(ctx.tracks[0].base64,doc.attachment.base64);
+send({...doc,subject:"Lion's Rock Quotation QUO-0043",attachment:{...doc.attachment,name:'Lions-Rock-Quotation-QUO-0043.pdf'}});
+assert.equal(ctx.tracks.length,1);assert.equal(ctx.tracks[0].name,'Lions-Rock-Quotation-QUO-0043.pdf');
+assert.equal(fields.subject.value,"Lion's Rock Quotation QUO-0043");
+console.log('PASS trusted frame handoff, recipient and subject, cleared CC/BCC, PDF payload and attachment replacement');
