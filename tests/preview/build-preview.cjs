@@ -8,7 +8,9 @@ html=html.replace(/<script src="\/invoice-sync.js[^"]*"><\/script>/g,'<script sr
 html=html.replace(/if\("serviceWorker" in navigator\)\{navigator.serviceWorker.register\("\/sw.js"\).catch\(\(\)=>\{\}\);\}/g,'');
 html=html.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="connect-src \'self\'; form-action \'none\'">');
 html=html.replace('<body>','<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>');
-html=html.replace('</body>','<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>');
+let closingBody=html.lastIndexOf('</body>');
+if(closingBody<0)closingBody=html.length;
+html=html.slice(0,closingBody)+'<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script>'+html.slice(closingBody);
 fs.writeFileSync(path.join(out,file),html);}
 fs.copyFileSync(path.join(__dirname,'fixture-sdk.js'),path.join(out,'fixture-sdk.js'));
 fs.copyFileSync(path.join(__dirname,'fixture-generator.js'),path.join(out,'fixture-generator.js'));
