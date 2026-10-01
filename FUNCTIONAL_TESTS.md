@@ -173,3 +173,10 @@ Adapted the role-aware Action Center concept from LIONS-ROCK-OS-FOR-SAGE (memory
 Data comes from public.studio_management_overview, SECURITY INVOKER with empty search_path and live Owner/Business/Artist guards. Anonymous execute is revoked. Member/Business accounts cannot call management data, and member UI keeps this section hidden. Invoice navigation validates originating frame, Owner role and database account ownership. No payment or outbound email action added.
 
 Before/after-migration SQL rollback tests passed for pending/expired holds, upcoming sessions, expiring deliveries, overdue dates, BBD/USD separation, paid/void exclusions and Business/Artist denial. All existing fixture changes rolled back. Both page scripts parsed. Database function installed; frontend pending Vercel quota reset. New Action Center browser/mobile verification is not yet claimed.
+
+
+## Distinct Artist browser verification — 2026-10-01 UTC
+
+With explicit approval, temporarily enabled Artist Member for tarikdelves@gmail.com (existing Business-only account). Secure browser login confirmed that account. READY preview b785a4c showed the Artist career workspace, zero own projects, no Owner management controls, and its own Services & bookings screen with no bookings. No active offerings were available, so request submission, delivery upload/download and a populated cross-account browser comparison were not exercised.
+
+Restored artist_member_enabled=false, preserving business_tools_enabled=true, and verified returned database flags. Full browser reload removed Member navigation and returned to Business clients. An already-open member frame did not visibly close after its Refresh action in this older preview; immediate revocation UI behavior remains unverified and should be retested against latest main. Database guards remain the authorization boundary. No emails, payments, or bookings were submitted. Management Action Center itself is not in this preview and remains pending deployment/browser verification.
