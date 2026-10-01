@@ -31,10 +31,12 @@
     <button class="tab active" data-view="invite">Create Invite</button>
     <button class="tab" data-view="members">Access List</button>
     <button class="tab" data-view="removed">Removed Members</button>
+    <button class="tab" data-view="security">Admin Security</button>
   </div>
   <div class="panel" id="content"><div class="empty">Loading…</div></div>
 </div>
 
+<script src="admin-security.js?v=1"></script>
 <script>
 (function(){
  const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
@@ -48,6 +50,7 @@
  function tag(s,cls){return '<span class="tag '+(cls||"")+'">'+esc(s)+'</span>'}
  function toast(s,bad){const el=document.createElement("div");el.className="toast"+(bad?" bad":"");el.textContent=s;document.body.appendChild(el);setTimeout(()=>el.remove(),3600)}
 
+ const security=installAdminSecurity(sb,content,requireOwner,toast);
  async function requireOwner(){
    const s=await sb.auth.getSession();session=s.data&&s.data.session;
    if(!session){content.innerHTML='<div class="empty">Sign in to Lions Rock Studio first.</div>';return false}
@@ -72,6 +75,7 @@
 
  function render(){
    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
+   if(view==="security"){security.show();return;} security.leave();
    view==="invite"?renderInvite():renderMembers();
  }
 
@@ -180,7 +184,7 @@
  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});
  document.getElementById("refresh").onclick=load;
  // Recheck access when the parent signs in or out. Keep queries outside the Auth callback.
- sb.auth.onAuthStateChange(()=>setTimeout(load,0));
+ sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT"||event==="SIGNED_IN"){security.leave();setTimeout(load,0);}});
  load();
 })();
 </script>

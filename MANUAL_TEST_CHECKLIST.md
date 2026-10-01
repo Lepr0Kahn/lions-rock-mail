@@ -67,3 +67,11 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 
 ## Remaining build-dependent checks
 Online payment provider sandbox/production setup, guardian outbound notifications/dual receipts, automatic tagged previews, explain-only Direction Engine, admin MFA and original data reconciliation require their own checks as those features are implemented.
+
+
+## Optional admin authenticator setup
+- Owner: Private Access → Admin Security. Enroll using an authenticator app, verify a six-digit code, then verify a fresh session.
+- Check invalid/expired code retry and Cancel setup. Keep QR/setup key private; never send it in chat.
+- Confirm sign-out and tab changes clear setup details. Non-Owners cannot open setup.
+- Management-wide MFA enforcement and recovery remain pending; enrollment alone does not require MFA for all API/database access.
+- Automated mock enrollment/verification/stale-view tests passed. Live Auth enrollment and phone QR scanning remain unverified.
