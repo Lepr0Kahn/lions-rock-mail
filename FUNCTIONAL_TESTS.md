@@ -130,3 +130,17 @@ Deployment retry succeeded: main 733f67a13a263a9a479ba4b814577e3ad5ae88e9 reache
 Authenticated Owner production browser opened a confirmed booking in the existing invoice generator. INV-0001 preserved booking reference, one-hour service, BBD currency, zero test price and 25% deposit. Email Client generated Lions-Rock-Invoice-INV-0001.pdf (140.8 KB) and opened the existing Mail composer with matching subject, body and recipient booklionsrock@gmail.com (visually verified). No Gmail send or payment performed.
 
 Disposable service 6f10bebf-1b87-4e88-bb2f-5a48fc16ca98 deactivated; booking 71c0ff73-8db9-4365-8f00-5e5067c8d9d6 cancelled. Verification query confirmed cancelled booking, inactive service and exactly one retained zero-value invoice 7a80d820-a722-41e1-af1b-867553a1a6b0. Owner management default was verified in this production session. Distinct Artist browser flow and iPhone-specific behavior remain unverified.
+
+
+## Numbering tests — 2026-09-30 Barbados / 2026-10-01 UTC
+
+Executed actual nextDocNumber and resolveDocumentNumberConflicts functions fetched from main in isolated Node VM contexts. Authenticated Owner SQL test used a generator-shaped invoice insert followed by the real booking RPC; all database changes rolled back.
+
+Passed: sequential INV-0001/0002 yields INV-0003; separate QUO-0004 yields QUO-0005; generator-shaped saved invoice then booking invoice advances once; reopening booking retains document ID; duplicate number rejected by database unique(user_id,doc_number).
+
+Confirmed unresolved issues:
+- Offline collision resolution with cloud INV-0002 and INV-0010 assigned INV-0001 instead of INV-0011. nextFor regex over-escapes the digit class, so maximum discovery fails.
+- After an invoice is renamed from INV-0001 to RCP-0001 when marked paid, next invoice can reuse INV-0001. Both generator and booking allocator derive maximum only from current INV numbers; no durable high-water counter.
+- Two isolated stale device stores both allocate INV-0001. Database uniqueness blocks persisting both unchanged, but this is not centralized allocation or guaranteed chronological numbering.
+
+Limits: simultaneous/offline cases reproduced with production-source function execution, not two real browser sessions or a concurrent production load test. No payments, real orders, or outbound emails created. Application code unchanged; these failures require fixes and regression tests before strict monotonic numbering can be claimed.
