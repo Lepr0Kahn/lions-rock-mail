@@ -654,10 +654,32 @@
   }
   window.finalizeStudioDocument = async function(doc) {
     if (!cloudUser || !navigator.onLine) throw new Error("Connect and sign in to finalize the document number. Your draft is saved locally.");
+    var savedDraft = cloneCloud(doc);
     clearTimeout(syncTimer);
-    // A sync already in progress may have taken its snapshot before this save.
+    // Finish any earlier snapshot before writing the exact draft being exported.
     await syncAll("document");
-    if (!await syncAll("document")) throw new Error("Sync the saved draft before printing or emailing it.");
+    if (syncFlight) await syncFlight;
+    syncFlight = (async function(){
+      cloudBusy = true;
+      try {
+        var remote = await fetchRemote();
+        var existing = (remote.documents || []).find(function(d){return d.id === savedDraft.id;});
+        if (existing) savedDraft.doc_number = existing.doc_number;
+        savedDraft.updated_at = nowIso();
+        var index = (window.STORE.documents || []).findIndex(function(d){return d.id === savedDraft.id;});
+        if (index < 0) throw new Error("Saved document is unavailable.");
+        window.STORE.documents[index] = savedDraft;
+        cloudApplying = true;
+        try { originalSaveStore(); } finally { cloudApplying = false; }
+        await pushLocal(remote);
+        var confirmed = await fetchRemote();
+        var savedItems = (confirmed.items || []).filter(function(it){return it.document_id === savedDraft.id;}).sort(function(a,b){return a.sort_order-b.sort_order;});
+        if (savedItems.length !== (savedDraft.items || []).length || savedItems.some(function(it,i){var expected=savedDraft.items[i];return it.name !== (expected.name || "Item") || Number(it.qty) !== Math.max(0.01,Number(expected.qty || 1)) || Number(it.unit_price) !== Math.max(0,Number(expected.price || 0));})) throw new Error("Could not confirm the saved invoice lines. Retry sync before exporting.");
+        mergeRemoteIntoLocal(mapRemoteSnapshot(confirmed));
+        return true;
+      } finally { cloudBusy = false; }
+    })().finally(function(){syncFlight = null;});
+    await syncFlight;
     var result = await sb.from("documents").select("id,doc_number").eq("id",doc.id).eq("user_id",cloudUser.id).single();
     if (result.error || !result.data) throw new Error("Could not confirm the final document number. Your draft is saved.");
     var current = (window.STORE.documents || []).find(function(d){return d.id===doc.id;});
