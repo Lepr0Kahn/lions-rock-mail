@@ -144,3 +144,14 @@ Confirmed unresolved issues:
 - Two isolated stale device stores both allocate INV-0001. Database uniqueness blocks persisting both unchanged, but this is not centralized allocation or guaranteed chronological numbering.
 
 Limits: simultaneous/offline cases reproduced with production-source function execution, not two real browser sessions or a concurrent production load test. No payments, real orders, or outbound emails created. Application code unchanged; these failures require fixes and regression tests before strict monotonic numbering can be claimed.
+
+
+## Shared document numbering fix — PR #8
+
+Private per-account INV/QUO counters and idempotent document-ID reservations replace conflict regex numbering. Before-insert/update trigger enforces allocation and preserves existing numbers, including legacy RCP documents. Both generator and booking inserts use this allocator. Counter increases survive document deletion; reservations may leave gaps for abandoned drafts. Existing saved documents are not renumbered.
+
+Frontend reserves offline draft numbers on sync. Print Preview, Save & PDF and Email Client await successful sync and confirm the saved number before output; offline drafts remain editable/savable. Mark Paid preserves the invoice number.
+
+Passed: actual frontend allocator functions in isolated Node VM; HTML/JS syntax; SQL rollback tests before and after migration for idempotence, sequential counters, independent quote prefix, trigger enforcement, paid number preservation, cross-account/Artist denial, mixed generator insert→booking RPC→reopen, and high-water preservation after deletion. Anonymous execute revoked. Private tables have RLS and no direct grants; no-policy info is intentional. Authenticated definer allocator is intentional and checks live Business entitlement and account ownership.
+
+Database migration applied. Preview build is currently blocked by Vercel build-rate-limit. Production frontend deployment and live browser regression for this fix remain pending; earlier booking/PDF verification belongs to PR #7. Two real concurrent browser sessions and iPhone-specific checks are not yet claimed.
