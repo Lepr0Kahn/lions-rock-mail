@@ -30,6 +30,8 @@ raise notice 'PASS quote idempotency, numbered draft, 50 percent default, budget
 end $test$;
 rollback;
 begin;
+-- Grant test-only Artist eligibility inside this transaction; rollback restores current access.
+update public.app_memberships set access_status='active',payment_status='comped',artist_member_enabled=true,deleted_at=null,expires_at=null where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';
 insert into public.artist_projects(id,user_id,title) values('b693e947-1b99-4895-a1ca-ae3dc7a9da67','1204ab25-7433-43a5-80e1-7a66b2eee057','Disposable isolation test');
 select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
 set local role authenticated;
