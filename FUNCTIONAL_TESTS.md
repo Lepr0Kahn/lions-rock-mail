@@ -1,6 +1,6 @@
 # Lions Rock Studio — Functional Test Record
 
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 
 ## Access separation
 
@@ -265,3 +265,32 @@ Append-only event and reversal tables have RLS and authenticated SELECT only; cl
 Momentum now has all100 points supported: eligible recent milestones and Barbados distinct evidence days plus past confirmed sessions (attendance unverified). History loads with breakdowns; Owner can reverse with inline reason. Imported history does not pretend to be new activity. Network quotes and Business explicit budgets still unsupported.
 
 Authenticated rollback tests passed: automatic project event, no duplicate on rename, recent Momentum increment, archive exclusion, idempotent reversal/original preserved, own/crossArtist/Business history permissions, no direct ledger write, repeated invoice settlement one event, reading history/tracks awards no events, anon/private execute false. Existing track caps test updated and passed. Test projects/events/payments all rolled back. JS syntax passed. Guarded history/reversal add intended SECURITY DEFINER advisor notices (12 total), private no-policy infos and preexisting password warning remain. Live UI pending deployment/browser recovery.
+
+
+## Verification update — 2026-10-01
+
+### Passed
+
+- Current invoice/quote/receipt email handoff and composer regression suites, including finalized recipient and number, attachment replacement, CC/BCC reset, and error recovery.
+- EML export now reuses the complete MIME builder used for Gmail. Regression checks preserve PDF/audio bytes, Unicode subject/body, recipients, inline image parts, and empty-attachment handling. Deployment of commit 676f47b7395849edb6daa65576983eac726c1dfe completed successfully.
+- Transactional booking tests: Full Mix 120 minutes, instrumental creation 180 minutes, 50 percent deposits, overlap rejection, adjacent sessions, invoice reuse, generator/booking/generator numbering, and reschedule amount preservation.
+- Active, suspended, removed, expired, and Business-only Artist access scenarios; cross-member isolation.
+- Project quote reuse, budget validation, linked settlement counting and void exclusion.
+- Recorded payment corrections: 175 paid on 350 leaves 175 due; full payment counts once; reducing/zeroing payment removes settled/deposit signals; void excludes financial credit; repeated settlement keeps one milestone and the document number. All database fixtures rolled back.
+- Isolated sample preview rendered the Owner managerial dashboard and generated a real PDF attachment in the email composer. This is sample data, not live authentication verification.
+
+### Concurrency evidence and limit
+
+- Live database has unique constraints on (user_id, doc_number), document reservations, and one document per (user_id, booking_id).
+- Both generator reservation and booking document insertion use reserve_document_number through the document trigger. Allocation holds a transaction advisory lock per account. Booking invoice creation also locks before checking/reusing the existing invoice.
+- An attempted pair of concurrent connector requests did not overlap. The test correctly failed as inconclusive; no successful simultaneous transaction or browser test is claimed. Both disposable allocations were rolled back.
+- Older tests/document-numbering.cjs and tests/duplicate-booking-invoice.cjs embed copied implementation snippets; their output alone is not evidence that current source was exercised.
+
+### Still unverified
+
+- Current cloud browser sign-in: secure submission reached the live app error “Could not reach the sign-in service.” No new authenticated session was verified.
+- Apple Mail opening/importing the exported EML and displaying its PDF attachment.
+- Authorized live Gmail send and receipt.
+- Two genuinely simultaneous committed orders from separate authenticated sessions.
+
+Prior historical observations above remain dated evidence, not a claim that every flow was retested today.
