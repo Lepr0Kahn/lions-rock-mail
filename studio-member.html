@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lions Rock Career OS</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{color-scheme:dark;--bg:#0d0c0c;--panel:#171616;--line:#34302b;--text:#f4f1ea;--muted:#a6a099;--gold:#d2ad68}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1150px;margin:auto;padding:28px}h1,h2{font-family:Georgia,serif;font-weight:400}h1{font-size:36px;margin:8px 0 20px}h2{font-size:24px}.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.16em;text-transform:uppercase}.muted{color:var(--muted);line-height:1.6}nav{display:flex;gap:8px;margin:20px 0}button{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text);padding:11px 16px;font:inherit}button.active,button.primary{background:var(--gold);color:#16120c;border-color:var(--gold)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);padding:24px}.stat-value{font-size:32px;margin-top:10px}.layout{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;margin-top:24px}.row{display:block;width:100%;text-align:left;padding:18px 4px;border-width:0 0 1px}.row strong{display:block;font-size:17px;margin-bottom:8px}.tag{color:var(--gold);font-size:11px;text-transform:uppercase}.field{margin:16px 0}label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}input,select,textarea{width:100%;font:inherit;background:#0d0c0c;border:1px solid var(--line);color:var(--text);padding:12px}textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:1px solid var(--gold)}#notice{min-height:24px;line-height:1.5;margin:16px 0;color:var(--gold)}#notice.error{color:#ffaaa1}.actions{display:flex;gap:10px;flex-wrap:wrap}.brief{white-space:pre-wrap;overflow-wrap:anywhere}.hidden{display:none!important}@media(max-width:700px){.wrap{padding:20px 14px}h1{font-size:30px}.layout{grid-template-columns:1fr}.card{padding:18px}.stats{gap:8px}.stats .card{padding:14px}.stat-value{font-size:26px}}
+:root{color-scheme:dark;--bg:#0d0c0c;--panel:#171616;--line:#34302b;--text:#f4f1ea;--muted:#a6a099;--gold:#d2ad68}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1150px;margin:auto;padding:28px}h1,h2{font-family:Georgia,serif;font-weight:400}h1{font-size:36px;margin:8px 0 20px}h2{font-size:24px}.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.16em;text-transform:uppercase}.muted{color:var(--muted);line-height:1.6}nav{display:flex;gap:8px;margin:20px 0;overflow-x:auto}nav button{flex:0 0 auto}button{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text);padding:11px 16px;font:inherit}button.active,button.primary{background:var(--gold);color:#16120c;border-color:var(--gold)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);padding:24px}.stat-value{font-size:32px;margin-top:10px}.layout{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;margin-top:24px}.row{display:block;width:100%;text-align:left;padding:18px 4px;border-width:0 0 1px}.row strong{display:block;font-size:17px;margin-bottom:8px}.tag{color:var(--gold);font-size:11px;text-transform:uppercase}.field{margin:16px 0}label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}input,select,textarea{width:100%;font:inherit;background:#0d0c0c;border:1px solid var(--line);color:var(--text);padding:12px}textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:1px solid var(--gold)}#notice{min-height:24px;line-height:1.5;margin:16px 0;color:var(--gold)}#notice.error{color:#ffaaa1}.actions{display:flex;gap:10px;flex-wrap:wrap}.brief{white-space:pre-wrap;overflow-wrap:anywhere}.ops-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}.ops-lists{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}.ops-summary{margin-top:16px;overflow-wrap:anywhere}.ops-meta{display:block;line-height:1.5}.hidden{display:none!important}@media(max-width:700px){.ops-stats{grid-template-columns:1fr 1fr;gap:8px}.ops-lists{grid-template-columns:1fr;gap:14px}.wrap{padding:20px 14px}h1{font-size:30px}.layout{grid-template-columns:1fr}.card{padding:18px}.stats{gap:8px}.stats .card{padding:14px}.stat-value{font-size:26px}}
 </style></head><body><main class="wrap">
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
@@ -11,6 +11,21 @@
 <div id="notice" role="status" aria-live="polite"></div>
 <section id="dashboard">
 <div class="stats"><div class="card"><div class="eyebrow">Projects</div><div id="count-all" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Active</div><div id="count-active" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Released</div><div id="count-released" class="stat-value">0</div></div></div>
+<section id="owner-operations" class="hidden" aria-label="Studio action center">
+<h2>Studio action center</h2><p id="operations-summary" class="muted ops-summary" role="status"></p>
+<div class="ops-stats">
+<div class="card"><div class="eyebrow">Awaiting confirmation</div><div id="ops-pending" class="stat-value">—</div></div>
+<div class="card"><div class="eyebrow">Upcoming sessions</div><div id="ops-upcoming" class="stat-value">—</div></div>
+<div class="card"><div class="eyebrow">Unpaid invoices</div><div id="ops-outstanding" class="stat-value">—</div></div>
+<div class="card"><div class="eyebrow">Deliveries expiring in 7 days</div><div id="ops-expiring" class="stat-value">—</div></div>
+</div>
+<div class="ops-lists">
+<div class="card"><h2>Booking requests</h2><div id="ops-requests"></div></div>
+<div class="card"><h2>Upcoming sessions</h2><div id="ops-sessions"></div></div>
+<div class="card"><h2>Invoices to follow up</h2><div id="ops-invoices"></div></div>
+<div class="card"><h2>Deliveries nearing expiry</h2><div id="ops-deliveries"></div></div>
+</div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
+</section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -38,7 +53,7 @@
  function show(name){view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -56,6 +71,28 @@
    if(selected){const p=items.find(p=>p.id===selected);if(p)open(p.id);else show("projects");}
  }
  function open(id){const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;show("detail");loadFiles(id);}
+ function renderOperations(data){
+   if(!isOwner)return;
+   el("ops-pending").textContent=data.pending_count;
+   el("ops-upcoming").textContent=data.upcoming_count;
+   el("ops-outstanding").textContent=data.outstanding_count;
+   el("ops-expiring").textContent=data.expiring_count;
+   const money=(amount,currency)=>currency+" "+Number(amount).toLocaleString("en-BB",{minimumFractionDigits:2,maximumFractionDigits:2});
+   const date=value=>new Date(value).toLocaleString("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"});
+   const balances=(data.currency_balances||[]).map(x=>money(x.balance_due,x.currency)).join(" · ")||"No outstanding balance";
+   el("operations-summary").textContent=balances+" · "+data.overdue_count+" overdue invoice"+(data.overdue_count===1?"":"s")+" · Updated "+date(data.computed_at);
+   function queue(id,rows,empty,describe,action){
+     const box=el(id);box.replaceChildren();
+     if(!rows.length){const p=document.createElement("p");p.className="muted";p.textContent=empty;box.append(p);return;}
+     rows.forEach(item=>{const button=document.createElement("button");button.type="button";button.className="row";const title=document.createElement("strong"),meta=document.createElement("span");meta.className="muted ops-meta";const text=describe(item);title.textContent=text[0];meta.textContent=text[1];button.append(title,meta);button.onclick=()=>action(item);box.append(button);});
+   }
+   const bookings=()=>{selected=null;show("bookings");notice("Review the session in Services & bookings.");};
+   queue("ops-requests",data.booking_requests||[],"No active requests awaiting confirmation.",b=>[b.service_name,(artistNames.get(b.user_id)||"Artist")+" · "+date(b.starts_at)+" · Hold ends "+date(b.hold_expires_at)],bookings);
+   queue("ops-sessions",data.upcoming_sessions||[],"No upcoming confirmed sessions.",b=>[b.service_name,(artistNames.get(b.user_id)||"Artist")+" · "+date(b.starts_at)],bookings);
+   queue("ops-invoices",data.due_invoices||[],"No unpaid invoices.",d=>[d.doc_number+" · "+(d.client_name||"Client"),money(d.balance_due,d.currency)+(d.due_date?" · Due "+d.due_date:" · No due date")+(d.overdue?" · Overdue":"")],d=>window.parent.postMessage({type:"lions-rock-management-document",documentId:d.id},location.origin));
+   queue("ops-deliveries",data.expiring_deliveries||[],"No studio deliveries expire in the next seven days.",f=>[f.filename,f.project_title+" · Expires "+date(f.expires_at)],f=>open(f.project_id));
+ }
+
  async function load(){
    const version=++generation;
    const session=(await sb.auth.getSession()).data.session;
@@ -77,6 +114,7 @@
    const artistSelect=el("project-artist");artistSelect.replaceChildren();
    if(isOwner){
      const artists=await sb.from("app_memberships").select("user_id,business_name,email,role,access_status,artist_member_enabled").eq("access_status","active");
+     if(version!==generation)return;
      if(artists.error)return deny("Could not load artists. Refresh to retry.");
      (artists.data||[]).filter(a=>a.role==="owner"||a.artist_member_enabled).forEach(a=>{const name=a.business_name||a.email;artistNames.set(a.user_id,name);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
      artistSelect.value=uid;
@@ -88,6 +126,14 @@
    const kindSelect=el("upload-kind");kindSelect.replaceChildren();
    (isOwner?["reference","stem","demo","mp3_delivery","master"]:["reference","stem","demo"]).forEach(kind=>{const option=document.createElement("option");option.value=kind;option.textContent=kind.replaceAll("_"," ");kindSelect.append(option);});
    el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);
+   el("owner-operations").classList.toggle("hidden",!isOwner);
+   if(isOwner){
+     el("operations-summary").textContent="Loading current studio operations…";
+     const operations=await sb.rpc("studio_management_overview");
+     if(version!==generation||!isOwner)return;
+     if(operations.error){el("operations-summary").textContent="Could not load current operations. Refresh to retry.";["ops-pending","ops-upcoming","ops-outstanding","ops-expiring"].forEach(id=>el(id).textContent="—");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());}
+     else renderOperations(operations.data);
+   }
  }
 
  async function loadFiles(projectId){
