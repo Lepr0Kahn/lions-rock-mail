@@ -318,6 +318,7 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  async function signIn(email,password){
    const status=document.getElementById("gate-status"),button=document.getElementById("gate-signin");
+   if(button?.disabled)return;
    email=String(email||"").trim();
    password=String(password||"");
    if(!email||!password){
@@ -327,11 +328,15 @@ body.studio-authenticated .login-gate{display:none!important}
    if(button){button.disabled=true;button.textContent="Signing In…";}
    if(status){status.textContent="Signing in…";status.classList.remove("err");}
    accessDenialMessage="";
-   const r=await sb.auth.signInWithPassword({email,password});
-   if(r.error){
-     if(status){status.textContent=r.error.message;status.classList.add("err");}
+   try{
+     const r=await sb.auth.signInWithPassword({email,password});
+     if(r.error)throw r.error;
+   }catch(error){
+     const networkFailure=/failed to fetch|networkerror|network request failed|load failed/i.test(error?.message||"")||error?.name==="AuthRetryableFetchError";
+     if(status){status.textContent=networkFailure?"Could not reach the sign-in service. Check your connection and try again.":error?.message||"Could not sign in. Try again.";status.classList.add("err");}
+   }finally{
+     if(button){button.disabled=false;button.textContent=loginMode==="artist_member"?"Sign In as Artist Member":"Sign In to Business Tools";}
    }
-   if(button){button.disabled=false;button.textContent="Sign In";}
  }
  setLoginMode(loginMode);
  document.getElementById("mode-business").onclick=()=>setLoginMode("business_tools");
