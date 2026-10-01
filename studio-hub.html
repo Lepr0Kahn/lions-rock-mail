@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="connect-src 'self'; form-action 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Lions Rock Studio — Clients & Projects</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fixture-sdk.js"></script>
 <style>
 :root{--bg:#0d0c0c;--panel:#171616;--panel2:#111;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9d9892;--dim:#6e6a66;--accent:#c24d2c;--green:#49b96d;--amber:#e5a542}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;min-height:100%}
@@ -17,7 +17,7 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
 @media(max-width:600px){body{padding:10px}.grid{grid-template-columns:1fr}.profile-head{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.actions .btn{flex:1}.title{font-size:26px}}
 </style>
 </head>
-<body>
+<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>
 <div class="wrap">
   <div class="bar">
     <div class="tabs">
@@ -364,5 +364,5 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
  load();
 })();
 </script>
-</body>
+<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>
 </html>

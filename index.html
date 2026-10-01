@@ -1,1358 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Lion's Rock Media Facility — Offline Email Kit</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<style>
-  :root {
-    --bg: #0d0c0c;
-    --surface: #1a1a1a;
-    --border: rgba(255, 255, 255, 0.1);
-    --text: #f4f1ea;
-    --muted: #a19d98;
-    --dim: #6b6864;
-    --accent: #c24d2c;
-    --accent-hover: #a63d20;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased; }
-  .display { font-family: Georgia, "Times New Roman", serif; }
-  ::selection { background: var(--accent); color: #fff; }
-
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-
-  /* HEADER */
-  header.nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark {
-    width: 40px; height: 40px; background: rgba(255,255,255,0.95);
-    display: flex; align-items: center; justify-content: center;
-    padding: 4px;
-  }
-  .brand-mark img { width: 100%; height: 100%; object-fit: contain; }
-  .brand-text .display { font-size: 13px; letter-spacing: 0.32em; text-transform: uppercase; }
-  .brand-text .sub { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
-  .badge-offline {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    border: 1px solid var(--accent); color: var(--accent);
-    padding: 8px 14px; font-weight: 700;
-  }
-  .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
-
-  /* HERO */
-  .hero { padding: 64px 0 32px; }
-  .eyebrow {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
-    color: var(--accent); font-weight: 700; margin-bottom: 24px;
-  }
-  .eyebrow .line { width: 36px; height: 1px; background: var(--accent); }
-  h1.display {
-    font-size: clamp(40px, 6vw, 76px); line-height: 0.95; letter-spacing: -0.01em;
-    margin: 0 0 24px 0; font-weight: 500;
-  }
-  h1 em { font-style: italic; color: var(--accent); }
-  .lede { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 640px; margin: 0; }
-  .lede b { color: var(--text); font-weight: 600; }
-
-  /* GRID */
-  .grid {
-    display: grid; grid-template-columns: 1fr; gap: 48px;
-    padding: 32px 0 96px;
-  }
-  @media (min-width: 1024px) { .grid { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
-
-  .panel {
-    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-    padding: 24px;
-  }
-  .panel-title {
-    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
-    color: var(--accent); font-weight: 700; margin-bottom: 14px;
-  }
-  .panel-hint { color: var(--dim); font-size: 12px; line-height: 1.55; margin-top: 8px; }
-
-  /* Two-col logo card */
-  .logo-row { display: grid; grid-template-columns: 1fr; gap: 24px; }
-  @media (min-width: 720px) { .logo-row { grid-template-columns: 1fr 1fr; } }
-  .logo-cell { display: flex; align-items: center; gap: 14px; }
-  .logo-thumb {
-    width: 56px; height: 56px; background: #fff; display: flex;
-    align-items: center; justify-content: center; overflow: hidden;
-  }
-  .logo-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
-
-  /* Field */
-  .field { margin-bottom: 22px; }
-  .label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-  label {
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--muted); font-weight: 600;
-  }
-  .hint {
-    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim);
-  }
-  input[type="text"], input:not([type]), textarea {
-    width: 100%; background: transparent; border: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.18);
-    padding: 10px 0; color: var(--text); font-size: 15px;
-    font-family: inherit;
-    outline: none; transition: border-color 240ms ease;
-  }
-  input:focus, textarea:focus { border-bottom-color: var(--accent); }
-  textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
-  input[type="color"] {
-    width: 48px; height: 48px; padding: 0; background: transparent;
-    border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
-  }
-  .color-row { display: flex; gap: 16px; align-items: center; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    padding: 14px 22px; font-size: 11px; letter-spacing: 0.22em;
-    text-transform: uppercase; font-weight: 700; border-radius: 0;
-    cursor: pointer; transition: all 240ms ease; border: 0;
-    font-family: inherit;
-  }
-  .btn-accent { background: var(--accent); color: #fff; }
-  .btn-accent:hover { background: var(--accent-hover); transform: translateY(-1px); }
-  .btn-secondary {
-    background: transparent; border: 1px solid rgba(255,255,255,0.2);
-    color: var(--text);
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.4); }
-  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
-  .btn-small { padding: 8px 12px; font-size: 10px; }
-
-  /* Music */
-  .empty {
-    border: 1px dashed rgba(255,255,255,0.12);
-    padding: 28px; text-align: center;
-  }
-  .track {
-    display: flex; align-items: center; gap: 14px;
-    border: 1px solid var(--border); background: rgba(0,0,0,0.3);
-    padding: 12px 14px; margin-bottom: 8px;
-  }
-  .track-mark {
-    width: 32px; height: 32px; background: rgba(194,77,44,0.14);
-    display: flex; align-items: center; justify-content: center; color: var(--accent);
-    flex-shrink: 0; font-size: 16px;
-  }
-  .track-info { flex: 1; min-width: 0; }
-  .track-name { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track-meta { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
-  .track-remove {
-    background: transparent; border: 0; color: var(--muted); cursor: pointer; padding: 6px;
-    font-size: 16px;
-  }
-  .track-remove:hover { color: var(--accent); }
-  .track-total {
-    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--dim); margin-top: 8px;
-  }
-
-  /* iPhone Preview */
-  .preview-wrap { position: sticky; top: 24px; }
-  .iphone {
-    width: 340px; height: 700px; max-width: 100%;
-    background: #050505; border-radius: 48px; padding: 12px;
-    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.7), inset 0 0 0 2px #1a1a1a;
-    position: relative; margin: 0 auto;
-  }
-  .iphone::before {
-    content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-    width: 100px; height: 28px; background: #050505; border-radius: 999px; z-index: 10;
-  }
-  .iphone-screen {
-    width: 100%; height: 100%; background: #fff; border-radius: 38px; overflow: hidden;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-  }
-  .mail-bar {
-    height: 64px; background: #f7f7f7; border-bottom: 1px solid #e7e7e7;
-    display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 14px 10px; font-size: 13px; color: #007aff;
-  }
-
-  /* Email preview */
-  .ep { background: #f3efe8; padding: 16px 8px 24px; font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif; color: #1a1a1a; }
-  .ep-box { background: #fff; max-width: 600px; margin: 0 auto; }
-  .ep-accent { height: 6px; }
-  .ep-head { padding: 22px 22px 12px; text-align: center; }
-  .ep-head img.logo { max-width: 100px; height: auto; display: block; margin: 0 auto 10px; }
-  .ep-head .ep-brand { font-family: Georgia, serif; font-size: 10px; letter-spacing: 0.32em; color: #111; text-transform: uppercase; font-weight: 600; }
-  .ep-head .ep-est { margin-top: 4px; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; }
-  .ep-divider { margin: 0 22px; border-bottom: 1px solid #eeeae2; }
-  .ep-subject { padding: 20px 22px 4px; font-family: Georgia, serif; font-size: 22px; line-height: 1.2; color: #111; font-weight: 600; letter-spacing: -0.01em; }
-  .ep-greet { padding: 14px 22px 0; font-size: 14px; color: #1a1a1a; line-height: 1.6; }
-  .ep-body { padding: 14px 22px 6px; }
-  .ep-body p { margin: 0 0 14px 0; font-size: 14px; line-height: 1.7; color: #1a1a1a; white-space: pre-wrap; }
-  .ep-sign { padding: 4px 22px 24px; }
-  .ep-sign-mark { max-width: 56px; height: auto; display: block; margin: 0 0 6px; }
-  .ep-sign-name { font-family: Georgia, serif; font-size: 15px; font-weight: 600; color: #111; }
-  .ep-sign-title { font-size: 11px; color: #6b6864; letter-spacing: 0.04em; margin-top: 2px; }
-  .ep-att { padding: 0 22px 18px; }
-  .ep-att-card { border: 1px solid #eeeae2; background: #fbf8f2; padding: 12px 14px; }
-  .ep-att-title { font-family: Georgia, serif; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-  .ep-att-row { font-size: 12px; color: #1a1a1a; padding: 3px 0; display: flex; align-items: center; gap: 8px; }
-  .ep-att-row .swatch { width: 7px; height: 7px; display: inline-block; flex-shrink: 0; }
-  .ep-att-row .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ep-att-row .sz { color: #a19d98; font-size: 10px; }
-  .ep-footer { background: #111; color: #f3efe8; padding: 22px; margin-top: 4px; }
-  .ep-footer .ep-brand-foot { font-family: Georgia, serif; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
-  .ep-footer .ep-stay { margin-top: 4px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
-  .ep-footer .ep-links { margin-top: 14px; font-size: 12px; line-height: 1.9; }
-  .ep-footer .ep-links .k { color: #a19d98; letter-spacing: 0.08em; text-transform: uppercase; font-size: 9px; }
-  .ep-footer .ep-sig { margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 10px; color: #a19d98; line-height: 1.6; }
-  .ep-meta { text-align: center; padding: 10px 8px 0; font-size: 9px; color: #a19d98; letter-spacing: 0.16em; text-transform: uppercase; }
-
-  /* Toast */
-  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-  .toast { background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    padding: 14px 18px; min-width: 260px; max-width: 380px;
-    font-size: 13px; line-height: 1.45;
-    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
-    opacity: 0; transform: translateY(10px); transition: all 280ms ease;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast .t-title { font-weight: 700; }
-  .toast .t-desc { color: var(--muted); margin-top: 4px; font-size: 12px; }
-  .toast.err { border-color: rgba(255, 90, 90, 0.4); }
-  .toast.err .t-title { color: #ff7e7e; }
-
-  /* How */
-  .how { padding: 48px 0 96px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); }
-  .how-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 24px; }
-  @media (min-width: 880px) { .how-grid { grid-template-columns: repeat(3, 1fr); } }
-  .step { border: 1px solid var(--border); background: rgba(255,255,255,0.02); padding: 24px; }
-  .step .n { font-family: Georgia, serif; font-size: 26px; color: var(--accent); margin-bottom: 16px; }
-  .step .t { font-family: Georgia, serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
-  .step .d { font-size: 13px; color: var(--muted); line-height: 1.55; }
-
-  footer.foot { padding: 32px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--dim); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; text-align: center; }
-
-  .section-h2 {
-    font-family: Georgia, serif; font-size: clamp(28px, 4vw, 44px); line-height: 1.15;
-    margin: 4px 0 12px; color: var(--text);
-  }
-  .section-h2 em { color: var(--accent); font-style: italic; }
-  .section-eyebrow {
-    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
-    color: var(--accent); font-weight: 700; margin-bottom: 14px;
-  }
-
-  select {
-    width:100%; background:transparent; border:0;
-    border-bottom:1px solid rgba(255,255,255,0.18);
-    padding:10px 0; color:var(--text); font-size:15px;
-    font-family:inherit; outline:none;
-  }
-  select:focus { border-bottom-color:var(--accent); }
-  select option { background:#171717; color:var(--text); }
-  .quick-tools { position:relative; overflow:hidden; }
-  .quick-tools::before {
-    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent);
-  }
-  .tool-note { color:var(--dim); font-size:11px; line-height:1.55; margin-top:12px; }
-  .track audio { width:100%; height:30px; margin-top:8px; display:block; }
-  .track-info { overflow:hidden; }
-  .send-success {
-    margin-top:14px; padding:14px; border:1px solid rgba(82,190,110,.45);
-    background:rgba(82,190,110,.08); color:#b8e6c3; font-size:12px; line-height:1.55;
-  }
-
-</style>
-<meta name="lions-rock-build" content="gmail-repair-20260930-1">\n<link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<head><meta http-equiv="Content-Security-Policy" content="connect-src 'self'; form-action 'none'">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lions Rock Studio</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="https://lions-rock-mail.vercel.app/icon-192.png">
+<link rel="apple-touch-icon" href="https://lions-rock-mail.vercel.app/icon-192.png">
+<meta name="application-name" content="Lions Rock Studio">
+<meta name="apple-mobile-web-app-title" content="Lions Rock Studio">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0d0c0c">
+<script src="/fixture-sdk.js"></script>
+<style>
+:root{--bg:#0d0c0c;--surface:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.top{height:118px;border-bottom:1px solid var(--border);background:rgba(13,12,12,.97);display:flex;flex-direction:column;position:sticky;top:0;z-index:10}
+.head{height:66px;display:flex;align-items:center;gap:12px;padding:10px 18px}.head img{width:42px;height:42px;background:#fff;padding:3px}.brand{min-width:0;flex:1}.brand .name{font-family:Georgia,serif;font-size:14px;letter-spacing:.22em;text-transform:uppercase}.brand .sub{font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.global-search{position:relative;width:min(340px,32vw)}.global-search input{width:100%;background:#111;border:1px solid var(--border);color:#fff;padding:9px 11px;font:inherit;font-size:12px}.search-results{display:none;position:absolute;top:40px;left:0;right:0;background:#171616;border:1px solid var(--border);box-shadow:0 18px 40px rgba(0,0,0,.55);max-height:380px;overflow:auto;z-index:40}.search-results.open{display:block}.search-item{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}.search-item:hover{background:rgba(194,77,44,.12)}.search-kind{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.search-title{font-size:12px;font-weight:700;margin-top:2px}.search-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.account{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.on{background:var(--green)}.pill{border:1px solid var(--border);padding:7px 10px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
+.authbox{display:none;align-items:center;gap:6px}.authbox input{width:150px;background:#111;border:1px solid var(--border);color:#fff;padding:8px}
+.nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:#b91c1c;border-color:#b91c1c;color:white}
+.stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
+.toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
+.login-gate{min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(194,77,44,.13),transparent 32%),var(--bg)}
+.login-card{width:min(430px,100%);border:1px solid var(--border);background:rgba(20,19,19,.96);padding:34px 30px;box-shadow:0 28px 80px rgba(0,0,0,.48);text-align:center}
+.login-logo{width:86px;height:86px;object-fit:contain;background:#fff;padding:6px;margin:0 auto 20px}
+.login-title{font-family:Georgia,serif;font-size:27px;letter-spacing:.08em;margin:0 0 7px}
+.login-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+.login-field{text-align:left;margin:0 0 14px}.login-field label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:700}
+.login-field input,.login-field textarea{width:100%;background:#0e0e0e;border:1px solid var(--border);color:#fff;padding:13px 12px;font:inherit;font-size:14px;outline:none}.login-field textarea{min-height:88px;resize:vertical}.login-field input:focus,.login-field textarea:focus{border-color:var(--accent)}
+.login-button{width:100%;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:13px 14px;font:inherit;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:5px}.login-button.secondary{background:transparent;border-color:var(--border);color:var(--text);margin-top:10px}.login-button:disabled{opacity:.55;cursor:wait}
+.login-help{font-size:11px;color:var(--muted);line-height:1.55;margin:15px 0}.login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 18px}.mode-button{border:1px solid var(--border);background:#101010;color:var(--muted);padding:11px 8px;font:inherit;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}.mode-button.active{border-color:var(--accent);background:rgba(194,77,44,.14);color:#fff}.login-link{background:none;border:0;color:#e7a58e;text-decoration:underline;font:inherit;font-size:11px;cursor:pointer;margin-top:12px}.gate-section{display:none}.gate-section.active{display:block}
+.login-status{min-height:18px;color:var(--muted);font-size:11px;margin-top:13px;line-height:1.5}.login-status.err{color:#ff9388}
+.login-foot{font-size:10px;color:var(--dim);margin-top:24px;letter-spacing:.08em}
+body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{display:none!important}
+body.studio-authenticated .login-gate{display:none!important}
+@media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
+</style>
 </head>
-<body>
+<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>
+<div class="login-gate" id="login-gate">
+  <div class="login-card">
+    <img class="login-logo" src="https://lions-rock-mail.vercel.app/icon-192.png" alt="Lions Rock">
+    <h1 class="login-title">Lions Rock Studio</h1>
+    <div class="login-sub">Studio Management System</div>
 
-<div class="wrap">
-  <header class="nav">
-    <div class="brand">
-      <div class="brand-mark"><img id="header-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAKMWlDQ1BJQ0Mg
-UHJvZmlsZQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErA
-kAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/N
-m98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA
-4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L4
-2VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO
-4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNT
-ZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HP
-z03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d
-/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqy
-vnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4
-knQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVb
-yBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99
-C8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPq
-QBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWg
-ETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKF
-WJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6
-FXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgK
-P4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVF
-MVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZ
-nYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGm
-sVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAn
-cFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4
-S7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0g
-k8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFys
-mK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcU
-LMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkV
-ioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eao
-eajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6c
-kjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQO
-VcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0
-Cfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJW
-Mw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXm
-u82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1v
-nW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055q
-H2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ
-7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sD
-D30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z
-31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEP
-gs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGET
-URDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K
-04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVH
-EtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2
-Td6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsy
-tTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/Mm
-Nzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfr
-ry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3Nrhs
-qNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9W
-zFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNld
-ZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgaj
-hop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXy
-YMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT
-6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+
-lXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd
-7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI
-/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3q
-ID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnW
-k5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9m
-Xpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+6TMXDkA
-AADAUExURQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-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
-smTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC
-" alt="Lion's Rock" /></div>
-      <div class="brand-text">
-        <div class="display">Lion&rsquo;s Rock</div>
-        <div class="sub">Media Facility</div>
+    <div class="gate-section active" id="signin-view">
+      <div class="login-help"><b>Private access only.</b><br>Choose the workspace you were invited to.</div>
+      <div class="mode-grid">
+        <button class="mode-button active" id="mode-business" type="button">Business Tools</button>
+        <button class="mode-button" id="mode-artist" type="button">Artist Member</button>
       </div>
-    </div>
-    <div class="badge-offline"><span class="dot"></span> LIONS ROCK MAIL V5.1</div>
-  </header>
-
-  <section class="hero">
-    <div class="eyebrow"><span class="line"></span> The Lion's Rock email kit</div>
-    <h1 class="display">Compose.<br/>Attach.<br/><em>Send.</em></h1>
-    <p class="lede">A styled email template for <b>Lion's Rock Media Facility</b>. Sign in with Google, write the note, attach audio — the email goes out from <b>your Gmail</b> with everything intact. <b>Works offline as a copy/paste kit too.</b></p>
-  </section>
-
-  <section class="grid">
-    <!-- BUILDER -->
-    <div>
-      <div class="section-eyebrow">The Builder</div>
-      <h2 class="section-h2">Write the email. <em>Download the draft.</em></h2>
-      <p style="color: var(--muted); margin: 8px 0 28px;">Every field updates the preview live. Attach audio. Tap download.</p>
-
-      <!-- Logos -->
-      <div class="panel" style="margin-bottom: 24px;">
-        <div class="logo-row">
-          <div>
-            <div class="panel-title">Header Logo</div>
-            <div class="logo-cell">
-              <div class="logo-thumb"><img id="logo-thumb" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAKMWlDQ1BJQ0Mg
-UHJvZmlsZQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErA
-kAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/N
-m98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA
-4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L4
-2VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO
-4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNT
-ZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HP
-z03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d
-/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqy
-vnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4
-knQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVb
-yBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99
-C8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPq
-QBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWg
-ETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKF
-WJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6
-FXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgK
-P4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVF
-MVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZ
-nYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGm
-sVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAn
-cFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4
-S7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0g
-k8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFys
-mK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcU
-LMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkV
-ioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eao
-eajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6c
-kjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQO
-VcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0
-Cfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJW
-Mw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXm
-u82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1v
-nW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055q
-H2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ
-7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sD
-D30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z
-31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEP
-gs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGET
-URDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K
-04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVH
-EtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2
-Td6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsy
-tTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/Mm
-Nzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfr
-ry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3Nrhs
-qNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9W
-zFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNld
-ZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgaj
-hop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXy
-YMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT
-6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+
-lXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd
-7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI
-/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3q
-ID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnW
-k5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9m
-Xpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+6TMXDkA
-AADAUExURQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-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
-smTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC
-" alt="logo" /></div>
-              <input type="file" id="logo-input" accept="image/*" style="display:none" />
-              <button class="btn btn-secondary btn-small" id="logo-replace-btn">⤴ Replace</button>
-              <button class="btn btn-secondary btn-small" id="logo-reset-btn" style="display:none">⌫</button>
-            </div>
-            <div class="panel-hint">Lion's Rock crest. Sits at the top of every email.</div>
-          </div>
-          <div>
-            <div class="panel-title">Signature Mark</div>
-            <div class="logo-cell">
-              <div class="logo-thumb"><img id="sig-thumb" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgI
-CRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/
-2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk
-JCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCAGQAZADASIAAhEBAxEB/8QA
-HQABAAICAwEBAAAAAAAAAAAAAAYIBQcDBAkCAf/EAEwQAAEDAwIDBAcDBwgH
-CQAAAAABAgMEBREGBxIhMQgTQVEUIjJhcYGRFUKhI1JTcoKSohYXM2KxsrPB
-GERWY3WT0iU0Q1SjwsPT4//EABoBAQACAwEAAAAAAAAAAAAAAAABAwIEBQb/
-xAAzEQEAAQMCBAQEBQMFAAAAAAAAAQIDEQQhBRIxURMiQXEGYYGhFBUysfAj
-kdEzQ8Hh8f/aAAwDAQACEQMRAD8AtSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAADKeaAAMp5oMgAMp5oAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQvXO8eiNu+KO/X2CKrRMpRw5lnXy
-9RuVb8XYQ1R2me0FU6Ne7RulajurxJGjq2tYvrUjHJlGM8pFTC5+6ipjmuUp
-1PPLVTPnnlfLLI5XPe9yuc5V6qqrzVQLY6j7blvie6PTmlKmpbnCTV9QkXz4
-GI7+8hB7h2ztf1LlSktun6NnhiCSR31c/H4GggBt+q7Vu61Qq93faamRfCKg
-h5fvNVTDVHaI3TqXcUms7gi/7tscafRrUNcgCdS75blzLl2t76n6tUrf7Djb
-vXuS1cprjUPzrXr/AJkJAGxqPtD7p0KosWsri/H6ZI5f7zVJbZe2HuPblRK5
-tnurfFZ6Xu3fWNWp+BowAWy0/wBt2je5seodJTwtz601BUpJ/A9G/wB43Tob
-evQu4bmQ2S+QrWuT/uVSncz/ACa72v2VU85D6jkfE9skbnMe1Uc1zVwqL5oo
-HqkCqHZt7Rt2rL1RaJ1fVOrY6pe5oLhKuZWSfdjkX76O6I5eaLhFyi8rXgAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL0AA8ztxrjU3bX2o
-q2sc5Z5rlUOdxfd/KORE+SIifIjhtHtK6X/kvvBe2Rs4ILg5txi5YykqZd/G
-jzVwAAAAAAAAAAAAAB2rXXTWu50lfTqrZ6aZk0ap1RzXIqfih6jwv72Jj1ar
-eJqOwvhk8zNBWZ2otbWG0I3iStuEEDk/qukTK/TJ6bJ0AAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqj23dPKlRprUTGJhzJaCV3kqKj2
-J+Mn0Ksl7u1rZftXZytqUZxOttXT1acuaet3a/hIURAAAAAAAAAAAAAANwdl
-OxfbW8lsmc3ijtsE9a9Pgzgb/E9pfQql2IbDmfU9/e32Ww0UTseaq96fhGWt
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAi+6VhXU+3Wo
-7QxvFLU2+ZsSY6yI1XM/iRDzUXqeqa80PMvX9kXTeuL/AGfh4W0Vwnhan9VH
-rwr9MAR8AAAAAAAAAAAD9RFVcJ1Avb2SrD9jbPUdU5nC+6VU9Yvnji7tv4R5
-+ZuYj+31hTTGh7DZeHhdRUEEL0/roxOJf3skgAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAFCu1XZEs+810la3hZcIYKxqfFiMcv7zHF9
-SpPbesix3fTF7a3Pf081G93lwOR7f8R30ArCAAAAAAAAAABKNr7D/KfcTTlo
-VvEypuELZE/3aORz/wCFFIubu7IVh+1t3I65zMstVFNU5XojnIkSf4i/QC8y
-dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANEdsiypc
-NrILg1vr224xSK7yY9HRr+LmG9yDb5WVdQbSaqoUbxuSgknanm6LEifiwDzk
-B+r1PwAAAAAAAAAW07ENhRlt1Nfntz3s0NFG7y4Gq9yfxs+hUzqX47LNi+xN
-mbRI5vDJcJJq16frPVrV/cY0DbYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAHDW0sVdRz0kzeKKeN0T082uTC/gpzADy7utmq7XdKu3
-ywy95Szvgd6i9WuVq/2HV9DqP0Ev7ilv92O1BfNtteXPTKaXttVFSrG6Kd87
-2rIx7GuRVRE96p8iHO7bV/8Au6StCfGeRQK4+iVH6GX9xSwmiOxxeNSaco7v
-edRR2SarjSVtGtGsr42Lzbxqr24cqYXh8PHnyOdvbV1RLKxjNMWJqOcies6V
-fH4k+7Tcj0utkVr3IjqWTKIqp95CjU3/AAbc14y6vBeF/mWrp0vNy5zvjPSM
-9Mwiy9iFiddwIk+Nt/8A1MVqTsXXi32qersGqKS8VcTFelI+m7h0uPBruNyZ
-8s4TPihAK5X8Cuy/hzjOVxk2Z2UZXJubcGKqqjrTJ1XyliK9PqvF9MNvjHA/
-y+cc/N9Mf8yrLPBLTTSQTxviljcrHse1Uc1yLhUVF6Ki+B8YLR6q7XFwsOqL
-xaW6Ms0yUNdPTd6+R3FJwSK3iXl1XGTGf6aFz/2Isn/Nf/0m28+rjHG+R7WM
-arnOXCIic1XwPTrR9kbpvSlnsrWo1KCihpuXmxiIv4opXDQvaru2stY2bTzN
-GWaL7QrI6d0rZXKsbVd6zkTh6omV+RaYAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAD4mjWWF8aPfGrmq3jYuHNz4p7yueqd/tb7L6rdY
-Nb2anvttky+iutKno0tRD+cqc2K9OjmojcL7lRVCx4NY6M7R+3OtO7ihvjLZ
-WP8A9VuaJA7PkjlXgX5ONmMkZIxr2ORzXJlHIuUVPcBTLtpWZKPcK1XRjcNr
-rajHL5vjkci/wuaV6Lc9t+1pJY9L3RG84KqemV367GuRP/TUqPhUA+oVxKxf
-Jyf2l5945ba/WOlqW7UtPUUVdTPppFmync8b2okiKioqKi45+WSiyLhclx+0
-g9fTdOKi4VKJzv4mmjxL/Qn6fu9N8I2vF4lTRnGYq3jrHlndEblapabbi4WJ
-1jp3XGPUrbclS1VV/eK1eWc815IicscKryzzJBswyy0G/twtdggSKhobZNS9
-4qqrp5Gvi7x6qvP2sonuQ46ncuxJpuXULdNxsror/DVeipXvw6VsSqk/Tqip
-jhxw8yO9mepdUbyvnkVVfPRVb3KviqvY5TV4fTHNmP5+33hfx6bs803KcTnf
-32z6y0judy3I1X/xis/xnEZJNubz3I1V/wAYrP8AGeRo7DyTb/ZRtKXPee1z
-ObxNoIKiqVPhGrEX6vQvoU77EtsSXWWobkrc+jW9kGfJZJUX/wCMuJkACG6y
-3h0NoNr0vmoqKKoZ/qsTu9nVfLu2ZVPnhDW2nd89Rb0aoWw6Btclos8GH197
-rGtfLFFnpGzmxsjsYbxK7xXGEUDfYPmJndRtZxOdwoiZcuVX4r4n0AAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAi+4u3Vj3N05NY75BxMd68E7
-MJLTSY5PYvn7uipyUlAA8490totR7UXj0O7QLNRSuX0S4RNXuahP/a7HVq80
-96czpaR3U1poVzf5P6ir6OJq59H4+8hX4xuy38D0avtgteprZPa7zQU9fRTp
-wyQTs4mu9/uVPBU5p4FW9zexvVQSS3DQFYlRCuXfZlZJwyN90cq8nfB2F96g
-RVvauuV8oY7drnRmnNUUbHo9GyRLG7ixji58TUdhV5oidTt02tezlqTCXjQV
-2sMy9ZKOZ7o2/uPT+4aT1DpS+6SrVor9aK221CL7FTErOL3oq8nJ70yYoCyM
-e2nZw1IiPtW4tdbHu6Mq5mxon/NjT+03Dr3TOkNzZbfNTbgWeD0ODuGpFPDN
-x8855SJgoblRn4fQruWqblPLXGYbei11/RXYv6erlqj12nr75XBn7ONlnTP8
-4tvRPPuGf/aZjbrazSe12rGajn3GtlS6OCSHuZXQwt9fHPPeL0wUmz8Bn4fQ
-i3Yot/phbrOKarV736s/SI/aFqNQ7YbByX+53q+bmd/NW1UtVJBSV0Ktar3q
-5URGMc7CZMRPc+y3plFWntV31HKzoqd+qKv7bo2/gVuyoLXPWD/0pLVpGKop
-tt9urPYmzoiPnnXifLjOFc1nDnGVxly9VNdat323E1nxx3LU1ZHTP5LTUa+j
-xY8lRmOJPiqmD0jt3qvXVQkGnbFW3Dnh0sceImfrSLhrfmpY/bTsaw00kVw1
-7XtqVTDvsyicqM+EkvJV+DcfrAaO2n2a1Ju1du6oI3U1sienpdymavdxJ4on
-57/6qfPCcy+GgdA2PbjTsFisVN3UEfrSSO5yTyL1kevi5foiYRMIhmLVaaCx
-2+C3WyjgoqOnbwRQQMRjGJ5IiHbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAADp3a3W25UMkF2pKSrpMK58dVG2SPCeKo5FQqvq+LYm
-6VkqU2iblDhVRKm3TejNd72xq5W4+LULWXGkbcKCpo3OVrZ4nxKqeCORU/zK
-PXq11VluNTbq6J0VTTSLFIxyYwqf5L1RfFDm6/U3LPLydJe0+EeDaLiMXvxO
-ZqpxiM42nOZfNToTZ6rdinvesrQrv/NUkNUxv7iop27Z2d9Kalm7rT27dlqJ
-XezBV0jqeVfdwuflfkhHvQ6m4VUdJR08tTUzLwxwxMV73r5Iic1N+7Qdm1tB
-UU+odbwxTVEapJT2tcPZE5OaOlXo5yeDU5J456Jbpb9dyPM0+PcK0ujqxamY
-+Wctfu7Euqc+pqeyKnmrJU/yOlcuyUunmJJqDcTT9tbjOFie5y/Bqqir8i6J
-BNz9qbfuDSJPG5lHd4W4hqscnJ+Y/HVvv6p4eKLs3ZrimZtxmXE4fb01y/TR
-q6pponrMRnH8+vsqmm2e01lk/wC0dX6kvvD1S2W5lO1y/rSqvIkumtUbF6Tq
-Y3pt1dK1zXJmpuD46pye/u3P4c/BCLau0xd9JXF9uvNFJSzplW8XNsifnMd0
-cnvQiFRHJLI2OKN8kj3I1jGJlz3LyRETxVV5YNGxqblc4q2eo4pwPRaa3zWJ
-mqPSc5z/AG2ehOnbhbLtYqCvsyxLbqmBktP3bOBvAqZTDfD4eBkSM7Z6em0p
-oCw2Wp5VFJRRsmTykxlyfJVVCTHSeKkAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAjurtU0+k57RVXGrgo7ZU1TqWpqJ3I1kSuie6N
-XOXkiK5iNyvi5AJERvVW3ul9Y4kvdqhnlY3CTtcsciJ5cTVRce5eRlqa+2qt
-pvSqW50U9PjPexTsczHnlFwVw7SvaJt7LTUaN0bcWVVVVIsVwr6Z/EyGPo6J
-jk5K53RVTkiZTqvLGqmKoxVGVtm/cs1c9qqaZ7xOJRrV3aE0/t1dqi0bUact
-KJC5YprxVNdM6dU6pGvFlW58VXC+CYwq4i19svcCkmRa2hsVdF4tWnfG75K1
-/L6KaEBNNMUxiEXLtd2qa7kzMz6zutrT9uC3LQo6o0bVpWInsR1rVjVf1lbl
-PopBtQ9snXlymX7Ho7VZ4E9lEiWok+bn8l+TUNBglWsdprtV0+oo2WTdPTdB
-drbI7C1lPDh8P9ZY/H4sVq+5SxWiNrtvLS6m1Hpu1Uszp2JPS1jpXT4Y5Mo6
-NXqvDyXqnM85yzHZX31prAiaG1PWNgoZHq621UzsMge5crE5V5I1V5ovRFVU
-8UxHLGc4WReuRTyRVOO2dlvAcTqynZD3zp4mxInFxq9OHHnkj+nNX0eqdQXe
-G010Fdb7dHDC6enej2LUOV7nsRyclVre7zjpxEq0lAAAHHUVMNJE6aeVkUbc
-Ze9cImVwnP4qhyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AjO5OjINwdEXfTc6tatbAqRSOTlHKi8Ubvk5E+WSTADy2uduq7Ncaq210Lqe
-rpZXQTROTCse1cKi/BUOob37UFLa7BvtHW1NtjrKSqpqarq6XiWNJ09Zj04m
-qitVWs6p48zaMHZJ211ZbKO92G8X2mo66FlRDwzRyNVjkRU9pmfHoqgU3M7o
-/RN/15eI7Tp62zV1U7Cu4EwyJv5z3Lya33qW6tPYy0DRTJLXXG+3FE/8J8zI
-2L8eBiO+iobm0vpCw6Ltrbbp61UttpU5qyBmFevm53Vy+9VVQK02jse2CptV
-XaqvWzH6vhibLJBSuY6Glz7KPjX8orV/O9X4eegdf7aam20uy27UNvfBlV7m
-oZ60FQnmx/RfhyVPFEL96u2vsmqq6O8RrUWfUECfkLxbXJFUs9zl6SM8Fa9F
-THkat3D1xrbbui9C3I0jaNcaTlckb7nSRd27yRZYncTWv8sYTydkCloLkWXY
-LZPdy0/bekqi40UT1xJFR1XrU71+4+ORHK1fd0XwyhyQ9jLQdvV9VcL/AH2S
-miRXvR0kUbUaiZVXORnTHwApxH387mQM7x6uVGtY3K5XwREPRLZDb/8Am225
-tllmaiV70WqrVT9O/CuT9lOFv7JU/aem09qrtGWWKy2uOksVPVSSUkCqrnOZ
-DG97HvVyqquc5qOXPTOE5Ihe1OgAwyaiYl6r6OViRUVDTNmkrHrwxo/mr2qq
-8vVZwOXy4jLyOVsbnNYr3IiqjUVEVy+XM19T69tVy0/VXLT1NNe6iGSR89o4
-O7qo2vXD2vjcmV4XLzwioqJyyYVzjdsaeiK5mj1naPTf+bb937Van0ru7Zbh
-arBdWXangbx1K0TnI+ORvOHC8ufeNRyL0Xu16pkntGk6UsKVSsWfgb3is9lX
-Y5492ckf2/joFsLamh0rHplJ3udJRtp2wqqp95UaiZz5qiKSUypmJjMKrtuq
-3XNFXWAAEsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSrto
-UUkO5tuqnObwT2mNGonVOGSRFz9Sf9k3dm2xaHuGnb/c6ahSxKtTFNVSoxno
-z3c+ar92RcfttQwPbbsMyXPT1/4k7l8D6Lh8eJHK/P0cVgRypnC4zyX3geqD
-Z4XsjeyVjmy/0bkcio/lnl58uZ0r1qG06coX193uNNQUjHtjfPUSIxjHOVER
-FcvJMqqdfMobSb936Dbi36Vc+X06zXGCstdxa71oWRo78m5F6onFhP6qq1eW
-Dk3Q3wrdbVE81u7yjp71a6envNA9qLC6pikVUkj5+TWYdyXGUXOALzt1jpt9
-P6S3UFodBjPepWRqzHx4sHxQ3rTetrXWNoq63Xm3K91HULG9s0LnKiZjVei8
-nJy955jZ+H0Nk7XbuVGjblZmXV89RY7I+prYLdAiNSerfG5GOevjhyt5rnhR
-OSeYTrcrSGoezRruPVOiax7bJVvREjc5XsjzlfRpk+81URVaq88IuFy3JsTc
-3fWHV/Z5q71p6nmbU3B7LZcI2rxLblenr8a/muROFrvHjTouUNVaL3notUz3
-vT2u6T0xus7lEyrrlcjW0MfArI1jTw7t6sVM8ka1eqkNsN3uGzevLrY73Sem
-W9Xvtt5t7vYrKfOFVPfheNjvDl4KoEi7JtE+q3ptkzVajaWmqZn58U7pWcvm
-9C9dZVNoqSWpe1zkiYruFvV2PBPepVbs57dv03vbepaKo9Ms9HbkmpKvGPSK
-epRr4H/FWoqL70XyLXPa1zVRyIqL4KE04zuh89q1Feb9b/tK7RQUMLvSp7bR
-RKiLj+jbJMq5d63PCI1F4Vyh82O+ad1Bqq42q23SmrK2xVHfvSFeJYFlR7Xx
-K7GPaRyqiKuFwi80MRpLdalumu7ppK5W6W3XJKiVkL3vykzWZwmMJwrwJxJ1
-Reamf2/2x01tpR1VNp+kkjdWS97UTzSLJLM7njicvgmVwnvVeqqpTZqpqiZp
-nLf4jZvWa6bd6nl2iYxjExPrt19+u26VgAuc8AAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAABrrffbaHcrQVXRoxzq+hZJWUKN6umSNyI355
-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
-62ZbdCJBaqhslRe2d1BJE7P5FUy96fFFRqfrF9vU/rquTjHp/O7kavgdEzp9
-No6ObxP9zM794xnEcvrmMuvZ+0BarvqyKypbnxUk9QtPFXLOio7mqMcreHkj
-lx48smY3h1NadN2GmdeNOUl/pqqZYlp6nhVjfVVc4c1yeBonUWkLnZNJ0Vjf
-pC5xXOmkWvfdoVWRj2vbzauG+qjUa1MKvJWqviZ/czVc2tNpNN17nL6dDWrT
-1mP0rYlyv7SYd8ymNXciiqKp83WP8Ozc+HtFXqtPcs2v6UzNNUc2c7TMVZid
-s/T2TjUmjtuNBacZqyn28sdRLmJUiWFvqq/HTiRUTGfI+qrfuhs9XaKapsTo
-aSspIKh0kc6L6Ox6dEbw8+HHhgiGvtEahsO3Mtyues7neY3pTJDRyIrY41c5
-Oaorl4sJyTp5keprPHqbWujbNXI9KesstOx7mLhzV7mRUVPgqIvyJu6i9zxF
-O3Tsr4XwbhM6ebl+JriJrzMc0bRETiIzG8ezee4W6EOh6S01cNAlzhuSu4Hs
-nRiI1EaqORcLlFRxOEXKIpTrWdRqPTklNoq+RpIy01LpKWZM4dFJjHD5sXGU
-8lVU8OVxGeynwNnTX6rlVWdsY/7cPj3C9PodNp5szmaufNW/mjMcs46RtPo/
-QAbby4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADH32wWzU1uktt3o
-46yjkVrnRSZwqouU6e8jH8ye3n+ytB/H/wBRNwY1UU1bzC+3qr1qOW3XMR8p
-mEVq9rdGV1tobZUafo5KOg7z0aFUciRcaor8YXxVEznyOvS7O6CoaqGqp9M0
-Uc8D2yRvTjy1zVyi+15oTIEeHR2hlGs1ERiLk495YaxaNsGmqusq7RbIKOeu
-dxVD485lXKrlcr5uX6mQudspLzb6i318DKilqGLHLE/o9q9UU7IMopiIxCmq
-7XVVz1TMz3Yi26SsVpscliorZTxWyRHtfS4yxyP9pFRc9Tj05orT+koqiGyW
-yGhiqVRZWRq5WvVEVMqiqqdFM2COWOzKb9yYmJqnfrv190Tl2n0NNWLVv0va
-+9VeJcQ4aq/qp6v4GUvWjrBqKhp6C52umqKWmXihhVFa2NcY5I3GORmAR4dP
-TCz8ZfzFXiTmOm87ezHXXTtpvdrS1XGghqqJOHEMiZROHpjxTBiWbZ6RjdRu
-SyU6+hLmnRznuSL1uLkirj2lVSTgTbpmczBb1uot08tu5MR8pmH45rXNVrkR
-WqmFReikW/mt0b6K6lSwUiQPkSVY8u4eJEVEXGeuFVCVAVW6av1RlFjVX7Gf
-BrmnPaZjp06MfdNPWu92xLXcKKKpok4cQvzw+r0+h0afQum6S4UdwgtFOyro
-o2xU8qZzExqKiInPyVTPATbpmczBRq79FM0U1zETnbM436/39WFv+jNP6pkg
-lvNppq2SBFSN0jVy1F8MovQzSJhMIAZRTETmIV1XrldMUVVTMR0jO0Z7dgAE
-qwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
-" alt="sig" /></div>
-              <input type="file" id="sig-input" accept="image/*" style="display:none" />
-              <button class="btn btn-secondary btn-small" id="sig-replace-btn">⤴ Replace</button>
-              <button class="btn btn-secondary btn-small" id="sig-reset-btn" style="display:none">⌫</button>
-            </div>
-            <div class="panel-hint">Leprokahn mark. Next to your name in the sign-off.</div>
-          </div>
-        </div>
+      <div class="login-field">
+        <label for="gate-email">Email</label>
+        <input id="gate-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com">
       </div>
-
-      <!-- Music -->
-      <div class="panel" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px;">
-          <div>
-            <div class="panel-title">Audio Attachments</div>
-            <div class="panel-hint" style="margin-top: 0;">Embedded into the <b>.eml</b> draft as real attachments. Recipient gets the audio files. Nothing leaves this device until you send.</div>
-          </div>
-          <input type="file" id="music-input" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff" multiple style="display:none" />
-          <button class="btn btn-accent btn-small" id="music-btn">♪ Add tracks</button>
-        </div>
-        <div id="tracks-empty" class="empty">
-          <div style="font-size: 24px; opacity: 0.4; margin-bottom: 8px;">♫</div>
-          <div style="font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);">No tracks attached</div>
-          <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">MP3 · WAV · M4A · FLAC · OGG · up to 25MB total</div>
-        </div>
-        <div id="tracks-list"></div>
+      <div class="login-field">
+        <label for="gate-password">Password</label>
+        <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password">
       </div>
-
-      <div class="panel quick-tools" style="margin-bottom:24px;">
-        <div class="panel-title">Quick Tools</div>
-        <div class="two-col">
-          <div class="field">
-            <div class="label-row"><label>Template</label><span class="hint">One-tap starting point</span></div>
-            <select id="template-select">
-              <option value="blank" selected>Blank email</option>
-              <option value="studio-follow-up">Studio Follow-up</option>
-              <option value="send-mix">Send Mix / Master</option>
-              <option value="booking-confirmation">Booking Confirmation</option>
-              <option value="producer-intro">Producer Introduction</option>
-              <option value="payment-follow-up">Payment Follow-up</option>
-            </select>
-          </div>
-          <div class="field">
-            <div class="label-row"><label>First name</label><span class="hint">Fills {{First Name}}</span></div>
-            <input id="first-name" placeholder="e.g. Jordan" />
-          </div>
-        </div>
-        <div class="two-col">
-          <div class="field">
-            <div class="label-row"><label>Test email</label><span class="hint">Saved on this device</span></div>
-            <input id="test-email" placeholder="your@email.com" autocomplete="email" />
-          </div>
-          <div class="field">
-            <div class="label-row"><label>Recent recipient</label><span class="hint">Last 10</span></div>
-            <select id="recent-recipient"><option value="">Choose recent…</option></select>
-          </div>
-        </div>
-        <div class="btn-row" style="margin-top:6px;">
-          <button class="btn btn-secondary btn-small" id="save-template">☆ Save current template</button>
-          <button class="btn btn-secondary btn-small" id="send-test">✉ Send test to myself</button>
-          <button class="btn btn-secondary btn-small" id="new-email">＋ New email</button>
-          <button class="btn btn-secondary btn-small" id="install-app" style="display:none;">⇩ Install app</button>
-        </div>
-        <div class="tool-note" id="size-note">No audio attached.</div>
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Subject line</label><span class="hint">The headline of the email</span></div>
-        <input id="subject" value="" placeholder="Subject" />
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Preheader</label><span class="hint">Shown in the inbox preview</span></div>
-        <input id="preheader" value="" placeholder="Optional inbox preview text" />
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Greeting</label></div>
-        <input id="greeting" value="" placeholder="Greeting" />
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Body</label><span class="hint">Use a blank line for a new paragraph</span></div>
-        <textarea id="body" rows="8" placeholder="Write your message…"></textarea>
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Sign-off</label></div>
-        <input id="signoff" value="" placeholder="Sign-off" />
-      </div>
-
-      <div class="two-col">
-        <div class="field">
-          <div class="label-row"><label>Your name</label></div>
-          <input id="senderName" value="Tarik 'LeProKahn' Delves" />
-        </div>
-        <div class="field">
-          <div class="label-row"><label>Your title</label></div>
-          <input id="senderTitle" value="Founder · The Lion's Rock Media Facility" />
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="label-row"><label>Accent color</label><span class="hint">Hex value</span></div>
-        <div class="color-row">
-          <input type="color" id="accent-color" value="#C24D2C" />
-          <input id="accent-hex" value="#C24D2C" />
-        </div>
-      </div>
-
-      <!-- Send Directly with Gmail -->
-      <div class="panel" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
-          <div>
-            <div class="panel-title">Send Directly with Gmail</div>
-            <div class="panel-hint" style="margin-top:0;">Sign in once — the app sends from your Gmail account with the styled body <b>and your audio attached as real files</b>. Message saves to your Sent folder. <span style="color:var(--dim);">Requires internet.</span></div>
-          </div>
-          <div id="gmail-status-row" style="display:flex; align-items:center; gap:10px;">
-            <button class="btn btn-secondary btn-small" id="gmail-signin">→ Sign in with Google</button>
-          </div>
-        </div>
-        <div class="two-col" style="margin-top: 8px;">
-          <div style="grid-column: 1 / -1;">
-            <div class="label-row"><label>Recipient(s)</label><span class="hint">comma-separated</span></div>
-            <input id="to" placeholder="someone@example.com, another@example.com" autocomplete="email" />
-          </div>
-          <div>
-            <div class="label-row"><label>Cc</label></div>
-            <input id="cc" />
-          </div>
-          <div>
-            <div class="label-row"><label>Bcc</label></div>
-            <input id="bcc" />
-          </div>
-        </div>
-        <div id="gmail-runtime-note" style="display:none; margin-top:12px; padding:10px 12px; border:1px solid rgba(194,77,44,.35); color:var(--muted); font-size:11px; line-height:1.5;"></div><div id="send-success" class="send-success" style="display:none;"></div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-accent" id="send-gmail">✉ Send with Gmail</button>
-        <button class="btn btn-secondary" id="copy-html">⧉ Copy styled email</button>
-        <button class="btn btn-secondary" id="dl-eml">⬇ .eml</button>
-        <button class="btn btn-secondary" id="dl-html">⬇ .html</button>
-      </div>
-      <div style="color: var(--dim); font-size: 12px; max-width: 620px; line-height: 1.6; margin-top: 16px;">
-        <p style="margin: 0 0 10px 0;"><span style="color: var(--accent); font-weight: 700;">Send with Gmail</span> — one tap. Attachments and styling all go through as a real Gmail send. First use asks for permission to send emails on your behalf.</p>
-        <p style="margin: 0;"><span style="color: var(--muted);">.eml / Copy / .html</span> still work fully offline as fallbacks when you don't have internet.</p>
-      </div>
+      <button class="login-button" id="gate-signin">Sign In to Business Tools</button>
+      <button class="login-link" id="forgot-password" type="button">Forgot password?</button>
+      <button class="login-button secondary" id="show-apply" style="display:none">Apply for Access</button>
+      <div class="login-status" id="gate-status">Checking your session…</div>
     </div>
 
-    <!-- PREVIEW -->
-    <div>
-      <div class="preview-wrap">
-        <div class="section-eyebrow">Live Preview</div>
-        <div style="font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px;">📧 Live preview · 600px</div>
-        <div class="iphone">
-          <div class="iphone-screen">
-            <div class="mail-bar">
-              <span>&lt; Inbox</span>
-              <span style="color:#8e8e93;">Mail</span>
-            </div>
-            <div id="preview-root"></div>
-          </div>
-        </div>
-      </div>
+    <div class="gate-section" id="reset-view">
+      <div class="login-help"><b>Choose a new password.</b><br>Your recovery link confirms your account. Workspace access stays the same.</div>
+      <div class="login-field"><label for="reset-password">New Password</label><input id="reset-password" type="password" autocomplete="new-password"></div>
+      <div class="login-field"><label for="reset-confirm">Confirm Password</label><input id="reset-confirm" type="password" autocomplete="new-password"></div>
+      <button class="login-button" id="reset-save">Save New Password</button>
+      <div class="login-status" id="reset-status"></div>
     </div>
-  </section>
+
+    <div class="gate-section" id="apply-view">
+      <div class="login-help">Applications are reviewed first. If you are accepted, Lions Rock will send payment instructions. Your account is only activated after payment is confirmed.</div>
+      <div class="login-field"><label>Full Name</label><input id="apply-name" autocomplete="name"></div>
+      <div class="login-field"><label>Business / Studio Name</label><input id="apply-business" autocomplete="organization"></div>
+      <div class="login-row">
+        <div class="login-field"><label>Email</label><input id="apply-email" type="email" autocomplete="email"></div>
+        <div class="login-field"><label>Phone</label><input id="apply-phone" autocomplete="tel"></div>
+      </div>
+      <div class="login-field"><label>Website / Social (optional)</label><input id="apply-website"></div>
+      <div class="login-field"><label>Tell us about your studio or work</label><textarea id="apply-about"></textarea></div>
+      <input id="apply-hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
+      <button class="login-button" id="apply-submit">Submit Application</button>
+      <button class="login-link" id="back-signin">Already approved? Return to Sign In</button>
+      <div class="login-status" id="apply-status"></div>
+    </div>
+
+    <div class="gate-section" id="invite-view">
+      <div class="login-help"><b>Your Lions Rock Studio access is active.</b><br>Create the password you will use to sign in.</div>
+      <div class="login-field"><label>New Password</label><input id="invite-password" type="password" autocomplete="new-password"></div>
+      <div class="login-field"><label>Confirm Password</label><input id="invite-confirm" type="password" autocomplete="new-password"></div>
+      <button class="login-button" id="invite-save">Set Password & Open Studio</button>
+      <div class="login-status" id="invite-status"></div>
+    </div>
+
+    <div class="login-foot">THE LION'S ROCK MEDIA FACILITY</div>
+  </div>
 </div>
-
-<section class="how">
-  <div class="wrap">
-    <div class="section-eyebrow">How it works</div>
-    <h2 class="section-h2">Three taps. <em>Any device.</em></h2>
-    <p style="color: var(--muted); max-width: 540px; margin-top: 8px;">Works the same on Mac, Windows, Android, iPhone, Linux — anywhere there's a default mail app.</p>
-    <div class="how-grid">
-      <div class="step">
-        <div class="n">01</div>
-        <div class="t">Sign in &amp; write</div>
-        <div class="d">Sign in with Google (one-time), then fill recipient, subject, body, and drop in any audio files.</div>
+<div class="top">
+  <div class="head">
+    <img src="https://lions-rock-mail.vercel.app/icon-192.png" alt="Lions Rock">
+    <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Private Member & Business Access</div></div>
+    <div class="global-search">
+      <input id="global-search" placeholder="Search clients, projects, documents…">
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <div class="account">
+      <span class="dot" id="cloud-dot"></span>
+      <span class="label" id="cloud-label">Checking account…</span>
+      <div class="authbox" id="authbox">
+        <input id="studio-email" type="email" placeholder="Email">
+        <input id="studio-password" type="password" placeholder="Password">
+        <button class="pill" id="studio-signin">Sign In</button>
       </div>
-      <div class="step">
-        <div class="n">02</div>
-        <div class="t">Send with Gmail</div>
-        <div class="d">Tap Send. The email goes out from your Gmail account with the styled body and attached audio. Saves to your Sent folder.</div>
-      </div>
-      <div class="step">
-        <div class="n">03</div>
-        <div class="t">Offline fallback</div>
-        <div class="d">No internet? Use Copy styled email or .eml — the whole builder still works. Bring it online later to send.</div>
-      </div>
+      <button class="pill" id="studio-signout" style="display:none">Sign Out</button>
     </div>
   </div>
-</section>
-
-<footer class="foot">
-  <div class="wrap">© <span id="year"></span> Lion's Rock Media Facility — Offline Email Kit</div>
-</footer>
-
-<div class="toast-wrap" id="toasts"></div>
-
+  <div class="nav" id="nav">
+    <button class="active" data-app="mail" id="mail-nav">Email</button>
+    <button data-app="member" id="member-nav" style="display:none">Member</button>
+    <button data-app="documents" data-view="generator" data-scope="business">Documents</button>
+    <button data-app="documents" data-view="history" data-scope="business">History</button>
+    <button data-app="hub" data-view="clients" data-scope="business">Clients</button>
+    <button data-app="hub" data-view="projects" data-scope="business">Projects</button>
+    <button data-app="documents" data-view="dashboard" data-scope="business">Dashboard</button>
+    <button data-app="documents" data-view="settings" data-scope="business">Settings</button>
+    <button data-app="admin" id="admin-nav" style="display:none">Admin</button>
+  </div>
+</div>
+<div class="stage">
+  <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=8" title="Lions Rock Mail"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
+  <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=11" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=4" title="Lions Rock Access Administration"></iframe>
+</div>
 <script>
-"use strict";
-const $ = id => document.getElementById(id);
-const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAKMWlDQ1BJQ0Mg\nUHJvZmlsZQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErA\nkAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/N\nm98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA\n4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L4\n2VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO\n4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNT\nZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HP\nz03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d\n/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqy\nvnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4\nknQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVb\nyBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99\nC8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPq\nQBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWg\nETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKF\nWJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6\nFXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgK\nP4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVF\nMVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZ\nnYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGm\nsVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAn\ncFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4\nS7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0g\nk8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFys\nmK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcU\nLMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkV\nioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eao\neajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6c\nkjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQO\nVcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0\nCfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJW\nMw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXm\nu82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1v\nnW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055q\nH2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ\n7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sD\nD30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z\n31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEP\ngs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGET\nURDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K\n04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVH\nEtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2\nTd6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsy\ntTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/Mm\nNzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfr\nry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3Nrhs\nqNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9W\nzFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNld\nZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgaj\nhop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXy\nYMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT\n6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+\nlXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd\n7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI\n/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3q\nID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnW\nk5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9m\nXpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+6TMXDkA\nAADAUExURQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n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\nsmTJPyv/ATNZNXWODstaAAAAAElFTkSuQmCC\n";
-const SIGNATURE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgI\nCRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/\n2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\nJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCAGQAZADASIAAhEBAxEB/8QA\nHQABAAICAwEBAAAAAAAAAAAAAAYIBQcDBAkCAf/EAEwQAAEDAwIDBAcDBwgH\nCQAAAAABAgMEBREGBxIhMQgTQVEUIjJhcYGRFUKhI1JTcoKSohYXM2KxsrPB\nGERWY3WT0iU0Q1SjwsPT4//EABoBAQACAwEAAAAAAAAAAAAAAAABAwIEBQb/\nxAAzEQEAAQMCBAQEBQMFAAAAAAAAAQIDEQQhBRIxURMiQXEGYYGhFBUysfAj\nkdEzQ8Hh8f/aAAwDAQACEQMRAD8AtSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAADKeaAAMp5oMgAMp5oAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQvXO8eiNu+KO/X2CKrRMpRw5lnXy\n9RuVb8XYQ1R2me0FU6Ne7RulajurxJGjq2tYvrUjHJlGM8pFTC5+6ipjmuUp\n1PPLVTPnnlfLLI5XPe9yuc5V6qqrzVQLY6j7blvie6PTmlKmpbnCTV9QkXz4\nGI7+8hB7h2ztf1LlSktun6NnhiCSR31c/H4GggBt+q7Vu61Qq93faamRfCKg\nh5fvNVTDVHaI3TqXcUms7gi/7tscafRrUNcgCdS75blzLl2t76n6tUrf7Djb\nvXuS1cprjUPzrXr/AJkJAGxqPtD7p0KosWsri/H6ZI5f7zVJbZe2HuPblRK5\ntnurfFZ6Xu3fWNWp+BowAWy0/wBt2je5seodJTwtz601BUpJ/A9G/wB43Tob\nevQu4bmQ2S+QrWuT/uVSncz/ACa72v2VU85D6jkfE9skbnMe1Uc1zVwqL5oo\nHqkCqHZt7Rt2rL1RaJ1fVOrY6pe5oLhKuZWSfdjkX76O6I5eaLhFyi8rXgAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL0AA8ztxrjU3bX2o\nq2sc5Z5rlUOdxfd/KORE+SIifIjhtHtK6X/kvvBe2Rs4ILg5txi5YykqZd/G\njzVwAAAAAAAAAAAAAB2rXXTWu50lfTqrZ6aZk0ap1RzXIqfih6jwv72Jj1ar\neJqOwvhk8zNBWZ2otbWG0I3iStuEEDk/qukTK/TJ6bJ0AAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqj23dPKlRprUTGJhzJaCV3kqKj2\nJ+Mn0Ksl7u1rZftXZytqUZxOttXT1acuaet3a/hIURAAAAAAAAAAAAAANwdl\nOxfbW8lsmc3ijtsE9a9Pgzgb/E9pfQql2IbDmfU9/e32Ww0UTseaq96fhGWt\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAi+6VhXU+3Wo\n7QxvFLU2+ZsSY6yI1XM/iRDzUXqeqa80PMvX9kXTeuL/AGfh4W0Vwnhan9VH\nrwr9MAR8AAAAAAAAAAAD9RFVcJ1Avb2SrD9jbPUdU5nC+6VU9Yvnji7tv4R5\n+ZuYj+31hTTGh7DZeHhdRUEEL0/roxOJf3skgAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAFCu1XZEs+810la3hZcIYKxqfFiMcv7zHF9\nSpPbesix3fTF7a3Pf081G93lwOR7f8R30ArCAAAAAAAAAABKNr7D/KfcTTlo\nVvEypuELZE/3aORz/wCFFIubu7IVh+1t3I65zMstVFNU5XojnIkSf4i/QC8y\ndAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANEdsiypc\nNrILg1vr224xSK7yY9HRr+LmG9yDb5WVdQbSaqoUbxuSgknanm6LEifiwDzk\nB+r1PwAAAAAAAAAW07ENhRlt1Nfntz3s0NFG7y4Gq9yfxs+hUzqX47LNi+xN\nmbRI5vDJcJJq16frPVrV/cY0DbYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAHDW0sVdRz0kzeKKeN0T082uTC/gpzADy7utmq7XdKu3\nywy95Szvgd6i9WuVq/2HV9DqP0Ev7ilv92O1BfNtteXPTKaXttVFSrG6Kd87\n2rIx7GuRVRE96p8iHO7bV/8Au6StCfGeRQK4+iVH6GX9xSwmiOxxeNSaco7v\nedRR2SarjSVtGtGsr42Lzbxqr24cqYXh8PHnyOdvbV1RLKxjNMWJqOcies6V\nfH4k+7Tcj0utkVr3IjqWTKIqp95CjU3/AAbc14y6vBeF/mWrp0vNy5zvjPSM\n9Mwiy9iFiddwIk+Nt/8A1MVqTsXXi32qersGqKS8VcTFelI+m7h0uPBruNyZ\n8s4TPihAK5X8Cuy/hzjOVxk2Z2UZXJubcGKqqjrTJ1XyliK9PqvF9MNvjHA/\ny+cc/N9Mf8yrLPBLTTSQTxviljcrHse1Uc1yLhUVF6Ki+B8YLR6q7XFwsOqL\nxaW6Ms0yUNdPTd6+R3FJwSK3iXl1XGTGf6aFz/2Isn/Nf/0m28+rjHG+R7WM\narnOXCIic1XwPTrR9kbpvSlnsrWo1KCihpuXmxiIv4opXDQvaru2stY2bTzN\nGWaL7QrI6d0rZXKsbVd6zkTh6omV+RaYAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAD4mjWWF8aPfGrmq3jYuHNz4p7yueqd/tb7L6rdY\nNb2anvttky+iutKno0tRD+cqc2K9OjmojcL7lRVCx4NY6M7R+3OtO7ihvjLZ\nWP8A9VuaJA7PkjlXgX5ONmMkZIxr2ORzXJlHIuUVPcBTLtpWZKPcK1XRjcNr\nrajHL5vjkci/wuaV6Lc9t+1pJY9L3RG84KqemV367GuRP/TUqPhUA+oVxKxf\nJyf2l5945ba/WOlqW7UtPUUVdTPppFmync8b2okiKioqKi45+WSiyLhclx+0\ng9fTdOKi4VKJzv4mmjxL/Qn6fu9N8I2vF4lTRnGYq3jrHlndEblapabbi4WJ\n1jp3XGPUrbclS1VV/eK1eWc815IicscKryzzJBswyy0G/twtdggSKhobZNS9\n4qqrp5Gvi7x6qvP2sonuQ46ncuxJpuXULdNxsror/DVeipXvw6VsSqk/Tqip\njhxw8yO9mepdUbyvnkVVfPRVb3KviqvY5TV4fTHNmP5+33hfx6bs803KcTnf\n32z6y0judy3I1X/xis/xnEZJNubz3I1V/wAYrP8AGeRo7DyTb/ZRtKXPee1z\nObxNoIKiqVPhGrEX6vQvoU77EtsSXWWobkrc+jW9kGfJZJUX/wCMuJkACG6y\n3h0NoNr0vmoqKKoZ/qsTu9nVfLu2ZVPnhDW2nd89Rb0aoWw6Btclos8GH197\nrGtfLFFnpGzmxsjsYbxK7xXGEUDfYPmJndRtZxOdwoiZcuVX4r4n0AAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAi+4u3Vj3N05NY75BxMd68E7\nMJLTSY5PYvn7uipyUlAA8490totR7UXj0O7QLNRSuX0S4RNXuahP/a7HVq80\n96czpaR3U1poVzf5P6ir6OJq59H4+8hX4xuy38D0avtgteprZPa7zQU9fRTp\nwyQTs4mu9/uVPBU5p4FW9zexvVQSS3DQFYlRCuXfZlZJwyN90cq8nfB2F96g\nRVvauuV8oY7drnRmnNUUbHo9GyRLG7ixji58TUdhV5oidTt02tezlqTCXjQV\n2sMy9ZKOZ7o2/uPT+4aT1DpS+6SrVor9aK221CL7FTErOL3oq8nJ70yYoCyM\ne2nZw1IiPtW4tdbHu6Mq5mxon/NjT+03Dr3TOkNzZbfNTbgWeD0ODuGpFPDN\nx8855SJgoblRn4fQruWqblPLXGYbei11/RXYv6erlqj12nr75XBn7ONlnTP8\n4tvRPPuGf/aZjbrazSe12rGajn3GtlS6OCSHuZXQwt9fHPPeL0wUmz8Bn4fQ\ni3Yot/phbrOKarV736s/SI/aFqNQ7YbByX+53q+bmd/NW1UtVJBSV0Ktar3q\n5URGMc7CZMRPc+y3plFWntV31HKzoqd+qKv7bo2/gVuyoLXPWD/0pLVpGKop\ntt9urPYmzoiPnnXifLjOFc1nDnGVxly9VNdat323E1nxx3LU1ZHTP5LTUa+j\nxY8lRmOJPiqmD0jt3qvXVQkGnbFW3Dnh0sceImfrSLhrfmpY/bTsaw00kVw1\n7XtqVTDvsyicqM+EkvJV+DcfrAaO2n2a1Ju1du6oI3U1sienpdymavdxJ4on\n57/6qfPCcy+GgdA2PbjTsFisVN3UEfrSSO5yTyL1kevi5foiYRMIhmLVaaCx\n2+C3WyjgoqOnbwRQQMRjGJ5IiHbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAADp3a3W25UMkF2pKSrpMK58dVG2SPCeKo5FQqvq+LYm\n6VkqU2iblDhVRKm3TejNd72xq5W4+LULWXGkbcKCpo3OVrZ4nxKqeCORU/zK\nPXq11VluNTbq6J0VTTSLFIxyYwqf5L1RfFDm6/U3LPLydJe0+EeDaLiMXvxO\nZqpxiM42nOZfNToTZ6rdinvesrQrv/NUkNUxv7iop27Z2d9Kalm7rT27dlqJ\nXezBV0jqeVfdwuflfkhHvQ6m4VUdJR08tTUzLwxwxMV73r5Iic1N+7Qdm1tB\nUU+odbwxTVEapJT2tcPZE5OaOlXo5yeDU5J456Jbpb9dyPM0+PcK0ujqxamY\n+Wctfu7Euqc+pqeyKnmrJU/yOlcuyUunmJJqDcTT9tbjOFie5y/Bqqir8i6J\nBNz9qbfuDSJPG5lHd4W4hqscnJ+Y/HVvv6p4eKLs3ZrimZtxmXE4fb01y/TR\nq6pponrMRnH8+vsqmm2e01lk/wC0dX6kvvD1S2W5lO1y/rSqvIkumtUbF6Tq\nY3pt1dK1zXJmpuD46pye/u3P4c/BCLau0xd9JXF9uvNFJSzplW8XNsifnMd0\ncnvQiFRHJLI2OKN8kj3I1jGJlz3LyRETxVV5YNGxqblc4q2eo4pwPRaa3zWJ\nmqPSc5z/AG2ehOnbhbLtYqCvsyxLbqmBktP3bOBvAqZTDfD4eBkSM7Z6em0p\noCw2Wp5VFJRRsmTykxlyfJVVCTHSeKkAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAjurtU0+k57RVXGrgo7ZU1TqWpqJ3I1kSuie6N\nXOXkiK5iNyvi5AJERvVW3ul9Y4kvdqhnlY3CTtcsciJ5cTVRce5eRlqa+2qt\npvSqW50U9PjPexTsczHnlFwVw7SvaJt7LTUaN0bcWVVVVIsVwr6Z/EyGPo6J\njk5K53RVTkiZTqvLGqmKoxVGVtm/cs1c9qqaZ7xOJRrV3aE0/t1dqi0bUact\nKJC5YprxVNdM6dU6pGvFlW58VXC+CYwq4i19svcCkmRa2hsVdF4tWnfG75K1\n/L6KaEBNNMUxiEXLtd2qa7kzMz6zutrT9uC3LQo6o0bVpWInsR1rVjVf1lbl\nPopBtQ9snXlymX7Ho7VZ4E9lEiWok+bn8l+TUNBglWsdprtV0+oo2WTdPTdB\ndrbI7C1lPDh8P9ZY/H4sVq+5SxWiNrtvLS6m1Hpu1Uszp2JPS1jpXT4Y5Mo6\nNXqvDyXqnM85yzHZX31prAiaG1PWNgoZHq621UzsMge5crE5V5I1V5ovRFVU\n8UxHLGc4WReuRTyRVOO2dlvAcTqynZD3zp4mxInFxq9OHHnkj+nNX0eqdQXe\nG010Fdb7dHDC6enej2LUOV7nsRyclVre7zjpxEq0lAAAHHUVMNJE6aeVkUbc\nZe9cImVwnP4qhyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAjO5OjINwdEXfTc6tatbAqRSOTlHKi8Ubvk5E+WSTADy2uduq7Ncaq210Lqe\nrpZXQTROTCse1cKi/BUOob37UFLa7BvtHW1NtjrKSqpqarq6XiWNJ09Zj04m\nqitVWs6p48zaMHZJ211ZbKO92G8X2mo66FlRDwzRyNVjkRU9pmfHoqgU3M7o\n/RN/15eI7Tp62zV1U7Cu4EwyJv5z3Lya33qW6tPYy0DRTJLXXG+3FE/8J8zI\n2L8eBiO+iobm0vpCw6Ltrbbp61UttpU5qyBmFevm53Vy+9VVQK02jse2CptV\nXaqvWzH6vhibLJBSuY6Glz7KPjX8orV/O9X4eegdf7aam20uy27UNvfBlV7m\noZ60FQnmx/RfhyVPFEL96u2vsmqq6O8RrUWfUECfkLxbXJFUs9zl6SM8Fa9F\nTHkat3D1xrbbui9C3I0jaNcaTlckb7nSRd27yRZYncTWv8sYTydkCloLkWXY\nLZPdy0/bekqi40UT1xJFR1XrU71+4+ORHK1fd0XwyhyQ9jLQdvV9VcL/AH2S\nmiRXvR0kUbUaiZVXORnTHwApxH387mQM7x6uVGtY3K5XwREPRLZDb/8Am225\ntllmaiV70WqrVT9O/CuT9lOFv7JU/aem09qrtGWWKy2uOksVPVSSUkCqrnOZ\nDG97HvVyqquc5qOXPTOE5Ihe1OgAwyaiYl6r6OViRUVDTNmkrHrwxo/mr2qq\n8vVZwOXy4jLyOVsbnNYr3IiqjUVEVy+XM19T69tVy0/VXLT1NNe6iGSR89o4\nO7qo2vXD2vjcmV4XLzwioqJyyYVzjdsaeiK5mj1naPTf+bb937Van0ru7Zbh\narBdWXangbx1K0TnI+ORvOHC8ufeNRyL0Xu16pkntGk6UsKVSsWfgb3is9lX\nY5492ckf2/joFsLamh0rHplJ3udJRtp2wqqp95UaiZz5qiKSUypmJjMKrtuq\n3XNFXWAAEsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSrto\nUUkO5tuqnObwT2mNGonVOGSRFz9Sf9k3dm2xaHuGnb/c6ahSxKtTFNVSoxno\nz3c+ar92RcfttQwPbbsMyXPT1/4k7l8D6Lh8eJHK/P0cVgRypnC4zyX3geqD\nZ4XsjeyVjmy/0bkcio/lnl58uZ0r1qG06coX193uNNQUjHtjfPUSIxjHOVER\nFcvJMqqdfMobSb936Dbi36Vc+X06zXGCstdxa71oWRo78m5F6onFhP6qq1eW\nDk3Q3wrdbVE81u7yjp71a6envNA9qLC6pikVUkj5+TWYdyXGUXOALzt1jpt9\nP6S3UFodBjPepWRqzHx4sHxQ3rTetrXWNoq63Xm3K91HULG9s0LnKiZjVei8\nnJy955jZ+H0Nk7XbuVGjblZmXV89RY7I+prYLdAiNSerfG5GOevjhyt5rnhR\nOSeYTrcrSGoezRruPVOiax7bJVvREjc5XsjzlfRpk+81URVaq88IuFy3JsTc\n3fWHV/Z5q71p6nmbU3B7LZcI2rxLblenr8a/muROFrvHjTouUNVaL3notUz3\nvT2u6T0xus7lEyrrlcjW0MfArI1jTw7t6sVM8ka1eqkNsN3uGzevLrY73Sem\nW9Xvtt5t7vYrKfOFVPfheNjvDl4KoEi7JtE+q3ptkzVajaWmqZn58U7pWcvm\n9C9dZVNoqSWpe1zkiYruFvV2PBPepVbs57dv03vbepaKo9Ms9HbkmpKvGPSK\nepRr4H/FWoqL70XyLXPa1zVRyIqL4KE04zuh89q1Feb9b/tK7RQUMLvSp7bR\nRKiLj+jbJMq5d63PCI1F4Vyh82O+ad1Bqq42q23SmrK2xVHfvSFeJYFlR7Xx\nK7GPaRyqiKuFwi80MRpLdalumu7ppK5W6W3XJKiVkL3vykzWZwmMJwrwJxJ1\nReamf2/2x01tpR1VNp+kkjdWS97UTzSLJLM7njicvgmVwnvVeqqpTZqpqiZp\nnLf4jZvWa6bd6nl2iYxjExPrt19+u26VgAuc8AAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAABrrffbaHcrQVXRoxzq+hZJWUKN6umSNyI355\n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\n62ZbdCJBaqhslRe2d1BJE7P5FUy96fFFRqfrF9vU/rquTjHp/O7kavgdEzp9\nNo6ObxP9zM794xnEcvrmMuvZ+0BarvqyKypbnxUk9QtPFXLOio7mqMcreHkj\nlx48smY3h1NadN2GmdeNOUl/pqqZYlp6nhVjfVVc4c1yeBonUWkLnZNJ0Vjf\npC5xXOmkWvfdoVWRj2vbzauG+qjUa1MKvJWqviZ/czVc2tNpNN17nL6dDWrT\n1mP0rYlyv7SYd8ymNXciiqKp83WP8Ozc+HtFXqtPcs2v6UzNNUc2c7TMVZid\ns/T2TjUmjtuNBacZqyn28sdRLmJUiWFvqq/HTiRUTGfI+qrfuhs9XaKapsTo\naSspIKh0kc6L6Ox6dEbw8+HHhgiGvtEahsO3Mtyues7neY3pTJDRyIrY41c5\nOaorl4sJyTp5keprPHqbWujbNXI9KesstOx7mLhzV7mRUVPgqIvyJu6i9zxF\nO3Tsr4XwbhM6ebl+JriJrzMc0bRETiIzG8ezee4W6EOh6S01cNAlzhuSu4Hs\nnRiI1EaqORcLlFRxOEXKIpTrWdRqPTklNoq+RpIy01LpKWZM4dFJjHD5sXGU\n8lVU8OVxGeynwNnTX6rlVWdsY/7cPj3C9PodNp5szmaufNW/mjMcs46RtPo/\nQAbby4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADH32wWzU1uktt3o\n46yjkVrnRSZwqouU6e8jH8ye3n+ytB/H/wBRNwY1UU1bzC+3qr1qOW3XMR8p\nmEVq9rdGV1tobZUafo5KOg7z0aFUciRcaor8YXxVEznyOvS7O6CoaqGqp9M0\nUc8D2yRvTjy1zVyi+15oTIEeHR2hlGs1ERiLk495YaxaNsGmqusq7RbIKOeu\ndxVD485lXKrlcr5uX6mQudspLzb6i318DKilqGLHLE/o9q9UU7IMopiIxCmq\n7XVVz1TMz3Yi26SsVpscliorZTxWyRHtfS4yxyP9pFRc9Tj05orT+koqiGyW\nyGhiqVRZWRq5WvVEVMqiqqdFM2COWOzKb9yYmJqnfrv190Tl2n0NNWLVv0va\n+9VeJcQ4aq/qp6v4GUvWjrBqKhp6C52umqKWmXihhVFa2NcY5I3GORmAR4dP\nTCz8ZfzFXiTmOm87ezHXXTtpvdrS1XGghqqJOHEMiZROHpjxTBiWbZ6RjdRu\nSyU6+hLmnRznuSL1uLkirj2lVSTgTbpmczBb1uot08tu5MR8pmH45rXNVrkR\nWqmFReikW/mt0b6K6lSwUiQPkSVY8u4eJEVEXGeuFVCVAVW6av1RlFjVX7Gf\nBrmnPaZjp06MfdNPWu92xLXcKKKpok4cQvzw+r0+h0afQum6S4UdwgtFOyro\no2xU8qZzExqKiInPyVTPATbpmczBRq79FM0U1zETnbM436/39WFv+jNP6pkg\nlvNppq2SBFSN0jVy1F8MovQzSJhMIAZRTETmIV1XrldMUVVTMR0jO0Z7dgAE\nqwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=\n";
-const CLIENT_ID = "773250602648-f1o63tevas55si5pdk0r8q1babam7ouk.apps.googleusercontent.com";
-const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
-const GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
-let tokenClient = null, accessToken = "", tracks = [];
-const TEMPLATES = {
-  "blank":{subject:"",preheader:"",greeting:"",body:"",signoff:""},
-  "studio-follow-up":{
-    subject:"A Quick Note From The Facility",
-    preheader:"Behind the lens. Always in motion.",
-    greeting:"Hi {{First Name}},",
-    body:"Hope this finds you in good spirits. I wanted to share a quick update on what we've been crafting at the Facility this week — new sessions, fresh edits, and a few projects I think you'll appreciate.\n\nIf anything catches your eye, just reply to this email. Always happy to set up a call, a studio walkthrough, or send over a treatment.\n\nTalk soon.",
-    signoff:"With gratitude,"
-  },
-  "send-mix":{
-    subject:"Your Mix From The Lion's Den",
-    preheader:"Fresh from the room.",
-    greeting:"Hi {{First Name}},",
-    body:"Your latest audio is attached. Give it a listen when you have a chance and send me any notes.\n\nIf you want revisions, be as specific as you like — timestamps are always helpful.",
-    signoff:"Respect,"
-  },
-  "booking-confirmation":{
-    subject:"Studio Booking Confirmation — Lion's Rock Media",
-    preheader:"Your session is locked in.",
-    greeting:"Hi {{First Name}},",
-    body:"Your session at The Lion's Den is confirmed.\n\nReply to this email if anything changes or if you want to send references, stems, lyrics, or session notes ahead of time.",
-    signoff:"See you at the Facility,"
-  },
-  "producer-intro":{
-    subject:"Introduction From LeProKahn — Lion's Rock Media",
-    preheader:"A quick introduction from the Facility.",
-    greeting:"Hi {{First Name}},",
-    body:"I wanted to introduce myself and Lion's Rock Media Facility. I work across production, recording and creative development, and I thought it made sense for us to connect.\n\nIf you're open to it, reply here and let's talk about what you're working on.",
-    signoff:"Respect,"
-  },
-  "payment-follow-up":{
-    subject:"Quick Follow-Up From Lion's Rock Media",
-    preheader:"A quick note regarding the project.",
-    greeting:"Hi {{First Name}},",
-    body:"Just following up regarding the outstanding project payment. When you get a moment, please let me know the status or if you need anything resent from my side.\n\nThanks again.",
-    signoff:"With gratitude,"
-  }
-};
-let deferredInstallPrompt = null;
+(function(){
+ const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
+ const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
+ const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const mail=document.getElementById("mail-frame"),docs=document.getElementById("docs-frame"),hub=document.getElementById("hub-frame"),member=document.getElementById("member-frame"),admin=document.getElementById("admin-frame");
+ let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null,accessDenialMessage="";
+ const query=new URLSearchParams(location.search);
+ let recoveryMode=query.get("reset")==="1" || new URLSearchParams(location.hash.slice(1)).get("type")==="recovery";
+ let inviteMode=query.get("invite")==="1";
+ let inviteAccess=query.get("access")||"";
+ let inviteExisting=query.get("existing")==="1";
+ let loginMode=inviteAccess||localStorage.getItem("lions-rock-access-mode")||"business_tools";
+ if(!["business_tools","artist_member"].includes(loginMode))loginMode="business_tools";
+ function fitFrame(frame){
+   try{
+     const d=frame.contentDocument;
+     if(!d)return;
+     const de=d.documentElement,b=d.body;
+     const contentH=Math.max(de?de.scrollHeight:0,b?b.scrollHeight:0,de?de.offsetHeight:0,b?b.offsetHeight:0);
+     const minH=Math.max(520,window.innerHeight-(window.innerWidth<=720?128:118));
+     frame.style.height=Math.max(contentH+24,minH)+"px";
+   }catch(_){}
+ }
+ function fitSoon(frame){
+   setTimeout(()=>fitFrame(frame),80);
+   setTimeout(()=>fitFrame(frame),350);
+   setTimeout(()=>fitFrame(frame),900);
+ }
+ function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+ function showGateSection(id){
+   ["signin-view","apply-view","invite-view","reset-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
+ }
+ function setLoginMode(mode){
+   loginMode=mode==="artist_member"?"artist_member":"business_tools";
+   localStorage.setItem("lions-rock-access-mode",loginMode);
+   document.getElementById("mode-business").classList.toggle("active",loginMode==="business_tools");
+   document.getElementById("mode-artist").classList.toggle("active",loginMode==="artist_member");
+   document.getElementById("gate-signin").textContent=loginMode==="artist_member"?"Sign In as Artist Member":"Sign In to Business Tools";
+ }
+ function canBusiness(m){return !!m&&(m.role==="owner"||m.business_tools_enabled===true)}
+ function canArtist(m){return !!m&&(m.role==="owner"||m.artist_member_enabled===true)}
+ async function setSession(session){
+   currentSession=session||null;
+   currentMembership=null;
+   document.body.classList.remove("studio-authenticated");
+   document.getElementById("admin-nav").style.display="none";
+   const status=document.getElementById("gate-status");
 
-function mergeText(value){
-  const name=$("first-name")?.value.trim()||"there";
-  return String(value||"")
-    .replace(/\{\{\s*First Name\s*\}\}/gi,name)
-    .replace(/\{\{\s*first_name\s*\}\}/gi,name);
-}
-function applyTemplate(key){
-  let t=TEMPLATES[key];
-  if(key==="custom"){
-    try{t=JSON.parse(localStorage.getItem("lrm_custom_template")||"null");}catch(_){t=null;}
-  }
-  if(!t)return;
-  ["subject","preheader","greeting","body","signoff"].forEach(id=>{const e=$(id);if(e&&t[id]!=null)e.value=t[id];});
-  renderPreview();
-  toastMsg("Template loaded", $("template-select")?.selectedOptions?.[0]?.textContent||"");
-}
-function saveCustomTemplate(){
-  const t={subject:$("subject")?.value||"",preheader:$("preheader")?.value||"",greeting:$("greeting")?.value||"",body:$("body")?.value||"",signoff:$("signoff")?.value||""};
-  localStorage.setItem("lrm_custom_template",JSON.stringify(t));
-  const sel=$("template-select");
-  if(sel&&!sel.querySelector('option[value="custom"]')){const o=document.createElement("option");o.value="custom";o.textContent="My Saved Template";sel.appendChild(o);}
-  if(sel)sel.value="custom";
-  toastMsg("Template saved","Saved on this device.");
-}
-function addRecentRecipient(value){
-  const items=String(value||"").split(/[;,]/).map(x=>x.trim()).filter(Boolean);
-  if(!items.length)return;
-  let recent=[];try{recent=JSON.parse(localStorage.getItem("lrm_recent_recipients")||"[]");}catch(_){}
-  recent=[...items,...recent.filter(x=>!items.some(y=>y.toLowerCase()===x.toLowerCase()))].slice(0,10);
-  localStorage.setItem("lrm_recent_recipients",JSON.stringify(recent));
-  renderRecentRecipients();
-}
-function renderRecentRecipients(){
-  const sel=$("recent-recipient");if(!sel)return;
-  let recent=[];try{recent=JSON.parse(localStorage.getItem("lrm_recent_recipients")||"[]");}catch(_){}
-  sel.innerHTML='<option value="">Choose recent…</option>'+recent.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
-}
-function clearTrackUrls(){tracks.forEach(t=>{if(t.url)try{URL.revokeObjectURL(t.url);}catch(_){}});}
-function updateSizeNote(){
-  const el=$("size-note");if(!el)return;
-  const total=tracks.reduce((n,t)=>n+t.size,0);
-  if(!total){el.textContent="No audio attached.";return;}
-  const encoded=Math.ceil(total*4/3);
-  el.textContent=tracks.length+" track"+(tracks.length===1?"":"s")+" · "+fmt(total)+" selected · roughly "+fmt(encoded)+" after email encoding"+(total>16*1024*1024?" — getting large; consider a smaller export.":".");
-}
-function resetNewEmail(){
-  ["to","cc","bcc","first-name"].forEach(id=>{const e=$(id);if(e)e.value="";});
-  clearTrackUrls();tracks=[];const mi=$("music-input");if(mi)mi.value="";
-  const sel=$("template-select");if(sel)sel.value="blank";
-  applyTemplate("blank");
-  renderTracks();renderPreview();
-  const success=$("send-success");if(success)success.style.display="none";
-  toastMsg("New email ready");
-}
+   if(!session||!session.user){
+     document.getElementById("cloud-dot").className="dot";
+     document.getElementById("cloud-label").textContent="Studio account";
+     document.getElementById("studio-signout").style.display="none";
+     document.getElementById("mail-nav").style.display="";
+     if(!document.getElementById("apply-view").classList.contains("active"))showGateSection("signin-view");
+     if(status){status.classList.toggle("err",!!accessDenialMessage);status.textContent=accessDenialMessage||"Sign in to continue.";}
+     return;
+   }
 
+   if(recoveryMode){
+     showGateSection("reset-view");
+     document.getElementById("reset-status").textContent="Enter and confirm your new password.";
+     return;
+   }
+   if(status){status.classList.remove("err");status.textContent="Checking access…";}
 
-function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function toastMsg(title,desc="",bad=false){const wrap=$("toasts");if(!wrap)return;const el=document.createElement("div");el.className="toast"+(bad?" err":"");el.innerHTML='<div class="t-title">'+esc(title)+'</div>'+(desc?'<div class="t-desc">'+esc(desc)+'</div>':'');wrap.appendChild(el);requestAnimationFrame(()=>el.classList.add("show"));setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),300)},4200);}
-function gmailNote(msg,bad=false){const el=$("gmail-runtime-note");if(!el)return;el.style.display="block";el.innerHTML=bad?'<b style="color:#ff8f82">'+esc(msg)+'</b>':msg;}
-function fmt(n){return n<1024?n+" B":n<1048576?(n/1024).toFixed(1)+" KB":(n/1048576).toFixed(1)+" MB";}
-function readB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]||"");r.onerror=rej;r.readAsDataURL(file);});}
-function readDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(file);});}
-function b64utf8(s){return btoa(unescape(encodeURIComponent(s)));}
-function b64url(s){return b64utf8(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
-function wrap76(s){return (s.match(/.{1,76}/g)||[]).join("\r\n");}
-function mime(name,type){const e=(name.split(".").pop()||"").toLowerCase();return ({mp3:"audio/mpeg",wav:"audio/wav",m4a:"audio/mp4",aac:"audio/aac",flac:"audio/flac",ogg:"audio/ogg",aiff:"audio/x-aiff",aif:"audio/x-aiff"})[e]||type||"application/octet-stream";}
+   const m=await sb.from("app_memberships")
+     .select("role,access_status,payment_status,expires_at,business_name,business_tools_enabled,artist_member_enabled,plan")
+     .eq("user_id",session.user.id)
+     .maybeSingle();
 
-function setImages(){[["header-logo-img",LOGO],["logo-thumb",LOGO],["sig-thumb",SIGNATURE]].forEach(([id,src])=>{const e=$(id);if(e)e.src=src;});}
-function getState(){
-  return {
-    to:$("to")?.value.trim()||"",
-    cc:$("cc")?.value.trim()||"",
-    bcc:$("bcc")?.value.trim()||"",
-    firstName:$("first-name")?.value.trim()||"",
-    subject:mergeText($("subject")?.value||""),
-    preheader:mergeText($("preheader")?.value||""),
-    greeting:mergeText($("greeting")?.value||""),
-    body:mergeText($("body")?.value||""),
-    signoff:mergeText($("signoff")?.value||""),
-    senderName:$("senderName")?.value||"",
-    senderTitle:$("senderTitle")?.value||"",
-    accent:$("accent-color")?.value||"#C24D2C"
-  };
-}
-function buildEmailHtml(imageMode="hosted"){
-  const s=getState();
-  const accent=s.accent;
-  const BRAND="LION'S ROCK MEDIA FACILITY";
-  const INSTAGRAM_BRAND="https://instagram.com/lionsrockmedia";
-  const INSTAGRAM_PERSONAL="https://instagram.com/yofavengineer";
-  const YOUTUBE="https://www.youtube.com/@LionsRockMediaFacility";
-  const PHONE="+1-246-851-8512";
-  const phoneTel=PHONE.replace(/[^+\d]/g,"");
+   if(inviteMode){
+     if(!["business_tools","artist_member"].includes(inviteAccess)){
+       accessDenialMessage="This invitation link is invalid.";
+       await sb.auth.signOut();
+       showGateSection("signin-view");
+       if(status){status.textContent=accessDenialMessage;status.classList.add("err");}
+       return;
+     }
+     const pending=await sb.from("studio_invites")
+       .select("id,access_type,status,expires_at")
+       .eq("user_id",session.user.id)
+       .eq("access_type",inviteAccess)
+       .eq("status","pending")
+       .order("invited_at",{ascending:false})
+       .limit(1)
+       .maybeSingle();
+     const validInvite=!!pending.data && new Date(pending.data.expires_at)>new Date();
+     if(pending.error||!validInvite){
+       accessDenialMessage="This private invitation is invalid or has expired.";
+       await sb.auth.signOut();
+       showGateSection("signin-view");
+       if(status){status.textContent=accessDenialMessage;status.classList.add("err");}
+       return;
+     }
+     currentMembership=m.data||null;
+     setLoginMode(inviteAccess);
+     showGateSection("invite-view");
+     const pw=document.getElementById("invite-password"),cf=document.getElementById("invite-confirm");
+     pw.closest(".login-field").style.display=inviteExisting?"none":"";
+     cf.closest(".login-field").style.display=inviteExisting?"none":"";
+     document.getElementById("invite-save").textContent=inviteExisting?"Accept Invite & Open":"Set Password & Open Studio";
+     const i=document.getElementById("invite-status");
+     i.textContent=inviteExisting?"Your private invitation is ready. Accept it to add this workspace to your account.":"Private invitation accepted. Create the password you will use to sign in.";
+     i.classList.remove("err");
+     return;
+   }
 
-  // Use hosted HTTPS images in the actual email. Email clients commonly strip
-  // data: image URLs, while HTTPS images render reliably through Gmail's proxy.
-  const emailLogo=imageMode==="cid"?"cid:lions-rock-logo":"https://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-2";
-  const emailSignature=imageMode==="cid"?"cid:lions-rock-signature":"https://lions-rock-mail.vercel.app/signature.jpg?v=email-rich-2";
+   const active=!!m.data &&
+     m.data.access_status==="active" &&
+     ["paid","comped"].includes(m.data.payment_status) &&
+     (!m.data.expires_at || new Date(m.data.expires_at)>new Date()) &&
+     (m.data.role==="owner"||m.data.business_tools_enabled===true||m.data.artist_member_enabled===true);
 
-  const paragraphs=(s.body||"").split(/\n{2,}/).map(block=>
-    `<p style="margin:0 0 18px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#1a1a1a;">${esc(block).split(/\n/).join("<br>")}</p>`
-  ).join("");
+   if(m.error||!active){
+     const reason=m.data?.access_status==="suspended"?"Your Lions Rock access is suspended.":m.data?.payment_status==="unpaid"?"Your account is awaiting activation.":"This account has not been activated by Lions Rock.";
+     accessDenialMessage=reason;
+     await sb.auth.signOut();
+     showGateSection("signin-view");
+     if(status){status.textContent=reason;status.classList.add("err");}
+     return;
+   }
 
-  const attRows=tracks.map(t=>`
-    <tr>
-      <td style="padding:6px 18px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#1a1a1a;">
-        <span style="display:inline-block;width:8px;height:8px;background:${accent};margin-right:10px;vertical-align:middle;"></span>
-        ${esc(t.name)}
-        <span style="color:#a19d98;font-size:11px;margin-left:8px;letter-spacing:0.06em;">(${fmt(t.size)})</span>
-      </td>
-    </tr>`).join("");
+   const businessOK=canBusiness(m.data),artistOK=canArtist(m.data);
+   if(m.data.role!=="owner" && ((loginMode==="business_tools"&&!businessOK)||(loginMode==="artist_member"&&!artistOK))){
+     const reason=loginMode==="artist_member"?"This account does not have Artist Member access.":"This account does not have Business Tools access.";
+     accessDenialMessage=reason;
+     await sb.auth.signOut();
+     showGateSection("signin-view");
+     if(status){status.textContent=reason;status.classList.add("err");}
+     return;
+   }
 
-  const attBlock=tracks.length?`
-    <tr>
-      <td style="padding:0 36px 24px 36px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #eeeae2;background:#fbf8f2;">
-          <tr>
-            <td style="padding:14px 18px 6px 18px;font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:0.22em;color:${accent};text-transform:uppercase;font-weight:700;">&#9836; Audio enclosed</td>
-          </tr>
-          ${attRows}
-          <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
-        </table>
-      </td>
-    </tr>`:"";
+   currentMembership=m.data;
+   document.getElementById("cloud-dot").className="dot on";
+   document.getElementById("cloud-label").textContent=session.user.email;
+   document.getElementById("authbox").style.display="none";
+   document.getElementById("studio-signout").style.display="inline-block";
+   document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
+   document.getElementById("mail-nav").style.display=m.data.role==="owner"?"":"none";
+   document.getElementById("member-nav").style.display=artistOK?"":"none";
+   document.getElementById("member-nav").textContent=m.data.role==="owner"?"Studio OS":"Member";
+   document.querySelectorAll('[data-scope="business"]').forEach(x=>x.style.display=businessOK?"":"none");
+   document.querySelector(".global-search").style.display=businessOK&&loginMode==="business_tools"?"":"none";
 
-  const greetingBlock=s.greeting?`
-    <tr>
-      <td style="padding:18px 36px 0 36px;">
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;color:#1a1a1a;line-height:1.6;">${esc(s.greeting)}</div>
-      </td>
-    </tr>`:"";
+   if(inviteMode){
+     if(inviteAccess)setLoginMode(inviteAccess);
+     showGateSection("invite-view");
+     const i=document.getElementById("invite-status");
+     i.textContent="Private invitation accepted. Set the password you will use to sign in.";
+     i.classList.remove("err");
+     return;
+   }
 
-  const signBlock=(s.signoff||s.senderName)?`
-    <tr>
-      <td style="padding:6px 36px 36px 36px;">
-        ${s.signoff?`<p style="margin:0 0 14px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#1a1a1a;">${esc(s.signoff)}</p>`:""}
-        <img src="${emailSignature}" alt="${esc(s.senderName||"LeProKahn")}" width="70" style="display:block;margin:0 0 8px 0;max-width:70px;height:auto;border:0;outline:none;text-decoration:none;">
-        ${s.senderName?`<div style="font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#111111;font-weight:600;">${esc(s.senderName)}</div>`:""}
-        ${s.senderTitle?`<div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#6b6864;letter-spacing:0.04em;margin-top:2px;">${esc(s.senderTitle)}</div>`:""}
-      </td>
-    </tr>`:"";
+   document.body.classList.add("studio-authenticated");
+   if(loginMode==="artist_member"&&artistOK){
+     activate("member");
+   }else if(m.data.role==="owner"){
+     activate("member");
+   }else{
+     activate("hub","clients");
+   }
+   mail.contentWindow && mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   hub.contentWindow && hub.contentWindow.postMessage({type:"lions-rock-hub-refresh"},location.origin);
+   setTimeout(()=>fitSoon(member.classList.contains("active")?member:(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs)))),60);
+ }
+ async function init(){
+   if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches){
+     try{history.scrollRestoration="manual";}catch(_){}
+     window.scrollTo(0,0);
+     setTimeout(()=>window.scrollTo(0,0),120);
+   }
+   const s=await sb.auth.getSession();
+   await setSession(s.data&&s.data.session);
+ }
+ async function signIn(email,password){
+   const status=document.getElementById("gate-status"),button=document.getElementById("gate-signin");
+   if(button?.disabled)return;
+   email=String(email||"").trim();
+   password=String(password||"");
+   if(!email||!password){
+     if(status){status.textContent="Enter your email and password.";status.classList.add("err");}
+     return;
+   }
+   if(button){button.disabled=true;button.textContent="Signing In…";}
+   if(status){status.textContent="Signing in…";status.classList.remove("err");}
+   accessDenialMessage="";
+   try{
+     const r=await sb.auth.signInWithPassword({email,password});
+     if(r.error)throw r.error;
+   }catch(error){
+     const networkFailure=/failed to fetch|networkerror|network request failed|load failed/i.test(error?.message||"")||error?.name==="AuthRetryableFetchError";
+     if(status){status.textContent=networkFailure?"Could not reach the sign-in service. Check your connection and try again.":error?.message||"Could not sign in. Try again.";status.classList.add("err");}
+   }finally{
+     if(button){button.disabled=false;button.textContent=loginMode==="artist_member"?"Sign In as Artist Member":"Sign In to Business Tools";}
+   }
+ }
+ setLoginMode(loginMode);
+ document.getElementById("mode-business").onclick=()=>setLoginMode("business_tools");
+ document.getElementById("mode-artist").onclick=()=>setLoginMode("artist_member");
+ document.getElementById("gate-signin").onclick=()=>signIn(document.getElementById("gate-email").value,document.getElementById("gate-password").value);
+ ["gate-email","gate-password"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("gate-signin").click();}));
+ document.getElementById("studio-signin").onclick=()=>signIn(document.getElementById("studio-email").value,document.getElementById("studio-password").value);
+ document.getElementById("studio-signout").onclick=async()=>{accessDenialMessage="";await sb.auth.signOut();document.getElementById("gate-password").value="";};
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${esc(s.subject||"A note from Lion's Rock Media Facility")}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f3efe8;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-<div style="display:none;font-size:1px;color:#f3efe8;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${esc(s.preheader)}</div>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3efe8;">
-<tr>
-<td align="center" style="padding:32px 12px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background:#ffffff;">
-  <tr><td style="background:${accent};height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
-  <tr>
-    <td align="center" style="padding:36px 36px 18px 36px;background:#ffffff;">
-      <img src="${emailLogo}" alt="${esc(BRAND)}" width="140" style="display:block;margin:0 auto 14px auto;max-width:140px;height:auto;border:0;outline:none;text-decoration:none;">
-      <div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:0.32em;color:#111111;text-transform:uppercase;font-weight:600;">${esc(BRAND)}</div>
-    </td>
-  </tr>
-  <tr><td style="padding:14px 36px 0 36px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-bottom:1px solid #eeeae2;height:1px;line-height:1px;font-size:0;">&nbsp;</td></tr></table></td></tr>
-  <tr><td style="padding:32px 36px 6px 36px;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;color:#111111;font-weight:600;letter-spacing:-0.01em;">${esc(s.subject||"A note from Lion's Rock Media Facility")}</div></td></tr>
-  ${greetingBlock}
-  <tr><td style="padding:22px 36px 8px 36px;">${paragraphs}</td></tr>
-  ${signBlock}
-  ${attBlock}
-  <tr><td style="padding:0 36px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${accent};height:2px;width:40px;line-height:2px;font-size:0;">&nbsp;</td></tr></table></td></tr>
-  <tr>
-    <td style="background:#111111;padding:36px;color:#f3efe8;">
-      <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;letter-spacing:0.18em;color:#f3efe8;text-transform:uppercase;font-weight:600;">${esc(BRAND)}</div>
-      <div style="margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:0.16em;color:${accent};text-transform:uppercase;">Stay in touch</div>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
-        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Instagram &nbsp;/&nbsp;</span><a href="${INSTAGRAM_BRAND}" style="color:#f3efe8;text-decoration:none;">@lionsrockmedia</a></td></tr>
-        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Instagram &nbsp;/&nbsp;</span><a href="${INSTAGRAM_PERSONAL}" style="color:#f3efe8;text-decoration:none;">@yofavengineer</a></td></tr>
-        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">YouTube &nbsp;/&nbsp;</span><a href="${YOUTUBE}" style="color:#f3efe8;text-decoration:none;">@LionsRockMediaFacility</a></td></tr>
-        <tr><td style="padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;color:#f3efe8;"><span style="color:#a19d98;letter-spacing:0.08em;text-transform:uppercase;font-size:11px;">Phone &nbsp;/&nbsp;</span><a href="tel:${phoneTel}" style="color:#f3efe8;text-decoration:none;">${PHONE}</a></td></tr>
-      </table>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:28px;">
-        <tr><td style="border-top:1px solid #333333;padding-top:18px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#a19d98;line-height:1.6;">Sent with intention by <span style="color:#f3efe8;">Tarik &ldquo;LeProKahn&rdquo; Delves</span> &mdash; Founder, The Lion&rsquo;s Rock Media Facility.</td></tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
-  <tr><td align="center" style="padding:18px 12px 0 12px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#a19d98;letter-spacing:0.16em;text-transform:uppercase;">&copy; ${new Date().getFullYear()} Lion&rsquo;s Rock Media Facility</td></tr>
-</table>
-</td>
-</tr>
-</table>
-</body>
-</html>`;
-}
-function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Audio attached: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
-function buildRaw(overrides={}){
-  const s={...getState(),...overrides};
-  const mixed="mix_"+Date.now()+"_"+Math.random().toString(36).slice(2);
-  const alt="alt_"+Date.now()+"_"+Math.random().toString(36).slice(2);
-  const related="rel_"+Date.now()+"_"+Math.random().toString(36).slice(2);
-  const logoB64=String(LOGO).split(",")[1]||"";
-  const signatureB64=String(SIGNATURE).split(",")[1]||"";
-  let raw="To: "+s.to+"\r\n";
-  if(s.cc)raw+="Cc: "+s.cc+"\r\n";
-  if(s.bcc)raw+="Bcc: "+s.bcc+"\r\n";
-  raw+="Subject: =?UTF-8?B?"+b64utf8(s.subject)+"?=\r\n";
-  raw+="MIME-Version: 1.0\r\n";
-  raw+='Content-Type: multipart/mixed; boundary="'+mixed+'"\r\n\r\n';
+ document.getElementById("forgot-password").onclick=async()=>{
+   const email=document.getElementById("gate-email").value.trim();
+   const out=document.getElementById("gate-status"),button=document.getElementById("forgot-password");
+   if(!email){out.textContent="Enter your email above, then tap Forgot password.";out.classList.add("err");return;}
+   button.disabled=true;
+   out.classList.remove("err");out.textContent="Requesting a password reset…";
+   try{
+     const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:"https://lions-rock-mail.vercel.app/studio.html?reset=1"});
+     if(r.error)throw r.error;
+     out.textContent="If that email has an account, a reset link will arrive shortly. Check your inbox and spam folder.";
+   }catch(e){out.textContent=e.message||"Could not request a reset. Try again.";out.classList.add("err");}
+   finally{button.disabled=false;}
+ };
+ document.getElementById("reset-save").onclick=async()=>{
+   const p=document.getElementById("reset-password").value,c=document.getElementById("reset-confirm").value;
+   const out=document.getElementById("reset-status"),button=document.getElementById("reset-save");
+   if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return;}
+   if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return;}
+   button.disabled=true;out.classList.remove("err");out.textContent="Saving…";
+   try{
+     const r=await sb.auth.updateUser({password:p});
+     if(r.error)throw r.error;
+     recoveryMode=false;
+     history.replaceState({},document.title,"/studio.html");
+     document.getElementById("reset-password").value="";document.getElementById("reset-confirm").value="";
+     await sb.auth.signOut({scope:"local"});
+     await setSession(null);
+     document.getElementById("gate-status").textContent="Password updated. Sign in with your new password.";
+   }catch(e){out.textContent=e.message||"Could not update your password.";out.classList.add("err");}
+   finally{button.disabled=false;}
+ };
 
-  raw+="--"+mixed+"\r\n";
-  raw+='Content-Type: multipart/alternative; boundary="'+alt+'"\r\n\r\n';
+ document.getElementById("show-apply").onclick=()=>{showGateSection("apply-view");document.getElementById("apply-status").textContent="";};
+ document.getElementById("back-signin").onclick=()=>showGateSection("signin-view");
+ document.getElementById("apply-submit").onclick=async()=>{
+   const button=document.getElementById("apply-submit"),out=document.getElementById("apply-status");
+   const payload={
+     full_name:document.getElementById("apply-name").value,
+     business_name:document.getElementById("apply-business").value,
+     email:document.getElementById("apply-email").value,
+     phone:document.getElementById("apply-phone").value,
+     website:document.getElementById("apply-website").value,
+     about:document.getElementById("apply-about").value,
+     company_website:document.getElementById("apply-hp").value
+   };
+   if(!payload.full_name.trim()||!payload.business_name.trim()||!payload.email.trim()){
+     out.textContent="Name, business name and email are required.";out.classList.add("err");return;
+   }
+   button.disabled=true;button.textContent="Submitting…";out.textContent="Sending application…";out.classList.remove("err");
+   try{
+     const r=await sb.functions.invoke("studio-apply",{body:payload});
+     if(r.error)throw r.error;
+     if(r.data?.error)throw new Error(r.data.error);
+     out.textContent=r.data?.existing?"An application already exists for this email. Lions Rock will contact you when the status changes.":"Application received. Lions Rock will review it before requesting payment.";
+     ["apply-name","apply-business","apply-email","apply-phone","apply-website","apply-about"].forEach(id=>document.getElementById(id).value="");
+   }catch(e){out.textContent=e.message||String(e);out.classList.add("err")}
+   finally{button.disabled=false;button.textContent="Submit Application";}
+ };
 
-  raw+="--"+alt+"\r\n";
-  raw+="Content-Type: text/plain; charset=UTF-8\r\n";
-  raw+="Content-Transfer-Encoding: base64\r\n\r\n";
-  raw+=wrap76(b64utf8(buildPlain()))+"\r\n";
+ document.getElementById("invite-save").onclick=async()=>{
+   const p=document.getElementById("invite-password").value,c=document.getElementById("invite-confirm").value,out=document.getElementById("invite-status"),button=document.getElementById("invite-save");
+   if(!inviteExisting){
+     if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return}
+     if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return}
+   }
+   button.disabled=true;button.textContent=inviteExisting?"Accepting…":"Saving…";
+   try{
+     if(!inviteExisting){
+       const r=await sb.auth.updateUser({password:p});
+       if(r.error)throw r.error;
+     }
+     const claim=await sb.functions.invoke("studio-claim-invite",{body:{access_type:inviteAccess}});
+     if(claim.error)throw claim.error;
+     if(claim.data?.error)throw new Error(claim.data.error);
+     if(inviteAccess)setLoginMode(inviteAccess);
+     inviteMode=false;inviteAccess="";inviteExisting=false;
+     history.replaceState({},document.title,"/studio.html");
+     document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
+     await setSession((await sb.auth.getSession()).data.session);
+   }catch(e){
+     out.textContent=e.message||String(e);out.classList.add("err");
+   }finally{
+     button.disabled=false;
+     button.textContent=inviteExisting?"Accept Invite & Open":"Set Password & Open Studio";
+   }
+ };
 
-  raw+="--"+alt+"\r\n";
-  raw+='Content-Type: multipart/related; boundary="'+related+'"\r\n\r\n';
+ sb.auth.onAuthStateChange((event,s)=>{
+   if(event==="PASSWORD_RECOVERY")recoveryMode=true;
+   setTimeout(()=>setSession(s),0);
+ });
+ function activate(appName,viewName,payload){
+   if(appName==="member"&&!canArtist(currentMembership))return;
+   if((appName==="documents"||appName==="hub")&&!canBusiness(currentMembership))return;
+   if(appName==="mail"&&currentMembership?.role!=="owner")return;
+   document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
+   mail.classList.toggle("active",appName==="mail");
+   docs.classList.toggle("active",appName==="documents");
+   hub.classList.toggle("active",appName==="hub");
+   member.classList.toggle("active",appName==="member");
+   admin.classList.toggle("active",appName==="admin");
+   if(appName==="documents"){
+     pendingView=viewName||"generator";
+     setTimeout(()=>{docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);if(payload)docs.contentWindow.postMessage(payload,location.origin);fitSoon(docs);},30);
+   }else if(appName==="hub"){
+     pendingHubView=viewName||"clients";
+     setTimeout(()=>{hub.contentWindow.postMessage(Object.assign({type:"lions-rock-hub-view",view:pendingHubView},payload||{}),location.origin);fitSoon(hub);},30);
+   }else if(appName==="admin"){
+     if(currentMembership?.role!=="owner")return;
+     fitSoon(admin);
+   }else if(appName==="member"){
+     fitSoon(member);
+   }else fitSoon(mail);
+   window.scrollTo({top:0,behavior:"instant"});
+ }
+ document.getElementById("nav").addEventListener("click",e=>{
+   const b=e.target.closest("button[data-app]");if(!b)return;
+   activate(b.dataset.app,b.dataset.view||null);
+ });
+ window.addEventListener("message",async e=>{
+   if(e.origin!==location.origin||!e.data)return;
+   if(e.data.type==="lions-rock-hub-view-changed"){
+     if(e.source!==hub.contentWindow||!hub.classList.contains("active")||!canBusiness(currentMembership)||!["clients","projects"].includes(e.data.view))return;
+     pendingHubView=e.data.view;
+     document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app==="hub"&&x.dataset.view===pendingHubView));
+     return;
+   }
+   if(e.data.type==="lions-rock-management-document"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!currentSession?.user?.id||!canBusiness(currentMembership))return;
+     const result=await sb.from("documents").select("id").eq("id",e.data.documentId).eq("user_id",currentSession.user.id).maybeSingle();
+     if(result.error||!result.data){toast("Could not open this invoice.");return;}
+     activate("documents","generator",{type:"lions-rock-open-document",documentId:result.data.id});
+     return;
+   }
+   if(e.data.type==="lions-rock-project-quote"){
+     if(e.source!==member.contentWindow||!currentSession||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     try{const r=await sb.rpc("quote_for_artist_project",{project_id:e.data.projectId});if(r.error)throw r.error;activate("documents","generator",{type:"lions-rock-booking-document",...r.data});}catch(error){toast(error.message||"Could not open the project quote.");}
+     return;
+   }
+   if(e.data.type==="lions-rock-booking-invoice"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     try{
+       const r=await sb.rpc("invoice_for_studio_booking",{session_id:e.data.bookingId});
+       if(r.error)throw r.error;
+       activate("documents","generator",{type:"lions-rock-booking-document",...r.data});
+     }catch(error){toast(error.message||"Could not open the booking invoice.");}
+     return;
+   }
+   if(e.data.type==="lions-rock-email-client"){
+     if(e.source!==docs.contentWindow||!canBusiness(currentMembership))return;
+     pendingClient={
+       name:e.data.name||"",
+       email:e.data.email||"",
+       attachment:e.data.attachment||null,
+       subject:e.data.subject||"",
+       greeting:e.data.greeting||"",
+       body:e.data.body||"",
+       signoff:e.data.signoff||"",
+       documentNumber:e.data.documentNumber||"",
+       documentType:e.data.documentType||""
+     };
+     activate("mail");
+     setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin),60);
+   }
+   if(e.data.type==="lions-rock-new-document"){
+     activate("documents","generator",{type:"lions-rock-new-document",client:e.data.client||{},projectId:e.data.projectId||null,project:e.data.project||null,docType:e.data.docType||"quote"});
+   }
+   if(e.data.type==="lions-rock-open-document"){
+     activate("documents","generator",{type:"lions-rock-open-document",documentId:e.data.documentId});
+   }
+   if(e.data.type==="lions-rock-sync"){
+     docs.contentWindow.postMessage({type:"lions-rock-sync"},location.origin);
+     mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   }
+ });
+ docs.addEventListener("load",()=>{
+   docs.contentWindow.postMessage({type:"lions-rock-view",view:pendingView},location.origin);
+   fitSoon(docs);
+   try{const ro=new ResizeObserver(()=>fitFrame(docs));ro.observe(docs.contentDocument.documentElement);}catch(_){}
+ });
+ hub.addEventListener("load",()=>{
+   hub.contentWindow.postMessage({type:"lions-rock-hub-view",view:pendingHubView},location.origin);
+   fitSoon(hub);
+   try{const ro=new ResizeObserver(()=>fitFrame(hub));ro.observe(hub.contentDocument.documentElement);}catch(_){}
+ });
+ member.addEventListener("load",()=>{
+   fitSoon(member);
+   try{const ro=new ResizeObserver(()=>fitFrame(member));ro.observe(member.contentDocument.documentElement);}catch(_){}
+ });
+ admin.addEventListener("load",()=>{
+   fitSoon(admin);
+   try{const ro=new ResizeObserver(()=>fitFrame(admin));ro.observe(admin.contentDocument.documentElement);}catch(_){}
+ });
+ mail.addEventListener("load",()=>{
+   mail.contentWindow.postMessage({type:"lions-rock-refresh-clients"},location.origin);
+   if(pendingClient) mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin);
+   fitSoon(mail);
+   try{
+     const ro=new ResizeObserver(()=>fitFrame(mail));
+     ro.observe(mail.contentDocument.documentElement);
+   }catch(_){}
+ });
+ window.addEventListener("resize",()=>{fitSoon(member.classList.contains("active")?member:(mail.classList.contains("active")?mail:(hub.classList.contains("active")?hub:(admin.classList.contains("active")?admin:docs))));});
 
-  raw+="--"+related+"\r\n";
-  raw+="Content-Type: text/html; charset=UTF-8\r\n";
-  raw+="Content-Transfer-Encoding: base64\r\n\r\n";
-  raw+=wrap76(b64utf8(buildEmailHtml("cid")))+"\r\n";
-
-  raw+="--"+related+"\r\n";
-  raw+="Content-Type: image/png; name=\"lions-rock-logo.png\"\r\n";
-  raw+="Content-Transfer-Encoding: base64\r\n";
-  raw+="Content-ID: <lions-rock-logo>\r\n";
-  raw+="Content-Disposition: inline; filename=\"lions-rock-logo.png\"\r\n\r\n";
-  raw+=wrap76(logoB64)+"\r\n";
-
-  raw+="--"+related+"\r\n";
-  raw+="Content-Type: image/jpeg; name=\"lions-rock-signature.jpg\"\r\n";
-  raw+="Content-Transfer-Encoding: base64\r\n";
-  raw+="Content-ID: <lions-rock-signature>\r\n";
-  raw+="Content-Disposition: inline; filename=\"lions-rock-signature.jpg\"\r\n\r\n";
-  raw+=wrap76(signatureB64)+"\r\n";
-  raw+="--"+related+"--\r\n";
-  raw+="--"+alt+"--\r\n";
-
-  for(const t of tracks){
-    const n=t.name.replace(/[\r\n"]/g,"_");
-    raw+="--"+mixed+"\r\n";
-    raw+="Content-Type: "+t.mime+'; name="'+n+'"\r\n';
-    raw+="Content-Transfer-Encoding: base64\r\n";
-    raw+='Content-Disposition: attachment; filename="'+n+'"\r\n\r\n';
-    raw+=wrap76(t.base64)+"\r\n";
-  }
-  raw+="--"+mixed+"--\r\n";
-  return b64url(raw);
-}
-function renderPreview(){const root=$("preview-root");if(!root)return;const s=getState();root.innerHTML='<div class="ep"><div class="ep-box"><div class="ep-accent" style="background:'+s.accent+'"></div><div class="ep-head"><img class="logo" src="'+LOGO+'"><div class="ep-brand">LION\'S ROCK MEDIA FACILITY</div></div><div class="ep-divider"></div><div class="ep-subject">'+esc(s.subject)+'</div><div class="ep-greet">'+esc(s.greeting)+'</div><div class="ep-body"><p>'+esc(s.body)+'</p></div><div class="ep-sign"><p>'+esc(s.signoff)+'</p><img class="ep-sign-mark" src="'+SIGNATURE+'"><div class="ep-sign-name">'+esc(s.senderName)+'</div><div class="ep-sign-title">'+esc(s.senderTitle)+'</div></div><div class="ep-footer"><div class="ep-brand-foot">LION\'S ROCK MEDIA FACILITY</div><div class="ep-links">@lionsrockmedia · @yofavengineer<br>+1-246-851-8512</div></div></div></div>';}
-function renderTracks(){
-  const list=$("tracks-list"),empty=$("tracks-empty");
-  if(!list||!empty)return;
-  if(!tracks.length){list.innerHTML="";empty.style.display="block";updateSizeNote();return;}
-  empty.style.display="none";
-  list.innerHTML=tracks.map((t,i)=>
-    '<div class="track">'+
-      '<div class="track-mark">♪</div>'+
-      '<div class="track-info">'+
-        '<div class="track-name">'+esc(t.name)+'</div>'+
-        '<div class="track-meta">'+esc(t.mime)+' · '+fmt(t.size)+'</div>'+
-        (t.url?'<audio controls preload="metadata" src="'+esc(t.url)+'"></audio>':'')+
-      '</div>'+
-      '<button class="track-remove" data-i="'+i+'" title="Remove">✕</button>'+
-    '</div>'
-  ).join("");
-  list.querySelectorAll(".track-remove").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.i);const old=tracks[i];if(old?.url)try{URL.revokeObjectURL(old.url);}catch(_){}
-    tracks.splice(i,1);renderTracks();renderPreview();
-  });
-  updateSizeNote();
-}
-function initGoogle(){if(!(window.google&&google.accounts&&google.accounts.oauth2)){gmailNote("Google library is still loading. If this stays here, check the internet connection.",true);setTimeout(initGoogle,800);return;}try{tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:GMAIL_SCOPE,callback:r=>{if(!r||r.error||!r.access_token){accessToken="";gmailNote("Google authorization failed: "+((r&&(r.error_description||r.error))||"cancelled"),true);return;}accessToken=r.access_token;gmailNote("✓ Google connected. Ready to send.");toastMsg("Gmail connected");},error_callback:e=>{accessToken="";gmailNote("Google sign-in error: "+((e&&(e.message||e.type))||"authorization failed"),true);}});gmailNote("Google loaded. Tap Sign in with Google.");}catch(e){gmailNote("Google setup error: "+e.message,true);}}
-
-document.addEventListener("DOMContentLoaded",()=>{
-  setImages();
-  ["subject","preheader","greeting","body","signoff","senderName","senderTitle","accent-color","accent-hex"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",renderPreview);});
-  const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>20*1024*1024){toastMsg("Audio too large","Keep total under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}clearTrackUrls();tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f),url:URL.createObjectURL(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
-  const sign=$("gmail-signin");if(sign)sign.onclick=()=>{if(!tokenClient){gmailNote("Google is not ready yet.",true);initGoogle();return;}gmailNote("Opening Google authorization…");tokenClient.requestAccessToken({prompt:"consent"});};
-  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" track"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
-  const copy=$("copy-html");if(copy)copy.onclick=async()=>{try{const h=buildEmailHtml(),t=buildPlain();if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([h],{type:"text/html"}),"text/plain":new Blob([t],{type:"text/plain"})})]);}else await navigator.clipboard.writeText(t);toastMsg("Copied");}catch(e){toastMsg("Copy failed",e.message,true);}};
-  const dl=$("dl-html");if(dl)dl.onclick=()=>{const u=URL.createObjectURL(new Blob([buildEmailHtml()],{type:"text/html;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-email.html";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("HTML downloaded");};
-  const eml=$("dl-eml");if(eml)eml.onclick=()=>{const s=getState();const raw=["To: "+s.to,"Cc: "+s.cc,"Bcc: "+s.bcc,"Subject: "+s.subject,"MIME-Version: 1.0",'Content-Type: text/html; charset="UTF-8"',"",buildEmailHtml()].join("\r\n");const u=URL.createObjectURL(new Blob([raw],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft downloaded");};
-  const lb=$("logo-replace-btn"), logoInput=$("logo-input"), logoReset=$("logo-reset-btn");
-  if(lb&&logoInput)lb.onclick=()=>logoInput.click();
-  if(logoInput)logoInput.onchange=async()=>{const file=logoInput.files?.[0];if(!file)return;const src=await readDataUrl(file);["header-logo-img","logo-thumb"].forEach(id=>{const e=$(id);if(e)e.src=src;});if(logoReset)logoReset.style.display="inline-flex";toastMsg("Logo updated");};
-  if(logoReset)logoReset.onclick=()=>{["header-logo-img","logo-thumb"].forEach(id=>{const e=$(id);if(e)e.src=LOGO;});logoReset.style.display="none";toastMsg("Logo reset");};
-
-  const sb=$("sig-replace-btn"), sigInput=$("sig-input"), sigReset=$("sig-reset-btn");
-  if(sb&&sigInput)sb.onclick=()=>sigInput.click();
-  if(sigInput)sigInput.onchange=async()=>{const file=sigInput.files?.[0];if(!file)return;const src=await readDataUrl(file);const e=$("sig-thumb");if(e)e.src=src;if(sigReset)sigReset.style.display="inline-flex";toastMsg("Signature updated");};
-  if(sigReset)sigReset.onclick=()=>{const e=$("sig-thumb");if(e)e.src=SIGNATURE;sigReset.style.display="none";toastMsg("Signature reset");};
-  const tpl=$("template-select");if(tpl)tpl.onchange=()=>applyTemplate(tpl.value);
-  const saveTpl=$("save-template");if(saveTpl)saveTpl.onclick=saveCustomTemplate;
-  const recent=$("recent-recipient");if(recent)recent.onchange=()=>{if(recent.value){$("to").value=recent.value;toastMsg("Recipient loaded");}};
-  const testEmail=$("test-email");if(testEmail)testEmail.addEventListener("input",()=>{try{localStorage.setItem("lrm_test_email",testEmail.value.trim());}catch(_){}});
-  const firstName=$("first-name");if(firstName)firstName.addEventListener("input",renderPreview);
-  const senderNameEl=$("senderName");if(senderNameEl)senderNameEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_sender_name",senderNameEl.value);}catch(_){}});
-  const senderTitleEl=$("senderTitle");if(senderTitleEl)senderTitleEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_sender_title",senderTitleEl.value);}catch(_){}});
-  const accentEl=$("accent-color");if(accentEl)accentEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_accent",accentEl.value);}catch(_){}});
-  const sendTest=$("send-test");if(sendTest)sendTest.onclick=async()=>{
-    const address=$("test-email")?.value.trim()||"";
-    if(!address){toastMsg("Test address required","Enter the email address you want to receive tests at.",true);return;}
-    if(!accessToken){toastMsg("Sign in first","Connect Google before sending a test.",true);return;}
-    sendTest.disabled=true;const old=sendTest.textContent;sendTest.textContent="Sending test…";
-    try{
-      const s=getState();
-      const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+s.subject})})});
-      if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}throw new Error(d);}
-      toastMsg("Test sent",address);
-    }catch(e){toastMsg("Test failed",e.message,true);}finally{sendTest.disabled=false;sendTest.textContent=old;}
-  };
-  const newEmail=$("new-email");if(newEmail)newEmail.onclick=resetNewEmail;
-  const installBtn=$("install-app");if(installBtn)installBtn.onclick=async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice;}catch(_){}deferredInstallPrompt=null;installBtn.style.display="none";};
-  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;if(installBtn)installBtn.style.display="inline-flex";});
-
-  renderTracks();renderPreview();initGoogle();
-  if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
-});
-</script>\n</body>
+ const searchInput=document.getElementById("global-search"),searchResults=document.getElementById("search-results");
+ function closeSearch(){searchResults.classList.remove("open");searchResults.innerHTML="";}
+ function searchItem(kind,title,sub,id){
+   const el=document.createElement("div");el.className="search-item";el.dataset.kind=kind;el.dataset.id=id;
+   el.innerHTML='<div class="search-kind">'+kind+'</div><div class="search-title"></div><div class="search-sub"></div>';
+   el.querySelector(".search-title").textContent=title||"";
+   el.querySelector(".search-sub").textContent=sub||"";
+   return el;
+ }
+ async function runSearch(q){
+   q=String(q||"").trim();
+   if(q.length<2||!currentSession){closeSearch();return;}
+   const uid=currentSession.user.id,pat="%"+q.replace(/[%_]/g,"")+"%";
+   const [cr,pr,dr]=await Promise.all([
+     sb.from("clients").select("id,name,email,phone").eq("user_id",uid).or("name.ilike."+pat+",email.ilike."+pat+",phone.ilike."+pat).limit(6),
+     sb.from("projects").select("id,name,project_type,status,client_id").eq("user_id",uid).or("name.ilike."+pat+",project_type.ilike."+pat).limit(6),
+     sb.from("documents").select("id,doc_number,doc_type,client_name,total,currency").eq("user_id",uid).or("doc_number.ilike."+pat+",client_name.ilike."+pat).limit(6)
+   ]);
+   if(q!==searchInput.value.trim())return;
+   searchResults.innerHTML="";
+   const rows=[];
+   (cr.data||[]).forEach(c=>rows.push(searchItem("Client",c.name,c.email||c.phone||"",c.id)));
+   (pr.data||[]).forEach(p=>rows.push(searchItem("Project",p.name,(p.project_type||"Project")+" · "+(p.status||"active"),p.id)));
+   (dr.data||[]).forEach(d=>rows.push(searchItem(d.doc_type==="quote"?"Quote":"Invoice",d.doc_number,d.client_name||"",d.id)));
+   if(!rows.length){searchResults.innerHTML='<div class="search-item"><div class="search-sub">No matches</div></div>';}
+   else rows.forEach(x=>searchResults.appendChild(x));
+   searchResults.classList.add("open");
+ }
+ searchInput.addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>runSearch(searchInput.value),180)});
+ searchInput.addEventListener("keydown",e=>{if(e.key==="Escape"){searchInput.value="";closeSearch()}});
+ searchResults.addEventListener("click",e=>{
+   const item=e.target.closest(".search-item[data-id]");if(!item)return;
+   const kind=item.dataset.kind,id=item.dataset.id;closeSearch();searchInput.value="";
+   if(kind==="Client")activate("hub","clients",{clientId:id});
+   else if(kind==="Project")activate("hub","projects",{projectId:id});
+   else activate("documents","generator",{type:"lions-rock-open-document",documentId:id});
+ });
+ document.addEventListener("click",e=>{if(!e.target.closest(".global-search"))closeSearch()});
+ 
+ init();
+})();
+</script>
+<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>
 </html>

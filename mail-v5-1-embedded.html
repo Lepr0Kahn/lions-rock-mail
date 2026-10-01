@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="connect-src 'self'; form-action 'none'">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Lion's Rock Media Facility — Offline Email Kit</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="/fixture-sdk.js"></script>
 <style>
   :root {
     --bg: #0d0c0c;
@@ -319,7 +319,7 @@
 </style>
 <meta name="lions-rock-build" content="gmail-repair-20260930-1">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="https://lions-rock-mail.vercel.app/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -330,7 +330,7 @@
   @media (max-width: 700px) { .wrap { padding: 0 12px; } .grid { gap: 24px; } }
 </style>
 </head>
-<body>
+<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>
 
 <div class="wrap">
   <header class="nav">
@@ -1185,7 +1185,7 @@ function buildEmailHtml(imageMode="hosted"){
 
   // Use hosted HTTPS images in the actual email. Email clients commonly strip
   // data: image URLs, while HTTPS images render reliably through Gmail's proxy.
-  const emailLogo=imageMode==="cid"?"cid:lions-rock-logo":"https://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-2";
+  const emailLogo=imageMode==="cid"?"cid:lions-rock-logo":"https://lions-rock-mail.vercel.apphttps://lions-rock-mail.vercel.app/icon-192.png?v=email-rich-2";
   const emailSignature=imageMode==="cid"?"cid:lions-rock-signature":"https://lions-rock-mail.vercel.app/signature.jpg?v=email-rich-2";
 
   const paragraphs=(s.body||"").split(/\n{2,}/).map(block=>
@@ -1498,5 +1498,5 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",loadStudioClients);else loadStudioClients();
 })();
 </script>
-</body>
+<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>
 </html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="connect-src 'self'; form-action 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lion's Rock Media Facility — Documents V2.1 Cloud Sync</title>
@@ -295,7 +295,7 @@
   @media (max-width:700px){ body{padding:8px !important;} .panel{padding:14px;} }
 </style>
 </head>
-<body>
+<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>
 <div class="container">
 
   <header class="no-print">
@@ -516,7 +516,7 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fixture-sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script>
@@ -919,7 +919,7 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
-<script src="/invoice-sync.js?v=8"></script>
+<script src="/fixture-generator.js"></script>
 <script>
 (function(){
   function switchRequested(view){
@@ -1089,5 +1089,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wireEmail);else wireEmail();
 })();
 </script>
-</body>
+<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>
 </html>

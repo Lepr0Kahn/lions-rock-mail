@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="connect-src 'self'; form-action 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Lions Rock Studio</title>
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://lions-rock-mail.vercel.app/icon-192.png">
+<link rel="apple-touch-icon" href="https://lions-rock-mail.vercel.app/icon-192.png">
 <meta name="application-name" content="Lions Rock Studio">
 <meta name="apple-mobile-web-app-title" content="Lions Rock Studio">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0d0c0c">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fixture-sdk.js"></script>
 <style>
 :root{--bg:#0d0c0c;--surface:#171616;--border:rgba(255,255,255,.1);--text:#f4f1ea;--muted:#9c9893;--accent:#c24d2c;--green:#44b66b}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
@@ -41,10 +41,10 @@ body.studio-authenticated .login-gate{display:none!important}
 @media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
 </style>
 </head>
-<body>
+<body><div style="padding:8px;background:#b91c1c;color:white;font:14px sans-serif">SAMPLE PREVIEW — no live account, bookings, payments or email sending</div>
 <div class="login-gate" id="login-gate">
   <div class="login-card">
-    <img class="login-logo" src="/icon-192.png" alt="Lions Rock">
+    <img class="login-logo" src="https://lions-rock-mail.vercel.app/icon-192.png" alt="Lions Rock">
     <h1 class="login-title">Lions Rock Studio</h1>
     <div class="login-sub">Studio Management System</div>
 
@@ -105,7 +105,7 @@ body.studio-authenticated .login-gate{display:none!important}
 </div>
 <div class="top">
   <div class="head">
-    <img src="/icon-192.png" alt="Lions Rock">
+    <img src="https://lions-rock-mail.vercel.app/icon-192.png" alt="Lions Rock">
     <div class="brand"><div class="name">Lions Rock Studio</div><div class="sub">Private Member & Business Access</div></div>
     <div class="global-search">
       <input id="global-search" placeholder="Search clients, projects, documents…">
@@ -588,9 +588,9 @@ body.studio-authenticated .login-gate{display:none!important}
    else activate("documents","generator",{type:"lions-rock-open-document",documentId:id});
  });
  document.addEventListener("click",e=>{if(!e.target.closest(".global-search"))closeSearch()});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}
+ 
  init();
 })();
 </script>
-</body>
+<script>document.addEventListener("DOMContentLoaded",()=>{for(const b of document.querySelectorAll("button"))if(/send|sign in|connect gmail/i.test(b.textContent))b.disabled=true;});</script></body>
 </html>
