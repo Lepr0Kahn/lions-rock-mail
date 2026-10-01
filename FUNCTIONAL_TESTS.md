@@ -121,3 +121,12 @@ Disposable new test service 0a4db48f-9a47-4ac9-bf60-ba94c90eb470 deactivated; bo
 Deployment retry requested on 2026-09-30 at 19:18 Barbados time. Retriggering the GitHub production build with application code unchanged.
 
 Deployment retry requested on 2026-09-30 at 20:21 Barbados time; application code unchanged.
+
+
+## Live booking invoice bridge verification — 2026-10-01 UTC
+
+Deployment retry succeeded: main 733f67a13a263a9a479ba4b814577e3ad5ae88e9 reached Vercel READY in dpl_Ff6svHwSeEsRBngLPj3vf4c4AFYb. This supersedes the build-rate-limit block above.
+
+Authenticated Owner production browser opened a confirmed booking in the existing invoice generator. INV-0001 preserved booking reference, one-hour service, BBD currency, zero test price and 25% deposit. Email Client generated Lions-Rock-Invoice-INV-0001.pdf (140.8 KB) and opened the existing Mail composer with matching subject, body and recipient booklionsrock@gmail.com (visually verified). No Gmail send or payment performed.
+
+Disposable service 6f10bebf-1b87-4e88-bb2f-5a48fc16ca98 deactivated; booking 71c0ff73-8db9-4365-8f00-5e5067c8d9d6 cancelled. Verification query confirmed cancelled booking, inactive service and exactly one retained zero-value invoice 7a80d820-a722-41e1-af1b-867553a1a6b0. Owner management default was verified in this production session. Distinct Artist browser flow and iPhone-specific behavior remain unverified.
