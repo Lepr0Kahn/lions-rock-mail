@@ -1,0 +1,14 @@
+begin;
+insert into private.owner_mfa_settings(user_id,required) values('1204ab25-7433-43a5-80e1-7a66b2eee057',true);
+select set_config('request.jwt.claims','{"sub":"1204ab25-7433-43a5-80e1-7a66b2eee057","role":"authenticated","aal":"aal1"}',true);
+set local role authenticated;
+do $$begin if private.owner_mfa_allowed() or private.is_studio_owner() or private.has_active_studio_access() or private.has_active_artist_access() then raise exception 'aal1 unexpectedly allowed';end if;if (select count(*) from public.documents)>0 then raise exception 'documents visible';end if;if (select count(*) from public.app_memberships where user_id=auth.uid())<>1 then raise exception 'own challenge membership missing';end if;end;$$;
+select set_config('request.jwt.claims','{"sub":"1204ab25-7433-43a5-80e1-7a66b2eee057","role":"authenticated","aal":"aal2"}',true);
+do $$begin if not private.owner_mfa_allowed() or not private.is_studio_owner() or not private.has_active_studio_access() then raise exception 'aal2 incorrectly denied';end if;end;$$;
+reset role;
+delete from private.owner_mfa_settings;
+select set_config('request.jwt.claims','{"sub":"1204ab25-7433-43a5-80e1-7a66b2eee057","role":"authenticated","aal":"aal1"}',true);
+set local role authenticated;
+do $$begin if not private.owner_mfa_allowed() or not private.is_studio_owner() then raise exception 'inactive gate changed access';end if;end;$$;
+select 'Owner aal1 denied, aal2 allowed, own challenge membership preserved, inactive access unchanged' result;
+rollback;

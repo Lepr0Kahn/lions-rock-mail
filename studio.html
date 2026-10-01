@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0d0c0c">
+<script src="owner-mfa-gate.js?v=1"></script>
 <script src="payment-receipt.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -69,6 +70,7 @@ body.studio-authenticated .login-gate{display:none!important}
       <div class="login-status" id="gate-status">Checking your session…</div>
     </div>
 
+    <div class="gate-section" id="mfa-view"><div class="login-help"><b>Verify management access</b></div><div id="mfa-factors"></div><div class="login-status" id="mfa-status"></div><button class="login-button secondary" id="mfa-signout">Sign out</button></div>
     <div class="gate-section" id="reset-view">
       <div class="login-help"><b>Choose a new password.</b><br>Your recovery link confirms your account. Workspace access stays the same.</div>
       <div class="login-field"><label for="reset-password">New Password</label><input id="reset-password" type="password" autocomplete="new-password"></div>
@@ -184,7 +186,10 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  function canBusiness(m){return !!m&&(m.role==="owner"||m.business_tools_enabled===true)}
  function canArtist(m){return !!m&&(m.role==="owner"||m.artist_member_enabled===true)}
+ let sessionCheckGeneration=0;
+ document.getElementById("mfa-signout").onclick=async()=>{await sb.auth.signOut({scope:"local"});await setSession(null);};
  async function setSession(session){
+   const check=++sessionCheckGeneration;const isCurrent=()=>check===sessionCheckGeneration&&currentSession?.user?.id===session?.user?.id;
    currentSession=session||null;
    currentMembership=null;
    document.body.classList.remove("studio-authenticated");
@@ -265,6 +270,9 @@ body.studio-authenticated .login-gate{display:none!important}
      return;
    }
 
+   if(!isCurrent())return;
+   if(m.data.role==="owner"){try{if(!await ownerMfaGate(sb,showGateSection,async()=>setSession((await sb.auth.getSession()).data.session),isCurrent))return;}catch(error){if(isCurrent()){showGateSection("signin-view");status.textContent=error.message;status.classList.add("err");}return;}}
+   if(!isCurrent())return;
    const businessOK=canBusiness(m.data),artistOK=canArtist(m.data);
    if(m.data.role!=="owner" && ((loginMode==="business_tools"&&!businessOK)||(loginMode==="artist_member"&&!artistOK))){
      const reason=loginMode==="artist_member"?"This account does not have Artist Member access.":"This account does not have Business Tools access.";

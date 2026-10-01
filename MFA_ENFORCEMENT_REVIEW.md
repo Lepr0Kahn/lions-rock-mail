@@ -1,6 +1,6 @@
 # Owner MFA enforcement and recovery review
 
-Status: authenticator enrollment, session verification, backup enrollment and unfinished-setup removal are implemented. Management-wide enforcement is NOT enabled.
+Status: enrollment, backup setup, a conditional sign-in challenge, private inactive enforcement settings, shared access-helper checks and restrictive public-table/storage gates are implemented. No Owner is enabled. Activation UI and service-role endpoint protection remain pending; this is not completed management-wide enforcement.
 
 ## Findings from the live authorization review
 - private.is_studio_owner currently checks active Owner membership, without the JWT aal claim.
@@ -25,3 +25,7 @@ Status: authenticator enrollment, session verification, backup enrollment and un
 - Keep QR/setup secrets and codes out of chat, logs and test fixtures.
 
 No existing Owner has had enforcement enabled by this change. Backup enrollment and verification require the Owner to use their own authenticator; automated tests only cover mocked Auth flows.
+
+
+## Foundation verification
+Rollback database test passed: temporary required Owner at aal1 denied shared Owner/Business/Artist access and documents; own membership remains readable for challenge routing; aal2 permitted; inactive setting retains access. No settings persisted. UI mock tests cover inactive gate, primary/backup challenges, invalid code, resume, lookup error and stale checks. Private settings table has no client grants/policies by design. Existing security advisor warnings remain; the additional private RLS/no-policy notice is intentional deny-by-default protection. Live sign-in, all-table mutations and service-role invite protection remain pending.
