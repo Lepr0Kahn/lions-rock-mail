@@ -26,7 +26,8 @@
 <div class="card"><h2>Deliveries nearing expiry</h2><div id="ops-deliveries"></div></div>
 </div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
 </section>
-<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. Career stages and scores are not assigned yet.</p></section>
+<form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
+<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. Career stages and scores are not assigned yet.</p></section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -55,7 +56,7 @@
  function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -97,17 +98,42 @@
 
  async function loadMilestones(target){
    const version=++milestoneGeneration,workspaceVersion=generation;
-   el("milestones-list").replaceChildren();el("milestones-summary").textContent="Loading recorded progress…";
+   el("milestones-list").replaceChildren();el("selected-career-profile").textContent="";el("milestones-summary").textContent="Loading recorded progress…";
    try{
      const result=await sb.rpc("artist_career_milestones",{artist_id:target});
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      if(result.error)throw result.error;
+     const profile=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months").eq("user_id",target).maybeSingle();
+     if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
+     el("selected-career-profile").textContent=profile.error?"Career direction could not be loaded.":profile.data?[profile.data.artist_name,profile.data.genres,profile.data.goal_12_months].filter(Boolean).join(" · "):"Artist identity and career goal are not recorded yet.";
      const rows=result.data?.milestones||[];
      el("milestones-summary").textContent=rows.filter(m=>m.complete).length+" of "+rows.length+" recorded milestones met.";
      rows.forEach(m=>{const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=(m.complete?"Complete · ":"Next · ")+m.label;const detail=document.createElement("p");detail.className="muted";detail.textContent=m.count+" on record · "+m.evidence;row.append(title,detail);el("milestones-list").append(row);});
    }catch(error){if(version===milestoneGeneration&&workspaceVersion===generation){el("milestones-list").replaceChildren();el("milestones-summary").textContent="Could not load progress. Refresh to retry.";}}
  }
  el("milestone-artist").onchange=()=>loadMilestones(el("milestone-artist").value);
+ async function loadCareerProfile(version){
+   const result=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months").eq("user_id",uid).maybeSingle();
+   if(version!==generation||!uid)return;
+   el("career-profile-form").classList.toggle("hidden",isOwner);
+   if(result.error){el("career-profile-status").textContent="Could not load your career profile. Refresh to retry.";el("save-career-profile").disabled=true;return;}
+   el("save-career-profile").disabled=false;
+   el("career-name").value=result.data?.artist_name||"";
+   el("career-genres").value=result.data?.genres||"";
+   el("career-goal").value=result.data?.goal_12_months||"";
+   el("career-profile-status").textContent=result.data?"Career direction saved.":"Add your identity and goal to support career progression.";
+ }
+ el("career-profile-form").onsubmit=async e=>{
+   e.preventDefault();if(!uid||isOwner)return;const version=generation,artist=uid,button=el("save-career-profile");button.disabled=true;
+   try{
+     const profile={user_id:artist,artist_name:el("career-name").value.trim(),genres:el("career-genres").value.trim(),goal_12_months:el("career-goal").value.trim()};
+     if(!profile.artist_name||!profile.genres||!profile.goal_12_months)throw new Error("Complete your artist name, genres and career goal.");
+     const result=await sb.from("artist_career_profiles").upsert(profile,{onConflict:"user_id"});if(result.error)throw result.error;
+     if(version!==generation||uid!==artist)return;
+     el("career-profile-status").textContent="Career direction saved.";
+   }catch(error){if(version===generation)el("career-profile-status").textContent=error.message||"Could not save career direction.";}
+   finally{if(version===generation)button.disabled=false;}
+ };
  async function load(){
    const version=++generation;
    const session=(await sb.auth.getSession()).data.session;
@@ -146,6 +172,8 @@
    const progressSelect=el("milestone-artist");progressSelect.replaceChildren();
    if(isOwner)artistNames.forEach((name,id)=>{const option=document.createElement("option");option.value=id;option.textContent=name;progressSelect.append(option);});
    progressSelect.value=uid;
+   await loadCareerProfile(version);
+   if(version!==generation)return;
    await loadMilestones(uid);
    if(version!==generation)return;
    el("owner-operations").classList.toggle("hidden",!isOwner);

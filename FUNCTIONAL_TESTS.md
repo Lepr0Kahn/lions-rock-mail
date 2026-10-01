@@ -189,3 +189,12 @@ Adapted recorded-signal concepts from LIONS-ROCK-OS-FOR-SAGE/backend/progression
 Artist dashboard reads own milestones. Owner Management adds an artist progress selector without replacing the managerial dashboard. public.artist_career_milestones is SECURITY INVOKER with empty search_path and live membership checks. Cross-account requests require active Owner/Business access; Business-only and anonymous access denied. No financial records or invented quote/payment associations are included.
 
 Rollback SQL test passed for Owner evidence, cancelled-booking exclusion, Owner artist review, own Artist counts, cross-account rejection and Business-only denial. Anonymous execute false; security_definer false. JavaScript syntax passed; advisor warning set unchanged. Fixture access/status changes rolled back. Frontend awaits Vercel deployment and browser/mobile verification.
+
+
+## Owner Email visibility and artist career identity
+
+Owner Email navigation no longer depends on choosing Business Tools at sign-in. It is labeled Email and remains Owner-only; the separate tarikdelves@gmail.com Business-only test account is not an Owner. Existing composer/Gmail behavior unchanged. Both Owner sign-in-mode visibility cases and non-Owner restriction checked from actual code; page scripts parse. Frontend awaits deployment.
+
+Added artist_career_profiles with artist name, genres and 12-month goal. Active Artists can insert/update only their own identity, with WITH CHECK preventing ownership reassignment. Active Owner with Business access can read artist profiles for management; Owner dashboard remains managerial and has no self-profile form. Profiles appear alongside selected artist milestones. Database checks passed for own profile, cross-account insert denial, ownership-change denial, Owner review and Business-only read denial; all test changes rolled back. Advisor warning set unchanged.
+
+Profile inputs are now available as progression evidence. Delivery collection, persisted eight-stage lifecycle and full track scores remain unfinished; no stage or score is claimed in this commit.

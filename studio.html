@@ -123,7 +123,7 @@ body.studio-authenticated .login-gate{display:none!important}
     </div>
   </div>
   <div class="nav" id="nav">
-    <button class="active" data-app="mail" id="mail-nav">Mail</button>
+    <button class="active" data-app="mail" id="mail-nav">Email</button>
     <button data-app="member" id="member-nav" style="display:none">Member</button>
     <button data-app="documents" data-view="generator" data-scope="business">Documents</button>
     <button data-app="documents" data-view="history" data-scope="business">History</button>
@@ -138,7 +138,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=7" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=9" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=5" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=6" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=3" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -280,7 +280,7 @@ body.studio-authenticated .login-gate{display:none!important}
    document.getElementById("authbox").style.display="none";
    document.getElementById("studio-signout").style.display="inline-block";
    document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
-   document.getElementById("mail-nav").style.display=m.data.role==="owner"&&loginMode==="business_tools"?"":"none";
+   document.getElementById("mail-nav").style.display=m.data.role==="owner"?"":"none";
    document.getElementById("member-nav").style.display=artistOK?"":"none";
    document.getElementById("member-nav").textContent=m.data.role==="owner"?"Studio OS":"Member";
    document.querySelectorAll('[data-scope="business"]').forEach(x=>x.style.display=businessOK?"":"none");
