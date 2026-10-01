@@ -13,7 +13,15 @@ Reviewed 2026-10-01 against Lepr0Kahn/LIONS-ROCK-OS-FOR-SAGE (main), especially 
 
 Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live browser authentication remains blocked; file byte transfer, live Gmail sending and simultaneous committed orders remain unverified. Apple Mail testing is skipped by user request.
 
-## Remaining migration work, proposed order
+## Recent completed integrations
+
+- In-app notifications: booking request/confirmation/cancellation and delivery/reissue alerts, own-account read state and Owner/member destinations.
+- Owner analytics: activity windows, evidence-stage roster, track averages, booking status and currency-separated recorded invoice balances.
+- Recognition-only rewards: Owner approved XP, levels and badges on 2026-10-01. Implemented from new eligible evidence with corrections and per-project delivery caps. Discounts/free-service benefits remain disabled. Claim/fulfilment/capacity exposure remains outstanding.
+
+The first two items below are retained as original scope references; their implemented checks are in FUNCTIONAL_TESTS.md.
+
+## Migration scope and remaining work
 
 1. **In-app notifications.** Adapt event title/body/action and unread/read behavior from the source bell to the existing app. Start with booking requested, confirmed/cancelled, and delivery available/reissued. Use account-scoped records, enforce ownership on reads/updates, and retain separate Owner/member destinations. Create events transactionally and idempotently; do not send external emails as part of this work. Test cross-account denial and duplicate-event prevention before UI integration.
 2. **Owner analytics.** Add date-window milestone counts, stage distribution and member progress using existing authoritative records. Distinguish elapsed session time from verified attendance and recorded payment from processor-confirmed settlement. Keep currencies separate.

@@ -331,3 +331,5 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - No separate XP transaction ledger is introduced: source event IDs and points are returned for audit. Corrected current eligibility can reduce XP and badge status.
 - Inline JavaScript parse passed. Live authenticated browser verification remains blocked; isolated sample UI verification is separate.
 - Advisor: existing 12 public definer RPC warnings and disabled leaked-password protection retained. Private recognition settings adds one RLS/no-policy informational notice; table access is revoked from clients.
+
+- Isolated sample preview verified recognition level/XP/badges display, Owner artist selector and expandable XP evidence. This does not verify a live authenticated session. Production recognition release 33e73eb752ef921ea02c617bb5e6637340e7a47f reported READY.
