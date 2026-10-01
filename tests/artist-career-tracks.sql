@@ -13,7 +13,7 @@ set local role authenticated;
 do $$ declare r jsonb;begin
 r:=public.artist_career_tracks();
 if (r#>>'{tracks,creative,score}')::int<>100 or(r#>>'{tracks,audience,score}')::int<>100 then raise exception 'Track caps failed %',r;end if;
-if (r#>>'{tracks,network,available_max}')::int<>70 or(r#>>'{tracks,business,available_max}')::int<>86 or(r#>>'{tracks,momentum,available_max}')::int<>30 then raise exception 'Missing signal coverage incorrect';end if;
+if (r#>>'{tracks,network,available_max}')::int<>70 or(r#>>'{tracks,business,available_max}')::int<>86 or(r#>>'{tracks,momentum,available_max}')::int<>100 then raise exception 'Missing signal coverage incorrect';end if;
 if r#>>'{tracks,business,breakdown,2,available}'<>'false' then raise exception 'Budget signal invented';end if;
 r:=public.artist_career_tracks('8da3fa1f-10ef-4fac-8294-279e6a9e61b1');
 if r->>'artist_id'<>'8da3fa1f-10ef-4fac-8294-279e6a9e61b1' then raise exception 'Owner target mismatch';end if;

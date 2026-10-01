@@ -27,7 +27,7 @@
 </div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
 </section>
 <form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
-<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="career-tracks" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores follow recorded evidence, with missing signals shown explicitly.</p></section>
+<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="career-tracks" aria-live="polite"></div><div id="career-history" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores follow recorded evidence, with missing signals shown explicitly.</p></section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html?v=4" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -56,7 +56,7 @@
  function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -133,6 +133,27 @@
          card.append(title,meter,details);trackBox.append(card);
        });
        const note=document.createElement("p");note.className="muted";note.textContent=tracks.data.notes.join(" ");trackBox.append(note);
+     }
+     const history=await sb.rpc("artist_career_history",{artist_id:target});
+     if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
+     const historyBox=el("career-history");historyBox.replaceChildren();
+     const historyTitle=document.createElement("h3");historyTitle.textContent="Milestone history";historyBox.append(historyTitle);
+     if(history.error){const error=document.createElement("p");error.textContent="History could not be loaded. Refresh to retry.";historyBox.append(error);}
+     else{
+       const help=document.createElement("p");help.className="muted";help.textContent="Latest 100 entries. Imported history earns no recent activity points. Reversing an entry excludes it from milestone activity; its project, file or invoice remains.";historyBox.append(help);
+       const labels={membership_granted:"Artist membership activated",profile_complete:"Career identity completed",project_created:"Project created",material_uploaded:"Material registered",session_booked:"Session confirmed",master_delivered:"Studio delivery recorded",master_collected:"Delivery download initiated",invoice_settled:"Linked invoice payment recorded in full",release_published:"Project marked Released"};
+       if(!history.data.events.length){const empty=document.createElement("p");empty.textContent="New career events will appear here automatically.";historyBox.append(empty);}
+       history.data.events.forEach(event=>{
+         const row=document.createElement("div");row.className="row";
+         const title=document.createElement("strong");title.textContent=labels[event.key]||event.key;
+         const meta=document.createElement("p");meta.className="muted";meta.textContent=new Date(event.occurred_at).toLocaleString("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"})+" · "+(event.reversed_at?"Reversed":event.backfilled?"Imported history":event.counts_now?"Eligible evidence":"Source currently ineligible");row.append(title,meta);
+         if(event.reason){const reason=document.createElement("p");reason.textContent="Reversal reason: "+event.reason;row.append(reason);}
+         if(isOwner&&!event.reversed_at){const form=document.createElement("form"),label=document.createElement("label"),input=document.createElement("input"),button=document.createElement("button");
+           input.id="reversal-"+event.id;input.required=true;input.maxLength=2000;label.htmlFor=input.id;label.textContent="Reason for reversal";button.type="submit";button.textContent="Reverse milestone";
+           form.append(label,input,button);form.onsubmit=async e=>{e.preventDefault();const reason=input.value.trim();if(!reason)return;button.disabled=true;try{const r=await sb.rpc("reverse_artist_career_event",{event_id:event.id,reversal_reason:reason});if(r.error)throw r.error;await loadMilestones(target);notice("Milestone reversed. Original evidence retained.");}catch(error){notice(error.message||"Could not reverse milestone.",true);}finally{button.disabled=false;}};row.append(form);
+         }
+         historyBox.append(row);
+       });
      }
      const rows=result.data?.milestones||[];
      el("milestones-summary").textContent=rows.filter(m=>m.complete).length+" of "+rows.length+" recorded milestones met.";

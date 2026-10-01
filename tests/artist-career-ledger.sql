@@ -1,0 +1,30 @@
+begin;select set_config('request.jwt.claim.sub','1204ab25-7433-43a5-80e1-7a66b2eee057',true);set local role authenticated;
+do $$ declare pid uuid;eid uuid;r jsonb;before_n integer;after_n integer;begin
+r:=public.artist_career_tracks();before_n:=(r#>>'{signals,milestones_30}')::int;
+insert into public.artist_projects(user_id,title,kind,status) values(auth.uid(),'Rollback ledger verification','single','active') returning id into pid;
+select id into eid from public.artist_career_events where source_id=pid and event_key='project_created';
+if eid is null then raise exception 'Event not captured';end if;
+update public.artist_projects set title='Rollback ledger rename' where id=pid;
+if (select count(*) from public.artist_career_events where source_id=pid)<>1 then raise exception 'Edit created duplicate milestone';end if;
+r:=public.artist_career_tracks();after_n:=(r#>>'{signals,milestones_30}')::int;
+if after_n<>before_n+1 or(r#>>'{tracks,momentum,available_max}')::int<>100 then raise exception 'Momentum ledger not counted';end if;
+update public.artist_projects set status='archived' where id=pid;
+r:=public.artist_career_tracks();if(r#>>'{signals,milestones_30}')::int<>before_n then raise exception 'Archived signal counted';end if;
+update public.artist_projects set status='active' where id=pid;
+if not public.reverse_artist_career_event(eid,'Disposable incorrect-event test') then raise exception 'Reversal missing';end if;
+if public.reverse_artist_career_event(eid,'Replay test') then raise exception 'Reversal replay accepted';end if;
+r:=public.artist_career_tracks();if(r#>>'{signals,milestones_30}')::int<>before_n then raise exception 'Reversed signal counted';end if;
+if not exists(select 1 from public.artist_career_events where id=eid) then raise exception 'Reversal deleted evidence';end if;
+perform public.artist_career_history('8da3fa1f-10ef-4fac-8294-279e6a9e61b1');
+begin update public.artist_career_events set occurred_at=now() where id=eid;raise exception 'Ledger writable';exception when insufficient_privilege then null;end;
+perform set_config('test.event',eid::text,true);
+end;$$;
+select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
+do $$ begin
+perform public.artist_career_history();
+begin perform public.artist_career_history('1204ab25-7433-43a5-80e1-7a66b2eee057');raise exception 'CrossArtist history allowed';exception when insufficient_privilege then null;end;
+begin perform public.reverse_artist_career_event(current_setting('test.event')::uuid,'Forbidden');raise exception 'Artist reversal allowed';exception when insufficient_privilege then null;end;
+end;$$;
+select set_config('request.jwt.claim.sub','72c9afac-875f-460b-aa30-0e70b0cbaddc',true);
+do $$ begin begin perform public.artist_career_history();raise exception 'Business history allowed';exception when insufficient_privilege then null;end;end;$$;
+rollback;
