@@ -27,7 +27,7 @@
 </div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
 </section>
 <form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
-<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores are not assigned yet.</p></section>
+<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="career-tracks" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores follow recorded evidence, with missing signals shown explicitly.</p></section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html?v=4" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -56,7 +56,7 @@
  function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -98,7 +98,7 @@
 
  async function loadMilestones(target){
    const version=++milestoneGeneration,workspaceVersion=generation;
-   el("career-stage").replaceChildren();el("milestones-list").replaceChildren();el("selected-career-profile").textContent="";el("milestones-summary").textContent="Loading recorded progress…";
+   el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("milestones-list").replaceChildren();el("selected-career-profile").textContent="";el("milestones-summary").textContent="Loading recorded progress…";
    try{
      const result=await sb.rpc("artist_career_milestones",{artist_id:target});
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
@@ -116,6 +116,23 @@
        next.textContent="Next action: "+data.next_action;stageBox.append(heading,next);
        if(data.held){const held=document.createElement("p");held.className="muted";held.textContent="Previously reached stage retained. Current records evidence "+data.evidenced_stage+".";stageBox.append(held);}
        const path=document.createElement("p");path.className="muted";path.textContent=data.gates.map(g=>g.stage+(g.reached_now?" ✓":"")).join(" · ");stageBox.append(path);
+     }
+     const tracks=await sb.rpc("artist_career_tracks",{artist_id:target});
+     if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
+     const trackBox=el("career-tracks");trackBox.replaceChildren();
+     if(tracks.error){trackBox.textContent="Career tracks could not be loaded. Refresh to retry.";}
+     else{
+       const heading=document.createElement("h3");heading.textContent="Five career tracks";trackBox.append(heading);
+       const labels={projects:"Projects",uploads:"Registered material",masters:"Master / MP3 deliveries",profile:"Complete career profile",releases:"Projects marked Released",masters_collected:"Delivery collections",sessions_completed:"Past confirmed sessions (attendance unverified)",bookings:"Confirmed bookings",invoices_settled:"Linked invoices with full payment recorded",deposits_paid:"Linked invoices with payment recorded",active_days_30:"Recent activity days",milestones_30:"Recent milestones",quotes:"Artist-linked quotes",budget_defined:"Explicit budget"};
+       Object.entries(tracks.data.tracks).forEach(([key,t])=>{
+         const card=document.createElement("div");card.className="row";
+         const title=document.createElement("strong");title.textContent=key.charAt(0).toUpperCase()+key.slice(1)+" · "+t.score+"/100"+(t.partial?" · Partial evidence":"");
+         const meter=document.createElement("progress");meter.max=100;meter.value=t.score;meter.setAttribute("aria-label",key+" score");meter.style.width="100%";
+         const details=document.createElement("details"),summary=document.createElement("summary");summary.textContent="See scoring evidence";details.append(summary);
+         t.breakdown.forEach(part=>{const line=document.createElement("p");line.className="muted";line.textContent=labels[part.signal]+" · "+(part.available?part.units+" on record · "+part.points+"/"+part.max+" points":"Not integrated yet · up to "+part.max+" points");details.append(line);});
+         card.append(title,meter,details);trackBox.append(card);
+       });
+       const note=document.createElement("p");note.className="muted";note.textContent=tracks.data.notes.join(" ");trackBox.append(note);
      }
      const rows=result.data?.milestones||[];
      el("milestones-summary").textContent=rows.filter(m=>m.complete).length+" of "+rows.length+" recorded milestones met.";

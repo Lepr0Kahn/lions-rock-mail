@@ -245,3 +245,12 @@ Booking tables have no direct authenticated UPDATE, so rescheduling intentionall
 ### Owner duration correction
 
 Full Mix Standard session is now 120 minutes; Create Instrumental is 180 minutes; other six remain 60 minutes. All retain 50% deposit and catalogue prices. Updated authenticated rollback reschedule/defaults test passed. Existing bookings retain their own time snapshots. Owner change-time controls are implemented in the prior commit, awaiting deployment.
+
+
+## Five career tracks from OS for Sage
+
+Adapted exact capped weights from LIONS-ROCK-OS-FOR-SAGE/backend/progression.py for Creative, Momentum, Audience, Network and Business. Live scores and full per-signal breakdowns, not client/AI-written values. Creative/Audience support full100; Momentum currently supports30 (past confirmed sessions), Network70 (confirmed bookings/past sessions), Business86 (complete profile/recorded invoice payments). Missing milestone-ledger activity/quotes/budgets explicitly unavailable and zero points, never normalized upward. Excludes archived project/file evidence and cancelled/expired requests; releases self-reported; elapsed sessions do not prove attendance; collection is download initiation. Financial evidence uses positive-total nonvoid Owner invoices joined through booking.user_id to target artist, amount_paid for full/partial payment, no matching by email or arbitrary financial records and no processor verification. Only aggregate counts returned.
+
+public.artist_career_tracks is guarded SECURITY DEFINER, empty search_path, active caller Artist guard, active target (including deleted_at) and cross-account Owner+Business guard. Definer required to return narrow financial aggregates to Artists without granting invoice-table reads. Public/anon revoked, scores not persisted or client-editable. Security advisor counts10 intentional guarded definers,3 private RLS infos, preexisting password warning. No direct grants added.
+
+Rollback tests passed for100caps, explicit missing coverage, Owner selected-Artist review, ownArtist/crossArtist andBusiness restrictions, linked payment inclusion, void exclusion and removed-target denial. Privileged fixture setup then authenticated assertions; no fixtures/payments retained. UI syntax passed; Owner dashboard still managerial, selected artist shows score evidence. Live UI awaits deployment and browser login recovery.
