@@ -333,3 +333,10 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Advisor: existing 12 public definer RPC warnings and disabled leaked-password protection retained. Private recognition settings adds one RLS/no-policy informational notice; table access is revoked from clients.
 
 - Isolated sample preview verified recognition level/XP/badges display, Owner artist selector and expandable XP evidence. This does not verify a live authenticated session. Production recognition release 33e73eb752ef921ea02c617bb5e6637340e7a47f reported READY.
+
+## Nonexclusive instrumental vault — 2026-10-01
+
+- SQL regression tests/instrumental-vault.sql passed preview/master gating, duplicate request protection, Owner-only approval, approval retry reusing one invoice, existing INV allocator integration, unpaid denial, recorded full-payment release, payment correction removing new download access and cross-account request isolation. All fixtures rolled back; storage object tests are metadata only.
+- Owner catalogue requires entered licence terms and both uploaded master/preview objects to publish. Private bucket; active Artists can read only published catalogue/previews and paid, explicitly released masters. Clients cannot write lease request status or invoice links. Owner approval snapshots price, currency and terms into the existing document/item system. Lease payment is 100% before release; ordinary session deposits remain unchanged.
+- Preview files are Owner-prepared, not automatically watermarked/generated. Playback may be copied. Exclusive licensing, minor/guardian controls, storage byte-transfer and actual browser audio playback remain outside this verified scope. No source demo audio/accounts imported.
+- Both HTML inline scripts parse. Advisor scan found no new vault-specific finding; previous guarded definer warnings/private-table INFO/password protection warning remain.

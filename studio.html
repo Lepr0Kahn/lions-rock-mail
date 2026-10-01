@@ -138,7 +138,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=9" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=14" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=15" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=4" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -484,6 +484,18 @@ body.studio-authenticated .login-gate{display:none!important}
      if(e.source!==member.contentWindow||!currentSession||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
      try{const r=await sb.rpc("quote_for_artist_project",{project_id:e.data.projectId});if(r.error)throw r.error;activate("documents","generator",{type:"lions-rock-booking-document",...r.data});}catch(error){toast(error.message||"Could not open the project quote.");}
      return;
+   }
+   if(e.data.type==="lions-rock-vault-invoice"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     try{
+       const doc=await sb.from("documents").select("*").eq("id",e.data.documentId).eq("user_id",currentSession.user.id).single();
+       if(doc.error)throw doc.error;
+       const lineItems=await sb.from("document_items").select("*").eq("document_id",doc.data.id).eq("user_id",currentSession.user.id).order("sort_order");
+       if(lineItems.error)throw lineItems.error;
+       const d=doc.data;
+       const client={id:d.client_id,name:d.client_name||"",email:d.client_email||"",phone:d.client_phone||"",address:d.client_address||""};
+       activate("documents","generator",{type:"lions-rock-booking-document",client,document:{...d,type:d.doc_type,paid:d.amount_paid>=d.total&&d.total>0,payment_status:d.amount_paid>=d.total&&d.total>0?"paid":d.amount_paid>0?"partial":"due",items:lineItems.data.map(i=>({name:i.name,desc:i.description,qty:i.qty,price:i.unit_price})),project_name:"",source_quote_id:d.converted_from_quote_id}});
+     }catch(error){toast(error.message||"Could not open the lease invoice.");}return;
    }
    if(e.data.type==="lions-rock-booking-invoice"){
      if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
