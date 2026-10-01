@@ -358,3 +358,10 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Live authenticated browser cash/audio/provider verification remains pending. No payment-provider credentials or charge/refund execution enabled.
 
 - Explicit opening-ledger preparation is idempotent and a full refund of a legacy paid balance passed transactional regression. Browser observation was blocked by native credential protection before payment-preview verification; visual receipt/print checks remain pending. Production payment release reported READY. Security advisor retains the existing findings, with no new payment-specific finding.
+
+
+## Vault and payment notifications — 2026-10-01
+
+- Added vault request/approval/release/denial notifications to the requesting Artist and Owners. Payment/refund/correction entries notify the invoice Owner and only Artists explicitly linked by vault request invoice_id; no email-based recipient matching. Opening balances do not generate payment alerts.
+- tests/vault-payment-notifications.sql passed lifecycle recipient counts, no-op suppression, payment RPC retry suppression, refund/correction recipients and Artist inbox isolation. Existing notification regression also passed content/insert denial, mark read and suspension. All fixtures rolled back; storage metadata only.
+- Inbox actions now open Vault or Owner Payments. Current inline JavaScript parses. Live authenticated clicking/unread refresh still pending; add these to final manual checklist. No outbound email or real money transfer enabled.
