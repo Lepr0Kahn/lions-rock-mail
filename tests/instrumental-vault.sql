@@ -30,6 +30,11 @@ select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1'
 set local role authenticated;
 do $test$ begin if not private.vault_asset_access((select beat||'/master/master.wav' from vault_fixture),false) then raise exception 'Paid released master blocked';end if;end $test$;
 reset role;
+update public.studio_instrumentals set published=false,master_filename=null where id=(select beat from vault_fixture);
+set local role authenticated;
+do $null$ begin if private.vault_asset_access((select beat||'/master/orphan.wav' from vault_fixture),false) then raise exception 'Null filename exposes unrelated asset';end if;end $null$;
+reset role;
+update public.studio_instrumentals set master_filename='master.wav' where id=(select beat from vault_fixture);
 update public.documents set amount_paid=75 where id=(select invoice from vault_fixture);
 set local role authenticated;
 do $test$ begin if private.vault_asset_access((select beat||'/master/master.wav' from vault_fixture),false) then raise exception 'Payment correction retained access';end if;end $test$;

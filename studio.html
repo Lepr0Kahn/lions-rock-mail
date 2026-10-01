@@ -488,9 +488,13 @@ body.studio-authenticated .login-gate{display:none!important}
    if(e.data.type==="lions-rock-vault-invoice"){
      if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
      try{
-       const doc=await sb.from("documents").select("*").eq("id",e.data.documentId).eq("user_id",currentSession.user.id).single();
+       const account=currentSession?.user?.id;if(!account)return;
+       const stillAllowed=()=>currentSession?.user?.id===account&&currentMembership?.role==="owner"&&canBusiness(currentMembership);
+       const doc=await sb.from("documents").select("*").eq("id",e.data.documentId).eq("user_id",account).single();
+       if(!stillAllowed())return;
        if(doc.error)throw doc.error;
-       const lineItems=await sb.from("document_items").select("*").eq("document_id",doc.data.id).eq("user_id",currentSession.user.id).order("sort_order");
+       const lineItems=await sb.from("document_items").select("*").eq("document_id",doc.data.id).eq("user_id",account).order("sort_order");
+       if(!stillAllowed())return;
        if(lineItems.error)throw lineItems.error;
        const d=doc.data;
        const client={id:d.client_id,name:d.client_name||"",email:d.client_email||"",phone:d.client_phone||"",address:d.client_address||""};

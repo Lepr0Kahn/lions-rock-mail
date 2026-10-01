@@ -27,7 +27,7 @@ if b.id is null then return false;end if;
 if private.is_studio_owner() and private.has_active_studio_access() then return true;end if;
 if writing then return false;end if;
 if asset_name=b.id||'/preview/'||b.preview_filename and b.published and not b.archived then return true;end if;
-if asset_name<>b.id||'/master/'||b.master_filename then return false;end if;
+if b.master_filename is null or asset_name is distinct from b.id||'/master/'||b.master_filename then return false;end if;
 return exists(select 1 from public.studio_instrumental_requests req join public.documents d on d.id=req.invoice_id where req.instrumental_id=b.id and req.user_id=auth.uid() and req.status='released' and d.doc_type='invoice' and d.status not in('draft','void') and d.currency=req.currency and d.total>=req.price_snapshot and d.total>0 and d.amount_paid>=d.total and exists(select 1 from public.app_memberships m where m.user_id=d.user_id and m.role='owner'));
 end;$$;
 revoke all on function private.vault_asset_access(text,boolean) from public,anon;

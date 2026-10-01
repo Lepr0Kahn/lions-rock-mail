@@ -342,3 +342,9 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Both HTML inline scripts parse. Advisor scan found no new vault-specific finding; previous guarded definer warnings/private-table INFO/password protection warning remain.
 
 - Isolated sample browser verification passed vault navigation, red active menu highlight, catalogue metadata/terms editing and presence of management lease controls. Sample fixtures cannot create real invoices or play stored audio. Production vault release reported READY. Invoice dates use Barbados time.
+
+## Vault follow-up verification — 2026-10-01
+
+- tests/vault-invoice-handoff.cjs tests the current studio.html handler: invoice number, recipient, price/items and generator payload; wrong iframe and non-Owner rejection; suspension during document fetch and account switch during item fetch cancel handoff; query failure shows an error.
+- Fixed storage NULL-master-filename edge case. Expanded transactional SQL regression verifies an artist with a released lease cannot read an unrelated asset when the catalogue master filename is cleared. Existing lease/payment/numbering checks also passed; fixtures rolled back.
+- Actual Supabase audio byte transfer/playback remains pending an authenticated live browser session. Source and metadata checks are not an audio end-to-end pass.
