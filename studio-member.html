@@ -50,10 +50,10 @@
  const el=id=>document.getElementById(id);
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
- function show(name){view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
+ function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -191,6 +191,26 @@
  };
  ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>{selected=null;show("projects");notice("");});
  el("dashboard-tab").onclick=()=>{selected=null;show("dashboard");notice("");};
+ let accessCheckRunning=false;
+ async function recheckAccess(){
+   if(accessCheckRunning||!uid||document.hidden)return;
+   accessCheckRunning=true;const version=generation,checkedUid=uid;
+   try{
+     const session=(await sb.auth.getSession()).data.session;
+     if(version!==generation)return;
+     if(!session||session.user.id!==checkedUid){deny("Sign in to Lions Rock Studio to open your artist workspace.");return;}
+     const result=await sb.from("app_memberships").select("role,access_status,payment_status,expires_at,artist_member_enabled").eq("user_id",checkedUid).maybeSingle();
+     if(version!==generation)return;
+     const m=result.data;
+     if(result.error){deny("Could not check artist access. Refresh to retry.");return;}
+     if(!(m&&m.access_status==="active"&&["paid","comped"].includes(m.payment_status)&&(!m.expires_at||new Date(m.expires_at)>new Date())&&(m.role==="owner"||m.artist_member_enabled))){deny("Active Artist Member access is required.");return;}
+     if((m.role==="owner")!==isOwner)await load();
+   }catch(error){if(version===generation)deny("Could not check artist access. Refresh to retry.");}
+   finally{accessCheckRunning=false;}
+ }
+ window.addEventListener("focus",recheckAccess);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)recheckAccess();});
+ setInterval(recheckAccess,30000);
  el("refresh").onclick=()=>{notice("");load();};
  sb.auth.onAuthStateChange((_event,session)=>{if(!session){++generation;deny("Sign in to Lions Rock Studio to open your artist workspace.");}else setTimeout(load,0);});
  load();
