@@ -356,3 +356,5 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Payment receipts and refund/correction records print from the entry amount/date/method and invoice snapshot. They are manually recorded evidence, not processor-confirmed settlement. Refund record performs no money transfer. References such as INV-0003-P001 are entry references attached to the existing invoice number, not a new invoice sequence.
 - Ledger invoices retain their account/type/currency and payment history. Void instead of deleting. Legacy direct paid-amount edits on invoices without a ledger retain their prior behavior.
 - Live authenticated browser cash/audio/provider verification remains pending. No payment-provider credentials or charge/refund execution enabled.
+
+- Explicit opening-ledger preparation is idempotent and a full refund of a legacy paid balance passed transactional regression. Browser observation was blocked by native credential protection before payment-preview verification; visual receipt/print checks remain pending. Production payment release reported READY. Security advisor retains the existing findings, with no new payment-specific finding.
