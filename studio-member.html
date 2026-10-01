@@ -26,6 +26,7 @@
 <div class="card"><h2>Deliveries nearing expiry</h2><div id="ops-deliveries"></div></div>
 </div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
 </section>
+<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. Career stages and scores are not assigned yet.</p></section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -48,12 +49,13 @@
 (function(){
  const sb=window.supabase.createClient("https://xsvczfqvscnvmngwcmtp.supabase.co","sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const el=id=>document.getElementById(id);
+ let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -93,6 +95,19 @@
    queue("ops-deliveries",data.expiring_deliveries||[],"No studio deliveries expire in the next seven days.",f=>[f.filename,f.project_title+" · Expires "+date(f.expires_at)],f=>open(f.project_id));
  }
 
+ async function loadMilestones(target){
+   const version=++milestoneGeneration,workspaceVersion=generation;
+   el("milestones-list").replaceChildren();el("milestones-summary").textContent="Loading recorded progress…";
+   try{
+     const result=await sb.rpc("artist_career_milestones",{artist_id:target});
+     if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
+     if(result.error)throw result.error;
+     const rows=result.data?.milestones||[];
+     el("milestones-summary").textContent=rows.filter(m=>m.complete).length+" of "+rows.length+" recorded milestones met.";
+     rows.forEach(m=>{const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=(m.complete?"Complete · ":"Next · ")+m.label;const detail=document.createElement("p");detail.className="muted";detail.textContent=m.count+" on record · "+m.evidence;row.append(title,detail);el("milestones-list").append(row);});
+   }catch(error){if(version===milestoneGeneration&&workspaceVersion===generation){el("milestones-list").replaceChildren();el("milestones-summary").textContent="Could not load progress. Refresh to retry.";}}
+ }
+ el("milestone-artist").onchange=()=>loadMilestones(el("milestone-artist").value);
  async function load(){
    const version=++generation;
    const session=(await sb.auth.getSession()).data.session;
@@ -126,6 +141,13 @@
    const kindSelect=el("upload-kind");kindSelect.replaceChildren();
    (isOwner?["reference","stem","demo","mp3_delivery","master"]:["reference","stem","demo"]).forEach(kind=>{const option=document.createElement("option");option.value=kind;option.textContent=kind.replaceAll("_"," ");kindSelect.append(option);});
    el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);
+   el("milestone-artist-field").classList.toggle("hidden",!isOwner);
+   el("milestones-title").textContent=isOwner?"Artist progress":"Career milestones";
+   const progressSelect=el("milestone-artist");progressSelect.replaceChildren();
+   if(isOwner)artistNames.forEach((name,id)=>{const option=document.createElement("option");option.value=id;option.textContent=name;progressSelect.append(option);});
+   progressSelect.value=uid;
+   await loadMilestones(uid);
+   if(version!==generation)return;
    el("owner-operations").classList.toggle("hidden",!isOwner);
    if(isOwner){
      el("operations-summary").textContent="Loading current studio operations…";
