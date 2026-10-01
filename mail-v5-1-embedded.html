@@ -1285,7 +1285,7 @@ function buildEmailHtml(imageMode="hosted"){
 </html>`;
 }
 function buildPlain(){const s=getState();return [s.greeting,"",s.body,"",tracks.length?"Attachments: "+tracks.map(t=>t.name).join(", "):"",s.signoff,s.senderName,s.senderTitle,"Lion's Rock Media Facility","+1-246-851-8512"].join("\r\n");}
-function buildRaw(overrides={}){
+function buildMimeMessage(overrides={}){
   const s={...getState(),...overrides};
   const mixed="mix_"+Date.now()+"_"+Math.random().toString(36).slice(2);
   const alt="alt_"+Date.now()+"_"+Math.random().toString(36).slice(2);
@@ -1340,8 +1340,9 @@ function buildRaw(overrides={}){
     raw+=wrap76(t.base64)+"\r\n";
   }
   raw+="--"+mixed+"--\r\n";
-  return b64url(raw);
+  return raw;
 }
+function buildRaw(overrides={}){return b64url(buildMimeMessage(overrides));}
 function renderPreview(){const root=$("preview-root");if(!root)return;const s=getState();root.innerHTML='<div class="ep"><div class="ep-box"><div class="ep-accent" style="background:'+s.accent+'"></div><div class="ep-head"><img class="logo" src="'+LOGO+'"><div class="ep-brand">LION\'S ROCK MEDIA FACILITY</div></div><div class="ep-divider"></div><div class="ep-subject">'+esc(s.subject)+'</div><div class="ep-greet">'+esc(s.greeting)+'</div><div class="ep-body"><p>'+esc(s.body)+'</p></div><div class="ep-sign"><p>'+esc(s.signoff)+'</p><img class="ep-sign-mark" src="'+SIGNATURE+'"><div class="ep-sign-name">'+esc(s.senderName)+'</div><div class="ep-sign-title">'+esc(s.senderTitle)+'</div></div><div class="ep-footer"><div class="ep-brand-foot">LION\'S ROCK MEDIA FACILITY</div><div class="ep-links">@lionsrockmedia · @yofavengineer<br>+1-246-851-8512</div></div></div></div>';}
 function renderTracks(){
   const list=$("tracks-list"),empty=$("tracks-empty");
@@ -1375,7 +1376,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" attachment"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
   const copy=$("copy-html");if(copy)copy.onclick=async()=>{try{const h=buildEmailHtml(),t=buildPlain();if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([h],{type:"text/html"}),"text/plain":new Blob([t],{type:"text/plain"})})]);}else await navigator.clipboard.writeText(t);toastMsg("Copied");}catch(e){toastMsg("Copy failed",e.message,true);}};
   const dl=$("dl-html");if(dl)dl.onclick=()=>{const u=URL.createObjectURL(new Blob([buildEmailHtml()],{type:"text/html;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-email.html";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("HTML downloaded");};
-  const eml=$("dl-eml");if(eml)eml.onclick=()=>{const s=getState();const raw=["To: "+s.to,"Cc: "+s.cc,"Bcc: "+s.bcc,"Subject: "+s.subject,"MIME-Version: 1.0",'Content-Type: text/html; charset="UTF-8"',"",buildEmailHtml()].join("\r\n");const u=URL.createObjectURL(new Blob([raw],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft downloaded");};
+  const eml=$("dl-eml");if(eml)eml.onclick=()=>{const u=URL.createObjectURL(new Blob([buildMimeMessage()],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft download started");};
   const lb=$("logo-replace-btn"), logoInput=$("logo-input"), logoReset=$("logo-reset-btn");
   if(lb&&logoInput)lb.onclick=()=>logoInput.click();
   if(logoInput)logoInput.onchange=async()=>{const file=logoInput.files?.[0];if(!file)return;const src=await readDataUrl(file);["header-logo-img","logo-thumb"].forEach(id=>{const e=$(id);if(e)e.src=src;});if(logoReset)logoReset.style.display="inline-flex";toastMsg("Logo updated");};
