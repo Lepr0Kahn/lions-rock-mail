@@ -27,7 +27,7 @@
 </div><p class="muted">Showing up to five items in each queue. Session times use Barbados time.</p>
 </section>
 <form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
-<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. Career stages and scores are not assigned yet.</p></section>
+<section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores are not assigned yet.</p></section>
 <div class="layout"><div class="card"><h2>Recent projects</h2><div id="recent-projects"></div><button id="all-projects">All projects</button></div><div class="card"><div class="eyebrow">Next move</div><h2 id="next-title"></h2><p id="next-detail" class="muted"></p><button id="next-project">Open projects</button></div></div>
 </section>
 <section id="bookings" class="hidden"><iframe id="booking-frame" title="Studio services and bookings" src="/studio-bookings.html" style="width:100%;height:1400px;border:0"></iframe></section>
@@ -56,7 +56,7 @@
  function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -98,7 +98,7 @@
 
  async function loadMilestones(target){
    const version=++milestoneGeneration,workspaceVersion=generation;
-   el("milestones-list").replaceChildren();el("selected-career-profile").textContent="";el("milestones-summary").textContent="Loading recorded progress…";
+   el("career-stage").replaceChildren();el("milestones-list").replaceChildren();el("selected-career-profile").textContent="";el("milestones-summary").textContent="Loading recorded progress…";
    try{
      const result=await sb.rpc("artist_career_milestones",{artist_id:target});
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
@@ -106,6 +106,17 @@
      const profile=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months").eq("user_id",target).maybeSingle();
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      el("selected-career-profile").textContent=profile.error?"Career direction could not be loaded.":profile.data?[profile.data.artist_name,profile.data.genres,profile.data.goal_12_months].filter(Boolean).join(" · "):"Artist identity and career goal are not recorded yet.";
+     const progression=await sb.rpc("artist_career_progress",{artist_id:target});
+     if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
+     const stageBox=el("career-stage");stageBox.replaceChildren();
+     if(progression.error){stageBox.textContent="Career stage could not be loaded. Refresh to retry.";}
+     else {
+       const data=progression.data,heading=document.createElement("h3"),next=document.createElement("p");
+       heading.textContent="Stage "+data.stage_index+" of "+data.stage_count+" · "+data.stage.charAt(0).toUpperCase()+data.stage.slice(1);
+       next.textContent="Next action: "+data.next_action;stageBox.append(heading,next);
+       if(data.held){const held=document.createElement("p");held.className="muted";held.textContent="Previously reached stage retained. Current records evidence "+data.evidenced_stage+".";stageBox.append(held);}
+       const path=document.createElement("p");path.className="muted";path.textContent=data.gates.map(g=>g.stage+(g.reached_now?" ✓":"")).join(" · ");stageBox.append(path);
+     }
      const rows=result.data?.milestones||[];
      el("milestones-summary").textContent=rows.filter(m=>m.complete).length+" of "+rows.length+" recorded milestones met.";
      rows.forEach(m=>{const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=(m.complete?"Complete · ":"Next · ")+m.label;const detail=document.createElement("p");detail.className="muted";detail.textContent=m.count+" on record · "+m.evidence;row.append(title,detail);el("milestones-list").append(row);});
@@ -131,6 +142,7 @@
      const result=await sb.from("artist_career_profiles").upsert(profile,{onConflict:"user_id"});if(result.error)throw result.error;
      if(version!==generation||uid!==artist)return;
      el("career-profile-status").textContent="Career direction saved.";
+     await loadMilestones(artist);
    }catch(error){if(version===generation)el("career-profile-status").textContent=error.message||"Could not save career direction.";}
    finally{if(version===generation)button.disabled=false;}
  };
@@ -201,7 +213,13 @@
      const actions=document.createElement("div");actions.className="actions";
      const expired=f.expires_at&&new Date(f.expires_at)<=new Date();
      const download=document.createElement("button");download.textContent=expired?"Expired":"Download";download.disabled=!!expired;
-     download.onclick=async()=>{download.disabled=true;try{const r=await sb.storage.from("artist-project-files").download(f.object_path);if(r.error)throw r.error;const url=URL.createObjectURL(r.data),a=document.createElement("a");a.href=url;a.download=f.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);notice("Download ready.");}catch(e){notice(e.message||"Download failed.",true);}finally{download.disabled=!!expired;}};
+     download.onclick=async()=>{download.disabled=true;try{const r=await sb.storage.from("artist-project-files").download(f.object_path);if(r.error)throw r.error;const url=URL.createObjectURL(r.data),a=document.createElement("a");a.href=url;a.download=f.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);notice("Download ready.");
+       const project=items.find(p=>p.id===projectId);
+       if(project?.user_id===uid&&["master","mp3_delivery"].includes(f.kind)){
+         const recorded=await sb.rpc("record_artist_delivery_collection",{delivery_id:f.id});
+         if(recorded.error)notice("Download ready, but collection could not be recorded. Refresh and retry.",true);
+         else await loadMilestones(uid);
+       }}catch(e){notice(e.message||"Download failed.",true);}finally{download.disabled=!!expired;}};
      actions.append(download);
      if(isOwner&&["master","mp3_delivery"].includes(f.kind)){const reissue=document.createElement("button");reissue.textContent="Reissue for 30 days";reissue.onclick=async()=>{reissue.disabled=true;try{const r=await sb.rpc("reissue_artist_delivery",{file_id:f.id});if(r.error)throw r.error;await loadFiles(projectId);notice("Delivery reissued for 30 days.");}catch(e){notice(e.message,true);}finally{reissue.disabled=false;}};actions.append(reissue);}
      row.append(title,meta,note,actions);list.append(row);
