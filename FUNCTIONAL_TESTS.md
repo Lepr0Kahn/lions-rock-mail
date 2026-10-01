@@ -316,3 +316,10 @@ The document-numbering and duplicate-booking-invoice Node tests now extract the 
 Added account-owned notifications for new/changed bookings and master/MP3 delivery/reissue events. Source triggers ignore no-op updates. RLS restricts inbox reads and read-status updates to the authenticated recipient with active Artist access; notification body/recipient/creation is not writable by clients. The OS has an unread count, latest-50 inbox, mark-all-read and booking/project actions with 45-second refresh while visible. No external email sending or historical backfill.
 
 Transactional tests passed booking request/confirmation, no-op replay, Owner/member recipient isolation, content/insert denial, mark read, delivery/reissue and suspension; all fixtures rolled back. JavaScript syntax checks passed. Live authenticated browser behavior remains unverified. Security advisor reports existing private-table and guarded-RPC notices plus the existing leaked-password-protection setting; no new notification finding.
+
+## Owner analytics — 2026-10-01
+
+- Database regression tests/owner-studio-analytics.sql passed: Owner 7/30/90-day windows, invalid-window rejection, stage totals equal eligible roster, USD invoiced/recorded-paid/outstanding increments, draft/void exclusions, active Artist and other non-Owner denial, suspended Owner denial. All fixtures and number allocations rolled back.
+- Analytics uses current evidence stages without advancing retained career stage; excludes Owner, backfilled, reversed and future milestones. Finance is Owner-account all-time and grouped by currency. Bookings show current status, not verified attendance.
+- Inline JavaScript syntax checked. Live authenticated browser verification remains blocked by the previously recorded sign-in connection issue; no live UI pass claimed.
+- Security advisor retains existing 12 guarded public SECURITY DEFINER RPC warnings, three private RLS-without-policy notices and disabled leaked-password protection; no analytics-specific finding in the preceding advisor scan.

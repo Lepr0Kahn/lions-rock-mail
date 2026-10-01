@@ -7,7 +7,7 @@
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
 <div id="workspace" class="hidden">
-<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="bookings-tab">Services &amp; bookings</button><button id="notifications-tab">Notifications</button><button id="refresh">Refresh</button></nav><section id="notifications" class="hidden card" aria-label="Notifications"><div class="actions"><h2>Notifications</h2><button id="notifications-read-all">Mark all read</button></div><p id="notification-status" class="muted" role="status"></p><div id="notification-list"></div></section>
+<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="bookings-tab">Services &amp; bookings</button><button id="analytics-tab" class="hidden">Analytics</button><button id="notifications-tab">Notifications</button><button id="refresh">Refresh</button></nav><section id="analytics" class="hidden card"><h2>Studio analytics</h2><label>Activity period <select id="analytics-window"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></label><p id="analytics-status" role="status"></p><div id="analytics-content" class="ops-lists"></div></section><section id="notifications" class="hidden card" aria-label="Notifications"><div class="actions"><h2>Notifications</h2><button id="notifications-read-all">Mark all read</button></div><p id="notification-status" class="muted" role="status"></p><div id="notification-list"></div></section>
 <div id="notice" role="status" aria-live="polite"></div>
 <section id="dashboard">
 <div class="stats"><div class="card"><div class="eyebrow">Projects</div><div id="count-all" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Active</div><div id="count-active" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Released</div><div id="count-released" class="stat-value">0</div></div></div>
@@ -53,10 +53,10 @@
  let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
- function show(name){el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings","notifications"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
+ function show(name){if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings","notifications","analytics"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -237,7 +237,7 @@
    const m=member.data;
    if(member.error)return deny("Could not check artist access. Refresh to retry.");
    if(!m||m.access_status!=="active"||!["paid","comped"].includes(m.payment_status)||(m.expires_at&&new Date(m.expires_at)<=new Date())||(m.role!=="owner"&&!m.artist_member_enabled))return deny("Active Artist Member access is required.");
-   uid=session.user.id;isOwner=m.role==="owner";
+   uid=session.user.id;isOwner=m.role==="owner";el("analytics-tab").classList.toggle("hidden",!isOwner);if(!isOwner)clearAnalytics();
    let query=sb.from("artist_projects").select("id,user_id,title,kind,brief,target_date,status,created_at,budget_amount,budget_currency").order("created_at",{ascending:false});
    if(!isOwner)query=query.eq("user_id",uid);
    const result=await query;
@@ -259,7 +259,7 @@
    el("artist-name").textContent=isOwner?"Lions Rock Studio Management":m.business_name||"Your career workspace";
    const kindSelect=el("upload-kind");kindSelect.replaceChildren();
    (isOwner?["reference","stem","demo","mp3_delivery","master"]:["reference","stem","demo"]).forEach(kind=>{const option=document.createElement("option");option.value=kind;option.textContent=kind.replaceAll("_"," ");kindSelect.append(option);});
-   el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);loadNotifications();
+   el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);loadNotifications();if(view==="analytics"&&isOwner)loadAnalytics();
    el("milestone-artist-field").classList.toggle("hidden",!isOwner);
    el("milestones-title").textContent=isOwner?"Artist progress":"Career milestones";
    const progressSelect=el("milestone-artist");progressSelect.replaceChildren();
@@ -340,6 +340,30 @@
  };
  ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>{selected=null;show("projects");notice("");});
  el("dashboard-tab").onclick=()=>{selected=null;show("dashboard");notice("");};
+
+ let analyticsGeneration=0;
+ function clearAnalytics(){++analyticsGeneration;el("analytics-content").replaceChildren();el("analytics-status").textContent="";el("analytics-tab").classList.add("hidden");}
+ async function loadAnalytics(){
+   if(!uid||!isOwner)return;const version=++analyticsGeneration,account=uid;
+   el("analytics-content").replaceChildren();el("analytics-status").textContent="Loading analytics…";
+   try{
+     const r=await sb.rpc("studio_analytics",{window_days:Number(el("analytics-window").value)});
+     if(version!==analyticsGeneration||account!==uid||!isOwner)return;
+     if(r.error)throw r.error;
+     const d=r.data,root=el("analytics-content");
+     function card(title,lines){const c=document.createElement("div");c.className="card";const heading=document.createElement("h3");heading.textContent=title;c.append(heading);lines.forEach(line=>{const p=document.createElement("p");p.textContent=line;c.append(p);});root.append(c);}
+     card("Career activity · "+d.days+" days",["Active artists: "+d.active_artists,"Eligible milestones: "+d.milestones,"Contributing artists: "+d.contributing_artists,"Milestones per active artist: "+(d.milestones_per_artist??"—"),"Excludes Owner activity, backfilled and reversed milestones."]);
+     card("Current evidence stages",Object.entries(d.evidence_stages).map(([k,v])=>k.charAt(0).toUpperCase()+k.slice(1)+": "+v).concat(["Based on current evidence; an artist’s previously retained stage may be higher."]));
+     card("Average career tracks",Object.entries(d.track_averages).map(([k,v])=>k.charAt(0).toUpperCase()+k.slice(1)+": "+(v==null?"—":v+" / 100")));
+     card("Bookings created · "+d.days+" days",["Total: "+d.bookings.created,"Confirmed: "+d.bookings.confirmed,"Requested: "+d.bookings.requested,"Cancelled: "+d.bookings.cancelled,"Shows current booking status. Attendance is not verified."]);
+     card("Invoice balances · all time",["Owner invoices excluding drafts and voids. Recorded payments are not processor reconciliation."].concat(d.finance_snapshot.length?d.finance_snapshot.map(f=>{const money=n=>new Intl.NumberFormat(undefined,{style:"currency",currency:f.currency}).format(n);return f.currency+" · "+f.invoices+" invoices · Invoiced "+money(f.invoiced)+" · Recorded paid "+money(f.recorded_paid)+" · Outstanding "+money(f.outstanding);}):["No issued invoices."]));
+     card("No eligible milestone in this period",d.no_recent_milestones.length?d.no_recent_milestones.map(a=>a.name+" · "+(a.last_activity?new Date(a.last_activity).toLocaleDateString():"No eligible milestones")):["All active artists have recent eligible milestones, or there are no active artists."]);
+     el("analytics-status").textContent="Updated "+new Date(d.computed_at).toLocaleTimeString();
+   }catch(e){if(version===analyticsGeneration&&account===uid&&isOwner)el("analytics-status").textContent="Could not load analytics. Refresh to retry.";}
+ }
+ el("analytics-tab").onclick=()=>{if(isOwner){show("analytics");loadAnalytics();}};
+ el("analytics-window").onchange=loadAnalytics;
+
  let accessCheckRunning=false;
  async function recheckAccess(){
    if(accessCheckRunning||!uid||document.hidden)return;
