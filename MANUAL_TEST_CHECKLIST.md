@@ -83,3 +83,5 @@ Online payment provider sandbox/production setup, guardian outbound notification
 - Confirm Mail clears prior attachments/CC/BCC and includes the readable .txt record. Review before manually sending.
 - Opening balances must not offer a receipt. Check account changes prevent delayed drafts.
 - Live Gmail send, iPhone attachment viewing and printed receipt remain pending.
+
+- MFA recovery preparation: after verifying the primary authenticator, add and verify a backup on a separate device. Check both factors can verify a fresh session. Remove unfinished setups only. Enforcement stays off pending full backend and login-gate validation; see MFA_ENFORCEMENT_REVIEW.md.
