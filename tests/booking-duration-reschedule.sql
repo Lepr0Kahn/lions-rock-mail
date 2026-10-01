@@ -1,6 +1,6 @@
 begin;select set_config('request.jwt.claim.sub','1204ab25-7433-43a5-80e1-7a66b2eee057',true);set local role authenticated;
 do $$ declare vid uuid;bid uuid;other uuid;t timestamptz;begin
-if (select count(*) from public.studio_services s join public.studio_service_variants v on v.service_id=s.id where s.invoice_service_id is not null and s.active and v.duration_minutes=60 and v.deposit_percent=50)<>8 then raise exception 'Default offering mismatch';end if;
+if (select count(*) from public.studio_services s join public.studio_service_variants v on v.service_id=s.id where s.invoice_service_id is not null and s.active and v.duration_minutes=case s.name when 'Full Mix' then 120 when 'Create Instrumental' then 180 else 60 end and v.deposit_percent=50)<>8 then raise exception 'Default offering mismatch';end if;
 select v.id into vid from public.studio_service_variants v join public.studio_services s on s.id=v.service_id where s.invoice_service_id is not null limit 1;
 t:=(((now() at time zone 'America/Barbados')::date+12)+time '10:00') at time zone 'America/Barbados';
 bid:=public.create_studio_booking(vid,t,'Rollback reschedule verification');

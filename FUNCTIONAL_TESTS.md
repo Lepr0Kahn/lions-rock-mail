@@ -240,3 +240,8 @@ Rolled-back authenticated test used imported Record a Song with a temporary 60-m
 Per user instruction, all eight nonmembership invoice services have a Standard session offering at the catalogue BBD price, 60 minutes, 50% deposit, and active=true. No membership packages included. Offering editing added for Owner; changes apply only to future bookings. New offering defaults 60/50. Booking date and available start selector retained. Owner can change time/date/duration of upcoming requested/confirmed bookings through guarded reschedule RPC; same calendar advisory lock, future hourly-start/day-hours constraints, overlap rejection excluding current booking and expired holds, price/deposit/status preserved. Requested hold cannot be extended. Linked invoices require review after session change; no automatic invoice rewrite/email.
 
 Booking tables have no direct authenticated UPDATE, so rescheduling intentionally uses SECURITY DEFINER with empty search_path and active Owner/Business/Artist guards. Public/anon execute revoked. No direct booking writes granted. SQL rollback test passed: eight defaults, 90-minute reschedule, overlap/invalid duration denial, offering changes preserve booking snapshots and nonOwner denial. JavaScript parsed. Browser verification awaits deployment.
+
+
+### Owner duration correction
+
+Full Mix Standard session is now 120 minutes; Create Instrumental is 180 minutes; other six remain 60 minutes. All retain 50% deposit and catalogue prices. Updated authenticated rollback reschedule/defaults test passed. Existing bookings retain their own time snapshots. Owner change-time controls are implemented in the prior commit, awaiting deployment.
