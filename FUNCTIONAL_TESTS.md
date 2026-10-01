@@ -294,3 +294,8 @@ Authenticated rollback tests passed: automatic project event, no duplicate on re
 - Two genuinely simultaneous committed orders from separate authenticated sessions.
 
 Prior historical observations above remain dated evidence, not a claim that every flow was retested today.
+
+
+### Current-source regression coverage — 2026-10-01
+
+The document-numbering and duplicate-booking-invoice Node tests now extract the relevant implementation from invoice-sync.js and invoice-v2-embedded.html rather than execute copied snippets. Both pass against current source. Controlled local mutations confirmed that ignoring the server number or retaining the duplicate booking link makes the respective test fail. The allocator test also checks RPC failure propagation. These are frontend tests with a mocked server, not simultaneous database transaction evidence.
