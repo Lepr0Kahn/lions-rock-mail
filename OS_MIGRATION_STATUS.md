@@ -19,16 +19,16 @@ Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live bro
 - Owner analytics: activity windows, evidence-stage roster, track averages, booking status and currency-separated recorded invoice balances.
 - Recognition-only rewards: Owner approved XP, levels and badges on 2026-10-01. Implemented from new eligible evidence with corrections and per-project delivery caps. Discounts/free-service benefits remain disabled. Claim/fulfilment/capacity exposure remains outstanding.
 
-The first two items below are retained as original scope references; their implemented checks are in FUNCTIONAL_TESTS.md.
+## Remaining work
 
-## Migration scope and remaining work
+- Vault catalogue/lease request/invoice/release, recorded payments/refunds/corrections and printing are implemented. Actual byte playback/download and live printing remain unverified. Automatic tagged previews/exclusive licensing remain outstanding.
+- Guardian/minor invoice approval and financial projections are implemented. Cash intent and recorded settlement use existing invoice/payment systems. Guardian identity is bearer-link recipient asserted; operational email, online checkout and dual formal receipts remain outstanding. Guardian booking approval is through invoice review after studio confirmation; it is not a separate approval gate before booking confirmation.
+- Payment-provider selection/configuration and sandbox/production charges/refunds.
+- Explain-only Direction Engine and external operational notifications.
+- Admin MFA, original data reconciliation, genuinely simultaneous committed invoice orders and final live browser verification.
+- Recognition-only XP/levels/badges remain enabled; monetary benefit claims/fulfilment/capacity remain disabled pending explicit approval.
 
-1. **In-app notifications.** Adapt event title/body/action and unread/read behavior from the source bell to the existing app. Start with booking requested, confirmed/cancelled, and delivery available/reissued. Use account-scoped records, enforce ownership on reads/updates, and retain separate Owner/member destinations. Create events transactionally and idempotently; do not send external emails as part of this work. Test cross-account denial and duplicate-event prevention before UI integration.
-2. **Owner analytics.** Add date-window milestone counts, stage distribution and member progress using existing authoritative records. Distinguish elapsed session time from verified attendance and recorded payment from processor-confirmed settlement. Keep currencies separate.
-3. **Rewards and benefits.** Source includes XP, levels, badges, claim/fulfil/deny and capacity exposure. Adapt only after reviewing award definitions, capacity, monetary value and expiry. Existing career tracks/milestones are not the complete rewards economy. Do not automatically promise or activate discounts/free studio time from source defaults.
-4. **Instrumental vault.** Catalogue, protected clean masters, generated preview assets, lease requests and Owner release after verified recorded settlement. Requires explicit ownership/license terms and a supported preview-generation/storage path. Browser playback cannot guarantee copying prevention.
-5. **Guardian and payment workflows.** Source includes minor/guardian views, cash confirmation, PayPal, refunds, receipts and admin MFA. These need an explicit deployment design with Supabase Auth and the existing invoice system; do not copy legacy authentication or assume provider credentials/configuration are present.
-6. **Direction Engine and operational notifications.** Source AI recommendations must remain explain-only; authoritative scores/stages come from server rules. Provider configuration and delivery infrastructure must be verified before enabling calls or outbound messages.
+Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidence remains in FUNCTIONAL_TESTS.md.
 
 ## Integration constraints
 

@@ -41,7 +41,7 @@
  const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
  const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const content=document.getElementById("content");
- let session=null,members=[],removedMembers=[],view="invite",lastLink="";
+ let session=null,members=[],removedMembers=[],view="invite",lastLink="",guardianContacts=[];
 
  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
  function dt(s){if(!s)return"—";try{return new Date(s).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});}catch(_){return s}}
@@ -60,6 +60,7 @@
    if(!await requireOwner())return;
    const r=await sb.from("app_memberships").select("*").order("created_at",{ascending:false});
    if(r.error){content.innerHTML='<div class="empty">Could not load access records.</div>';return}
+   const guardians=await sb.rpc("guardian_management");guardianContacts=guardians.error?[]:(guardians.data?.contacts||[]);
    members=(r.data||[]).filter(x=>x.role!=="owner"&&!x.deleted_at);
    removedMembers=(r.data||[]).filter(x=>x.role!=="owner"&&x.deleted_at);
    document.getElementById("s-active").textContent=members.filter(x=>x.access_status==="active").length;
@@ -136,7 +137,7 @@
    const rows=view==="removed"?removedMembers:members;
    if(!rows.length){content.innerHTML='<div class="empty">No invited users yet.</div>';return}
    content.innerHTML=rows.map(m=>{
-     const types=[];
+     const guardian=guardianContacts.find(c=>c.artist_id===m.user_id)||{};const types=[];if(m.is_minor)types.push(tag("Minor · guardian approval","artist"));
      if(m.business_tools_enabled)types.push(tag("Business Tools","business"));
      if(m.artist_member_enabled)types.push(tag("Artist Member","artist"));
      const action=m.deleted_at?'<button class="btn green" data-member-act="restore" data-id="'+m.id+'">Restore Membership</button>':m.access_status==="active"
@@ -146,7 +147,7 @@
        '<div><div class="name">'+esc(m.business_name||m.email)+'</div><div class="meta">'+esc(m.email)+'</div></div>'+
        '<div>'+types.join("")+'<div class="meta">Plan: '+esc(m.plan||"—")+'</div></div>'+
        '<div>'+tag(m.access_status,m.access_status)+' '+tag(m.payment_status,m.payment_status)+'<div class="meta">Invited '+esc(dt(m.invited_at))+'<br>Claimed '+esc(dt(m.invite_claimed_at))+'</div></div>'+
-       '<div><div class="field"><label for="member-type-'+m.id+'">Membership type</label><select id="member-type-'+m.id+'"><option value="business_tools"'+(m.business_tools_enabled?' selected':'')+'>Business Tools</option><option value="artist_member"'+(!m.business_tools_enabled&&m.artist_member_enabled?' selected':'')+'>Artist Member</option></select></div><div class="actions">'+(m.deleted_at?'':'<button class="btn primary" data-member-act="switch" data-id="'+m.id+'">Save Type</button>')+action+(m.deleted_at?'':'<button class="btn red" data-member-act="remove" data-id="'+m.id+'">Delete Membership</button>')+'</div>'+(m.deleted_at?'<div class="meta">Removed '+esc(dt(m.deleted_at))+'. Restore returns suspended access; reactivate separately.</div>':'')+'</div>'+
+       '<div>'+(m.deleted_at?'':'<div class="field"><label>Minor account (under 18)</label><select id="minor-'+m.id+'"><option value="false"'+(!m.is_minor?' selected':'')+'>Adult</option><option value="true"'+(m.is_minor?' selected':'')+'>Minor — Artist access only</option></select></div><div class="field"><label>Guardian full name</label><input id="guardian-name-'+m.id+'" maxlength="200" value="'+esc(guardian.guardian_name||'')+'"></div><div class="field"><label>Guardian email</label><input id="guardian-email-'+m.id+'" type="email" maxlength="320" value="'+esc(guardian.guardian_email||'')+'"></div><button class="btn" data-member-act="guardian" data-id="'+m.id+'">Save guardian settings</button>')+'<div class="field"><label for="member-type-'+m.id+'">Membership type</label><select id="member-type-'+m.id+'"><option value="business_tools"'+(m.business_tools_enabled?' selected':'')+'>Business Tools</option><option value="artist_member"'+(!m.business_tools_enabled&&m.artist_member_enabled?' selected':'')+'>Artist Member</option></select></div><div class="actions">'+(m.deleted_at?'':'<button class="btn primary" data-member-act="switch" data-id="'+m.id+'">Save Type</button>')+action+(m.deleted_at?'':'<button class="btn red" data-member-act="remove" data-id="'+m.id+'">Delete Membership</button>')+'</div>'+(m.deleted_at?'<div class="meta">Removed '+esc(dt(m.deleted_at))+'. Restore returns suspended access; reactivate separately.</div>':'')+'</div>'+
      '</div>';
    }).join("");
    content.querySelectorAll("[data-member-act]").forEach(b=>b.onclick=()=>memberAction(b.dataset.memberAct,b.dataset.id,b));
@@ -160,6 +161,7 @@
    if(act==="restore"&&!confirm("Restore "+member.email+" as "+(accessType==="artist_member"?"Artist Member":"Business Tools")+"? Access stays suspended until you reactivate it."))return;
    button.disabled=true;
    try{
+     if(act==="guardian"){const r=await sb.rpc("manage_artist_guardian",{artist_id:member.user_id,minor:document.getElementById("minor-"+id).value==="true",guardian_name:document.getElementById("guardian-name-"+id).value.trim(),guardian_email:document.getElementById("guardian-email-"+id).value.trim()});if(r.error)throw r.error;toast("Guardian settings saved. Existing approval links revoked.");await load();return;}
      if(["switch","remove","restore"].includes(act)){
        const result=await sb.rpc("manage_studio_membership",{member_id:id,operation:act,access_type:accessType});
        if(result.error)throw result.error;
