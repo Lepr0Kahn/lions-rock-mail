@@ -323,3 +323,11 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Analytics uses current evidence stages without advancing retained career stage; excludes Owner, backfilled, reversed and future milestones. Finance is Owner-account all-time and grouped by currency. Bookings show current status, not verified attendance.
 - Inline JavaScript syntax checked. Live authenticated browser verification remains blocked by the previously recorded sign-in connection issue; no live UI pass claimed.
 - Security advisor retains existing 12 guarded public SECURITY DEFINER RPC warnings, three private RLS-without-policy notices and disabled leaked-password protection; no analytics-specific finding in the preceding advisor scan.
+
+## Recognition-only rollout — 2026-10-01
+
+- tests/artist-recognition.sql passed project first/subsequent XP, release toggles, replay stability, correction/reversal/archive credit removal, active self access and cross/suspended denial, WAV/MP3 cap per project, reissue stability, and backfilled/future exclusion. All fixtures rolled back; file tests use metadata only.
+- Recognition is a read-only projection of authoritative event records and their corrections. XP starts at the migration timestamp; no historical replay. No client award writes or paid-value benefit activation. Nine evidence-backed badges; attendance/cycle badges deferred.
+- No separate XP transaction ledger is introduced: source event IDs and points are returned for audit. Corrected current eligibility can reduce XP and badge status.
+- Inline JavaScript parse passed. Live authenticated browser verification remains blocked; isolated sample UI verification is separate.
+- Advisor: existing 12 public definer RPC warnings and disabled leaked-password protection retained. Private recognition settings adds one RLS/no-policy informational notice; table access is revoked from clients.
