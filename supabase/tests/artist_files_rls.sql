@@ -1,5 +1,7 @@
 begin;
-update public.app_memberships set access_status='active',artist_member_enabled=true,business_tools_enabled=false where user_id='9bcb2126-19ab-4c12-8ee6-eca68ce7234e';
+-- Isolated eligibility fixtures; rollback restores each account's current state.
+update public.app_memberships set access_status='active',payment_status='comped',artist_member_enabled=false,business_tools_enabled=true,deleted_at=null,expires_at=null where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';
+update public.app_memberships set access_status='active',payment_status='comped',deleted_at=null,expires_at=null,artist_member_enabled=true,business_tools_enabled=false where user_id='9bcb2126-19ab-4c12-8ee6-eca68ce7234e';
 insert into public.artist_projects(id,user_id,title) values ('10000000-0000-4000-8000-000000000001','9bcb2126-19ab-4c12-8ee6-eca68ce7234e','Files security fixture');
 select set_config('request.jwt.claim.sub','9bcb2126-19ab-4c12-8ee6-eca68ce7234e',true);
 set local role authenticated;
@@ -16,7 +18,7 @@ insert into storage.objects(bucket_id,name,owner_id,metadata) values
  ('artist-project-files','9bcb2126-19ab-4c12-8ee6-eca68ce7234e/10000000-0000-4000-8000-000000000001/reference/20000000-0000-4000-8000-000000000001/test.txt','9bcb2126-19ab-4c12-8ee6-eca68ce7234e','{"size":12}');
 set local role authenticated;
 select public.register_artist_file('9bcb2126-19ab-4c12-8ee6-eca68ce7234e/10000000-0000-4000-8000-000000000001/reference/20000000-0000-4000-8000-000000000001/test.txt');
-do $$ begin if (select count(*) from public.artist_project_files)<>1 then raise exception 'Own files missing';end if;end $$;
+do $$ begin if (select count(*) from public.artist_project_files where project_id='10000000-0000-4000-8000-000000000001')<>1 then raise exception 'Own files missing';end if;end $$;
 reset role;
 select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
 set local role authenticated;
@@ -28,7 +30,7 @@ end $$;
 reset role;
 select set_config('request.jwt.claim.sub','1204ab25-7433-43a5-80e1-7a66b2eee057',true);
 set local role authenticated;
-do $$ begin if (select count(*) from public.artist_project_files)<>1 then raise exception 'Owner file oversight missing';end if;end $$;
+do $$ begin if (select count(*) from public.artist_project_files where project_id='10000000-0000-4000-8000-000000000001')<>1 then raise exception 'Owner file oversight missing';end if;end $$;
 insert into public.artist_projects(user_id,title) values ('9bcb2126-19ab-4c12-8ee6-eca68ce7234e','Owner creates artist project');
 reset role;
 insert into public.artist_project_files(project_id,user_id,uploaded_by,object_path,filename,kind,size_bytes,expires_at) values

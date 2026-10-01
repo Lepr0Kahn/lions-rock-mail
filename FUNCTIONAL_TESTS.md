@@ -299,3 +299,13 @@ Prior historical observations above remain dated evidence, not a claim that ever
 ### Current-source regression coverage — 2026-10-01
 
 The document-numbering and duplicate-booking-invoice Node tests now extract the relevant implementation from invoice-sync.js and invoice-v2-embedded.html rather than execute copied snippets. Both pass against current source. Controlled local mutations confirmed that ignoring the server number or retaining the duplicate booking link makes the respective test fail. The allocator test also checks RPC failure propagation. These are frontend tests with a mocked server, not simultaneous database transaction evidence.
+
+
+### Artist workflow and Owner queues — 2026-10-01
+
+- Apple Mail EML device test skipped at user request; compatibility remains unverified.
+- Transactional project tests passed creation, own updates, cross-account denial, reassignment denial, suspension and Owner oversight.
+- File policy tests passed artist reference registration, forbidden artist master/reissue actions, missing-object rejection, Business denial, delivery expiry, Owner reissue and suspended access. Storage rows were temporary metadata fixtures; no actual object bytes were uploaded or downloaded.
+- Management overview tests passed booking requests, upcoming sessions, expiring deliveries, expired-hold exclusion, overdue counts, separate BBD/USD balances, paid/void exclusion, and denial for active Business-only and Artist-only accounts.
+- Test membership setup is explicit and rolled back, preserving current account states. Project/file count assertions scope to fixtures rather than assume an empty account.
+- Live member browser navigation and actual upload/download remain unverified because cloud sign-in is blocked. Prior transactional booking/request/Owner approval/invoice checks remain recorded above.

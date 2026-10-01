@@ -24,7 +24,7 @@ do $test$ declare r jsonb:=public.studio_management_overview();begin
 end;$test$;
 reset role;update public.studio_bookings set hold_expires_at=now()-interval '1 second' where id='9e76ee44-6f2c-4717-b213-44bfa29b9c7d';set local role authenticated;
 do $test$ begin if exists(select 1 from jsonb_array_elements(public.studio_management_overview()->'booking_requests') x where x->>'id'='9e76ee44-6f2c-4717-b213-44bfa29b9c7d') then raise exception 'Expired hold shown';end if;end;$test$;
-reset role;select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);set local role authenticated;
+reset role;update public.app_memberships set access_status='active',payment_status='comped',deleted_at=null,expires_at=null,business_tools_enabled=true,artist_member_enabled=false where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);set local role authenticated;
 do $test$ begin begin perform public.studio_management_overview();raise exception 'Business got management data';exception when insufficient_privilege then null;end;end;$test$;
 reset role;update public.app_memberships set business_tools_enabled=false,artist_member_enabled=true where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';set local role authenticated;
 do $test$ begin begin perform public.studio_management_overview();raise exception 'Artist got management data';exception when insufficient_privilege then null;end;end;$test$;
