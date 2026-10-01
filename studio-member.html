@@ -7,7 +7,7 @@
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
 <div id="workspace" class="hidden">
-<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="bookings-tab">Services &amp; bookings</button><button id="refresh">Refresh</button></nav>
+<nav aria-label="Artist workspace"><button id="dashboard-tab" class="active">Career Dashboard</button><button id="projects-tab">Projects</button><button id="bookings-tab">Services &amp; bookings</button><button id="notifications-tab">Notifications</button><button id="refresh">Refresh</button></nav><section id="notifications" class="hidden card" aria-label="Notifications"><div class="actions"><h2>Notifications</h2><button id="notifications-read-all">Mark all read</button></div><p id="notification-status" class="muted" role="status"></p><div id="notification-list"></div></section>
 <div id="notice" role="status" aria-live="polite"></div>
 <section id="dashboard">
 <div class="stats"><div class="card"><div class="eyebrow">Projects</div><div id="count-all" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Active</div><div id="count-active" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Released</div><div id="count-released" class="stat-value">0</div></div></div>
@@ -53,10 +53,10 @@
  let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,artistNames=new Map(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
- function show(name){if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
+ function show(name){el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=4";view=name;["dashboard","projects","detail","bookings","notifications"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-invoice"&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height))el("booking-frame").style.height=Math.min(30000,Math.max(600,e.data.height+30))+"px";});
- function deny(text){el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";uid=null;items=[];selected=null;isOwner=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -186,6 +186,47 @@
    }catch(error){if(version===generation)el("career-profile-status").textContent=error.message||"Could not save career direction.";}
    finally{if(version===generation)button.disabled=false;}
  };
+ let notificationGeneration=0;
+ function clearNotifications(){++notificationGeneration;el("notification-list").replaceChildren();el("notifications-tab").textContent="Notifications";el("notification-status").textContent="";el("notifications").classList.add("hidden");}
+ async function loadNotifications(){
+   const user=uid,version=++notificationGeneration;if(!user)return;
+   const results=await Promise.all([
+     sb.from("studio_notifications").select("id,title,body,action_kind,project_id,created_at,read_at").eq("user_id",user).order("created_at",{ascending:false}).limit(50),
+     sb.from("studio_notifications").select("id",{count:"exact",head:true}).eq("user_id",user).is("read_at",null)
+   ]);
+   if(version!==notificationGeneration||uid!==user)return;
+   const [inbox,count]=results;
+   if(inbox.error||count.error){el("notification-list").replaceChildren();el("notifications-tab").textContent="Notifications";el("notification-status").textContent="Could not load notifications. Refresh to retry.";return;}
+   el("notifications-tab").textContent="Notifications"+(count.count?" ("+count.count+")":"");
+   el("notification-status").textContent=(inbox.data||[]).length?"Showing the latest 50 notifications.":"No notifications yet.";
+   el("notification-list").replaceChildren();
+   (inbox.data||[]).forEach(n=>{
+     const row=document.createElement("div");row.className="row";
+     const title=document.createElement("strong");title.textContent=(n.read_at?"":"Unread · ")+n.title;
+     const body=document.createElement("p");body.className="muted brief";body.textContent=n.body;
+     const date=document.createElement("p");date.className="muted";date.textContent=new Date(n.created_at).toLocaleString();
+     const button=document.createElement("button");button.textContent=n.action_kind==="project"?"Open project":"Open bookings";
+     button.onclick=async()=>{button.disabled=true;try{
+       const result=await sb.from("studio_notifications").update({read_at:new Date().toISOString()}).eq("id",n.id).eq("user_id",user).select("id");
+       if(uid!==user)return;if(result.error||!result.data?.length)throw new Error("Could not mark this notification as read. Refresh and retry.");
+       await loadNotifications();
+       if(uid!==user)return;
+       if(n.action_kind==="project"){if(items.some(p=>p.id===n.project_id))open(n.project_id);else notice("This project is unavailable. Refresh to check your access.",true);}
+       else show("bookings");
+     }catch(error){notice(error.message||"Could not open notification.",true);}finally{button.disabled=false;}};
+     row.append(title,body,date,button);el("notification-list").append(row);
+   });
+ }
+ el("notifications-tab").onclick=()=>{show("notifications");loadNotifications();};
+ el("notifications-read-all").onclick=async()=>{
+   const user=uid,button=el("notifications-read-all");if(!user)return;
+   button.disabled=true;try{
+     const result=await sb.from("studio_notifications").update({read_at:new Date().toISOString()}).eq("user_id",user).is("read_at",null).lte("created_at",new Date().toISOString());
+     if(uid!==user)return;if(result.error)throw result.error;await loadNotifications();
+   }catch(error){notice(error.message||"Could not mark notifications as read.",true);}finally{button.disabled=false;}
+ };
+ setInterval(()=>{if(uid&&!document.hidden)loadNotifications();},45000);
+
  async function load(){
    const version=++generation;
    const session=(await sb.auth.getSession()).data.session;
@@ -218,7 +259,7 @@
    el("artist-name").textContent=isOwner?"Lions Rock Studio Management":m.business_name||"Your career workspace";
    const kindSelect=el("upload-kind");kindSelect.replaceChildren();
    (isOwner?["reference","stem","demo","mp3_delivery","master"]:["reference","stem","demo"]).forEach(kind=>{const option=document.createElement("option");option.value=kind;option.textContent=kind.replaceAll("_"," ");kindSelect.append(option);});
-   el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);
+   el("gate").textContent="";el("workspace").classList.remove("hidden");render();show(view);loadNotifications();
    el("milestone-artist-field").classList.toggle("hidden",!isOwner);
    el("milestones-title").textContent=isOwner?"Artist progress":"Career milestones";
    const progressSelect=el("milestone-artist");progressSelect.replaceChildren();

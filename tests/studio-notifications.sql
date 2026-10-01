@@ -1,0 +1,40 @@
+begin;
+update public.app_memberships set access_status='active',payment_status='comped',artist_member_enabled=true,deleted_at=null,expires_at=null where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';
+select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
+set local role authenticated;
+select set_config('test.notification_start',now()::text,true);
+select set_config('test.notification_booking',public.create_studio_booking('196c7505-e8e8-4638-b0bb-83b6b2adf4c6','2031-01-09 10:00:00-04','Notification test')::text,true);
+do $$ begin
+if not exists(select 1 from public.studio_notifications where created_at>=current_setting('test.notification_start')::timestamptz and title='Session request received') then raise exception 'Request notification missing';end if;
+if exists(select 1 from public.studio_notifications where user_id<>auth.uid()) then raise exception 'Cross-account inbox leak';end if;
+begin update public.studio_notifications set title='Forged';raise exception 'Content update allowed';exception when insufficient_privilege then null;end;
+begin insert into public.studio_notifications(user_id,event_id,title,body,action_kind) values(auth.uid(),gen_random_uuid(),'Forged','Forged','bookings');raise exception 'Client insert allowed';exception when insufficient_privilege then null;end;
+update public.studio_notifications set read_at=now() where created_at>=current_setting('test.notification_start')::timestamptz;
+if exists(select 1 from public.studio_notifications where created_at>=current_setting('test.notification_start')::timestamptz and read_at is null) then raise exception 'Mark read failed';end if;
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub','1204ab25-7433-43a5-80e1-7a66b2eee057',true);
+set local role authenticated;
+select public.decide_studio_booking(current_setting('test.notification_booking')::uuid,'confirmed');
+do $$ begin
+if not exists(select 1 from public.studio_notifications where created_at>=current_setting('test.notification_start')::timestamptz and title='Session confirmed') then raise exception 'Owner confirmation alert missing';end if;
+if exists(select 1 from public.studio_notifications where user_id<>auth.uid()) then raise exception 'Owner can read member inbox';end if;
+end $$;
+reset role;
+do $$ declare before_count bigint;p uuid;f uuid;begin
+select count(*) into before_count from public.studio_notifications;
+update public.studio_bookings set status=status where id=current_setting('test.notification_booking')::uuid;
+if (select count(*) from public.studio_notifications)<>before_count then raise exception 'No-op duplicated alert';end if;
+update public.studio_bookings set status='cancelled' where id=current_setting('test.notification_booking')::uuid;
+insert into public.artist_projects(user_id,title) values('8da3fa1f-10ef-4fac-8294-279e6a9e61b1','Disposable notification project') returning id into p;
+insert into public.artist_project_files(project_id,user_id,uploaded_by,object_path,filename,kind,size_bytes,expires_at) values(p,'8da3fa1f-10ef-4fac-8294-279e6a9e61b1','1204ab25-7433-43a5-80e1-7a66b2eee057','notification-fixture/'||gen_random_uuid(),'notification-test.wav','master',1,now()+interval '30 days') returning id into f;
+if (select count(*) from public.studio_notifications where project_id=p and title='Studio delivery available')<>2 then raise exception 'Delivery recipients incorrect';end if;
+update public.artist_project_files set expires_at=now()+interval '31 days' where id=f;
+if (select count(*) from public.studio_notifications where project_id=p and title='Studio delivery reissued')<>2 then raise exception 'Reissue alert missing';end if;
+end $$;
+update public.app_memberships set access_status='suspended' where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';
+select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
+set local role authenticated;
+do $$ begin if exists(select 1 from public.studio_notifications) then raise exception 'Suspended inbox visible';end if;end $$;
+rollback;
+select 'PASS notifications: recipient isolation, read-only content, mark read, status events, no-op replay, delivery/reissue, suspended denial; rolled back' result;

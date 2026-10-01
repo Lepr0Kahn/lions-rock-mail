@@ -309,3 +309,10 @@ The document-numbering and duplicate-booking-invoice Node tests now extract the 
 - Management overview tests passed booking requests, upcoming sessions, expiring deliveries, expired-hold exclusion, overdue counts, separate BBD/USD balances, paid/void exclusion, and denial for active Business-only and Artist-only accounts.
 - Test membership setup is explicit and rolled back, preserving current account states. Project/file count assertions scope to fixtures rather than assume an empty account.
 - Live member browser navigation and actual upload/download remain unverified because cloud sign-in is blocked. Prior transactional booking/request/Owner approval/invoice checks remain recorded above.
+
+
+### In-app notifications — 2026-10-01
+
+Added account-owned notifications for new/changed bookings and master/MP3 delivery/reissue events. Source triggers ignore no-op updates. RLS restricts inbox reads and read-status updates to the authenticated recipient with active Artist access; notification body/recipient/creation is not writable by clients. The OS has an unread count, latest-50 inbox, mark-all-read and booking/project actions with 45-second refresh while visible. No external email sending or historical backfill.
+
+Transactional tests passed booking request/confirmation, no-op replay, Owner/member recipient isolation, content/insert denial, mark read, delivery/reissue and suspension; all fixtures rolled back. JavaScript syntax checks passed. Live authenticated browser behavior remains unverified. Security advisor reports existing private-table and guarded-RPC notices plus the existing leaked-password-protection setting; no new notification finding.
