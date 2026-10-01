@@ -45,6 +45,7 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Minor sees service names/times and request status, with no prices, deposit figures, project budgets or lease price/financial terms. API bypass and permissions have database tests; check rendered screens.
 - [ ] Minor creates a project, changes its status, uploads/downloads permitted files and requests a booking/lease.
 - [ ] Owner issues the linked invoice, selects it in Payments, and creates a private guardian link. Deliver it only to the designated test guardian.
+- [ ] Prepare guardian email from Payments: recipient is the saved guardian, private link and invoice number match, old PDF/audio/CC/BCC are cleared, and changing invoices while generating does not retain a stale draft. Review before sending to your designated test guardian.
 - [ ] Guardian opens link without signing in, sees correct invoice totals/items/terms/time, and must enter name plus consent to approve.
 - [ ] Unapproved invoice payment/lease release fails; approved invoice allows recorded payment and release.
 - [ ] Cash request appears once in Owner notifications; does not mark paid. Guardian sees recorded payment/adjustment history and can print.

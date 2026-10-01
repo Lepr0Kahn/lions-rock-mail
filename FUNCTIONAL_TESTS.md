@@ -378,3 +378,11 @@ Transactional tests passed booking request/confirmation, no-op replay, Owner/mem
 - Security advisor retains existing guarded public RPC and password findings; two intentionally inaccessible private RLS tables add informational no-policy notices.
 
 - Linked financial document recipient defaults are routed to the private guardian email, including vault invoice linkage; the booking handoff uses the saved document recipient. SQL asserts the vault recipient. Existing unrelated Business client contacts are retained. Live email handoff/sending is still pending.
+
+
+## Guardian email composer handoff — 2026-10-01
+
+- Payments now offers Prepare guardian email after issuing a private approval link. Uses the existing Mail composer with guardian recipient, invoice number, private link, expiry, review/consent/cash instructions. No automatic send or PDF attachment; the existing fillStudioEmail resets previous attachments and CC/BCC.
+- Current-source tests/guardian-email-handoff.cjs passed correct recipient/link/draft, wrong iframe/non-Owner/access denial, invalid email/link/expiry rejection, invoice selection change while link generation is pending, account switch and delayed account/access rejection. New link, invoice selection, payment reload and sign-out clear draft context.
+- Member and shell scripts parse. Actual live Mail rendering/Gmail send still unverified; no guardian message sent. Manual checklist updated.
+- PAYMENT_MIGRATION_REVIEW.md records original PayPal implementation and the proposed sandbox/server-verification/ledger integration. Provider/account and currency policy require Owner input; no provider configured or charge/refund performed.
