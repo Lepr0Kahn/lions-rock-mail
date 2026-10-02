@@ -1,8 +1,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
-const ORIGIN="https://lions-rock-mail.vercel.app";
-const jsonHeaders={"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"};
-const reply=(body:any,status=200)=>new Response(JSON.stringify(body),{status,headers:jsonHeaders});
+const ALLOWED_ORIGINS=new Set([
+  "https://lions-rock-mail.vercel.app",
+  "https://lions-rock-mail-tahrickd-9639.vercel.app",
+  "https://lions-rock-mail-git-main-tahrickd-9639.vercel.app"
+]);
+let responseOrigin="https://lions-rock-mail.vercel.app";
+const headers=()=>({"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":responseOrigin,"Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"});
+const reply=(body:any,status=200)=>new Response(JSON.stringify(body),{status,headers:headers()});
 const money=(n:any)=>Number(Number(n).toFixed(2));
 const mode=()=>Deno.env.get("PAYPAL_MODE")==="live"?"live":"sandbox";
 const base=()=>mode()==="live"?"https://api-m.paypal.com":"https://api-m.sandbox.paypal.com";
@@ -14,8 +19,9 @@ function fxRate(invoiceCurrency:string){
   const inv=invoiceCurrency.toUpperCase(),charge=chargeCurrency();
   if(inv===charge)return 1;
   if(inv==="BBD"&&charge==="USD"){
-    const rate=Number(Deno.env.get("PAYPAL_FX_BBD_PER_USD"));
-    if(Number.isFinite(rate)&&rate>0)return rate;
+    const configured=Number(Deno.env.get("PAYPAL_FX_BBD_PER_USD"));
+    const rate=Number.isFinite(configured)&&configured>0?configured:2;
+    return rate;
   }
   throw Error("paypal_currency_conversion_not_configured");
 }
@@ -31,6 +37,27 @@ async function token(){
   if(!r.ok)throw Error("paypal_auth_"+r.status);
   return (await r.json()).access_token;
 }
+async function browserClientToken(){
+  if(!clientId()||!secret())throw Error("paypal_not_configured");
+  const accessToken=await token();
+  const r=await fetch(base()+"/v1/identity/generate-token",{
+    method:"POST",
+    headers:{
+      Authorization:"Bearer "+accessToken,
+      "Accept-Language":"en_US",
+      "Content-Type":"application/json"
+    },
+    signal:AbortSignal.timeout(12000)
+  });
+  let j:any={};try{j=await r.json();}catch{}
+  if(!r.ok){
+    const safe={status:r.status,name:j?.name||null,message:j?.message||null,debug_id:j?.debug_id||null};
+    console.error(JSON.stringify({component:"studio-paypal",stage:"client-token",...safe}));
+    throw Error("paypal_client_token_"+r.status+"_"+String(j?.name||"unknown"));
+  }
+  if(!j.client_token)throw Error("paypal_client_token_missing");
+  return {clientToken:j.client_token,expiresIn:Number(j.expires_in||0)};
+}
 async function paypal(path:string,method="GET",body?:any,requestId?:string){
   const t=await token();
   const r=await fetch(base()+path,{method,headers:{Authorization:"Bearer "+t,"Content-Type":"application/json",...(requestId?{"PayPal-Request-Id":requestId}:{}),"Prefer":"return=representation"},...(body!==undefined?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});
@@ -39,19 +66,45 @@ async function paypal(path:string,method="GET",body?:any,requestId?:string){
   return data;
 }
 async function verifyWebhook(req:Request,raw:string){
-  if(!webhookId())return false;
-  const required={
+  const baseRequired={
     auth_algo:req.headers.get("paypal-auth-algo"),
     cert_url:req.headers.get("paypal-cert-url"),
     transmission_id:req.headers.get("paypal-transmission-id"),
     transmission_sig:req.headers.get("paypal-transmission-sig"),
     transmission_time:req.headers.get("paypal-transmission-time"),
-    webhook_id:webhookId(),
     webhook_event:JSON.parse(raw)
   };
-  if(!required.auth_algo||!required.cert_url||!required.transmission_id||!required.transmission_sig||!required.transmission_time)return false;
-  const result=await paypal("/v1/notifications/verify-webhook-signature","POST",required);
-  return result?.verification_status==="SUCCESS";
+  const headersPresent=!!(baseRequired.auth_algo&&baseRequired.cert_url&&baseRequired.transmission_id&&baseRequired.transmission_sig&&baseRequired.transmission_time);
+  if(!headersPresent){
+    console.error(JSON.stringify({component:"studio-paypal",stage:"webhook-verify",headersPresent:false}));
+    return false;
+  }
+
+  const endpoint=Deno.env.get("SUPABASE_URL")+"/functions/v1/studio-paypal";
+  const candidates:string[]=[];
+  const configured=webhookId();
+  if(configured)candidates.push(configured);
+
+  try{
+    const listed=await paypal("/v1/notifications/webhooks");
+    for(const h of (listed?.webhooks||[])){
+      if(h?.url===endpoint&&h?.id&&!candidates.includes(String(h.id)))candidates.push(String(h.id));
+    }
+  }catch(e){
+    console.error(JSON.stringify({component:"studio-paypal",stage:"webhook-list",error:String(e?.message||e).slice(0,120)}));
+  }
+
+  for(const wid of candidates){
+    try{
+      const result=await paypal("/v1/notifications/verify-webhook-signature","POST",{...baseRequired,webhook_id:wid});
+      if(result?.verification_status==="SUCCESS")return true;
+    }catch(e){
+      console.error(JSON.stringify({component:"studio-paypal",stage:"webhook-verify-attempt",error:String(e?.message||e).slice(0,120)}));
+    }
+  }
+
+  console.error(JSON.stringify({component:"studio-paypal",stage:"webhook-verify",headersPresent:true,candidateCount:candidates.length,verificationStatus:"FAILED"}));
+  return false;
 }
 async function linkedInvoices(server:any,userId:string){
   const [bq,rq]=await Promise.all([
@@ -98,11 +151,40 @@ function portionAmount(d:any,portion:string){
 }
 
 Deno.serve(async req=>{
-  if(req.method==="OPTIONS")return reply({ok:true});
-  if(req.method!=="POST")return reply({error:"Method not allowed"},405);
-  if(req.headers.get("origin")&&req.headers.get("origin")!==ORIGIN)return reply({error:"Origin not allowed"},403);
+  const origin=req.headers.get("origin");
+  if(origin&&ALLOWED_ORIGINS.has(origin))responseOrigin=origin;
+  if(req.method==="OPTIONS"){
+    if(origin&&!ALLOWED_ORIGINS.has(origin))return reply({error:"Origin not allowed"},403);
+    return reply({ok:true});
+  }
+  if(origin&&!ALLOWED_ORIGINS.has(origin))return reply({error:"Origin not allowed"},403);
 
   const server=createClient(Deno.env.get("SUPABASE_URL")!,secretKey(),{auth:{persistSession:false,autoRefreshToken:false}});
+
+  if(req.method==="GET"){
+    try{
+      const endpoint=Deno.env.get("SUPABASE_URL")+"/functions/v1/studio-paypal";
+      const listed=await paypal("/v1/notifications/webhooks");
+      const hooks=Array.isArray(listed?.webhooks)?listed.webhooks:[];
+      const matches=hooks.filter((h:any)=>h?.url===endpoint);
+      const names=new Set(matches.flatMap((h:any)=>(h.event_types||[]).map((e:any)=>e.name)));
+      return reply({
+        ok:true,
+        mode:mode(),
+        credentialsConfigured:!!(clientId()&&secret()),
+        configuredWebhookIdPresent:!!webhookId(),
+        matchingWebhookCount:matches.length,
+        captureCompletedSubscribed:names.has("PAYMENT.CAPTURE.COMPLETED"),
+        captureDeniedSubscribed:names.has("PAYMENT.CAPTURE.DENIED"),
+        captureRefundedSubscribed:names.has("PAYMENT.CAPTURE.REFUNDED"),
+        orderApprovedSubscribed:names.has("CHECKOUT.ORDER.APPROVED")
+      });
+    }catch(e){
+      console.error(JSON.stringify({component:"studio-paypal",stage:"health",error:String(e?.message||e).slice(0,120)}));
+      return reply({ok:false,error:"PayPal health check failed"},503);
+    }
+  }
+  if(req.method!=="POST")return reply({error:"Method not allowed"},405);
 
   const transmission=req.headers.get("paypal-transmission-id");
   if(transmission){
@@ -147,10 +229,36 @@ Deno.serve(async req=>{
 
   try{
     if(action==="config"){
-      return reply({configured:!!(clientId()&&secret()),clientId:clientId()||null,mode:mode(),chargeCurrency:chargeCurrency()});
+      if(!clientId()||!secret())return reply({configured:false,mode:mode(),chargeCurrency:chargeCurrency(),webhookConfigured:!!webhookId()});
+      try{
+        await token();
+        return reply({configured:true,credentialsValid:true,clientId:clientId(),mode:mode(),chargeCurrency:chargeCurrency(),webhookConfigured:!!webhookId()});
+      }catch{
+        return reply({configured:true,credentialsValid:false,mode:mode(),chargeCurrency:chargeCurrency(),webhookConfigured:!!webhookId()});
+      }
+    }
+    if(action==="client-token"){
+      const t=await browserClientToken();
+      return reply({clientToken:t.clientToken,expiresIn:t.expiresIn,mode:mode(),chargeCurrency:chargeCurrency()});
+    }
+    if(action==="ensure-webhook"){
+      if(m.role!=="owner")return reply({error:"Owner access required"},403);
+      const gate=await server.rpc("owner_mfa_status");
+      if(gate.error||gate.data?.allowed!==true)return reply({error:"Owner security verification required"},403);
+      if(!clientId()||!secret())return reply({error:"PayPal sandbox credentials are not configured."},503);
+      await token();
+      const url=Deno.env.get("SUPABASE_URL")+"/functions/v1/studio-paypal";
+      const list=await paypal("/v1/notifications/webhooks");
+      const hooks=Array.isArray(list?.webhooks)?list.webhooks:[];
+      let hook=hooks.find((h:any)=>h.url===url);
+      const desired=["PAYMENT.CAPTURE.COMPLETED","PAYMENT.CAPTURE.DENIED","PAYMENT.CAPTURE.REFUNDED","CHECKOUT.ORDER.APPROVED"];
+      if(!hook){
+        hook=await paypal("/v1/notifications/webhooks","POST",{url,event_types:desired.map(name=>({name}))});
+      }
+      return reply({ok:true,webhookId:hook.id,url,eventTypes:(hook.event_types||[]).map((x:any)=>x.name),mode:mode()});
     }
     if(action==="list"){
-      return reply({invoices:await linkedInvoices(server,user.id),configured:!!(clientId()&&secret()),mode:mode(),chargeCurrency:chargeCurrency()});
+      return reply({invoices:await linkedInvoices(server,user.id),configured:!!(clientId()&&secret()),clientId:clientId()||null,mode:mode(),chargeCurrency:chargeCurrency()});
     }
     if(action==="create"){
       const invoiceId=String(body.invoiceId||""),portion=String(body.portion||"deposit");
@@ -200,6 +308,7 @@ Deno.serve(async req=>{
     const message=String(e?.message||e);
     console.error(JSON.stringify({component:"studio-paypal",stage:action,error:message.slice(0,180)}));
     if(message.includes("paypal_not_configured"))return reply({error:"PayPal sandbox is not configured yet."},503);
+    if(message.startsWith("paypal_client_token_"))return reply({error:"PayPal browser token rejected: "+message.replace("paypal_client_token_","")},200);
     if(message.includes("paypal_currency_conversion_not_configured"))return reply({error:"PayPal currency conversion is not configured for this invoice."},503);
     if(message.startsWith("paypal_http_"))return reply({error:"PayPal could not complete this step. Check the order status before retrying."},503);
     return reply({error:"PayPal payment could not be completed. Refresh and check the invoice before retrying."},503);
