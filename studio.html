@@ -359,7 +359,7 @@ body.studio-authenticated .login-gate{display:none!important}
    if(status){status.textContent="Signing in…";status.classList.remove("err");}
    accessDenialMessage="";
    try{
-     const r=await sb.auth.signInWithPassword({email,password});
+     const r=await withAccessTimeout(sb.auth.signInWithPassword({email,password}),"Sign in",15000);
      if(r.error)throw r.error;
    }catch(error){
      const networkFailure=/failed to fetch|networkerror|network request failed|load failed/i.test(error?.message||"")||error?.name==="AuthRetryableFetchError";
@@ -383,7 +383,7 @@ body.studio-authenticated .login-gate{display:none!important}
    button.disabled=true;
    out.classList.remove("err");out.textContent="Requesting a password reset…";
    try{
-     const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:"https://lions-rock-mail.vercel.app/studio.html?reset=1"});
+     const r=await withAccessTimeout(sb.auth.resetPasswordForEmail(email,{redirectTo:"https://lions-rock-mail.vercel.app/studio.html?reset=1"}),"Password reset request",15000);
      if(r.error)throw r.error;
      out.textContent="If that email has an account, a reset link will arrive shortly. Check your inbox and spam folder.";
    }catch(e){out.textContent=e.message||"Could not request a reset. Try again.";out.classList.add("err");}
@@ -396,7 +396,7 @@ body.studio-authenticated .login-gate{display:none!important}
    if(p!==c){out.textContent="Passwords do not match.";out.classList.add("err");return;}
    button.disabled=true;out.classList.remove("err");out.textContent="Saving…";
    try{
-     const r=await sb.auth.updateUser({password:p});
+     const r=await withAccessTimeout(sb.auth.updateUser({password:p}),"Password update",15000);
      if(r.error)throw r.error;
      recoveryMode=false;
      history.replaceState({},document.title,"/studio.html");
@@ -444,17 +444,17 @@ body.studio-authenticated .login-gate{display:none!important}
    button.disabled=true;button.textContent=inviteExisting?"Accepting…":"Saving…";
    try{
      if(!inviteExisting){
-       const r=await sb.auth.updateUser({password:p});
+       const r=await withAccessTimeout(sb.auth.updateUser({password:p}),"Invite password setup",15000);
        if(r.error)throw r.error;
      }
-     const claim=await sb.functions.invoke("studio-claim-invite",{body:{access_type:inviteAccess}});
+     const claim=await withAccessTimeout(sb.functions.invoke("studio-claim-invite",{body:{access_type:inviteAccess}}),"Invite acceptance",15000);
      if(claim.error)throw claim.error;
      if(claim.data?.error)throw new Error(claim.data.error);
      if(inviteAccess)setLoginMode(inviteAccess);
      inviteMode=false;inviteAccess="";inviteExisting=false;
      history.replaceState({},document.title,"/studio.html");
      document.getElementById("invite-password").value="";document.getElementById("invite-confirm").value="";
-     await setSession((await sb.auth.getSession()).data.session);
+     await setSession((await withAccessTimeout(sb.auth.getSession(),"Session refresh",10000)).data.session);
    }catch(e){
      out.textContent=e.message||String(e);out.classList.add("err");
    }finally{
