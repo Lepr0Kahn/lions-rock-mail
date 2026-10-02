@@ -33,6 +33,7 @@
     <button class="tab" data-view="removed">Removed Members</button>
     <button class="tab" data-view="security">Admin Security</button>
     <button class="tab" data-view="calendar">Calendar Connection</button>
+    <button class="tab" data-view="assurance">Assurance</button>
   </div>
   <div class="panel" id="content"><div class="empty">Loading…</div></div>
 </div>
@@ -78,7 +79,27 @@
    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
    if(view==="security"){security.show();return;} security.leave();
    if(view==="calendar"){renderCalendar();return;}
+   if(view==="assurance"){renderAssurance();return;}
    view==="invite"?renderInvite():renderMembers();
+ }
+
+ async function renderAssurance(){
+   content.innerHTML='<div class="empty">Checking studio assurance…</div>';
+   if(!await requireOwner()||view!=="assurance")return;
+   const r=await sb.rpc("studio_assurance");
+   if(view!=="assurance")return;
+   if(r.error){content.innerHTML='<div class="empty">Could not load assurance status.</div>';toast(r.error.message||"Assurance check failed.",true);return;}
+   const d=r.data,issues=d.issues||[],cal=d.calendar||{},inv=d.invoices||{},book=d.bookings||{},career=d.career||{},reward=d.rewards||{};
+   const issueHtml=issues.length?issues.map(i=>'<div class="note"><b>'+esc(i.label)+'</b> · '+esc(i.count)+' · severity '+esc(i.severity)+'</div>').join(""):'<div class="note"><b>No integrity exceptions detected.</b> Calendar queue, invoice arithmetic, booking links, career ledger and reward exposure are currently consistent.</div>';
+   content.innerHTML='<h2>Owner Assurance</h2><p class="note">Read-only operational checks. This screen does not alter bookings, invoices, milestones or rewards.</p>'+
+   '<div class="stats"><div class="stat"><div class="k">Overall</div><div class="v">'+(d.healthy?'Healthy':'Review')+'</div></div><div class="stat"><div class="k">Calendar Pending</div><div class="v">'+esc(cal.pending_operations||0)+'</div></div><div class="stat"><div class="k">Invoice Issues</div><div class="v">'+esc((inv.arithmetic_mismatches||0)+(inv.negative_amounts||0))+'</div></div><div class="stat"><div class="k">Unread Owner Notices</div><div class="v">'+esc(d.notifications?.owner_unread||0)+'</div></div></div>'+
+   '<h3>Exceptions</h3>'+issueHtml+
+   '<h3>Calendar</h3><p class="meta">Sync '+(cal.enabled?'enabled':'disabled')+(cal.paused?' · paused':' · running')+' · failed '+esc(cal.failed_operations||0)+' · stale leases '+esc(cal.stale_leases||0)+' · last operation '+esc(dt(cal.last_operation_at))+' · last webhook '+esc(dt(cal.last_webhook_at))+'</p>'+
+   '<h3>Bookings & invoices</h3><p class="meta">Expired holds '+esc(book.expired_requested_holds||0)+' · confirmed without invoice '+esc(book.confirmed_without_invoice||0)+' · calendar mismatches '+esc(book.confirmed_calendar_mismatch||0)+' · confirmed without calendar link '+esc(book.confirmed_without_calendar_link||0)+'</p><p class="meta">Non-void invoices '+esc(inv.nonvoid_invoices||0)+' · paid '+esc(inv.paid_invoices||0)+' · open balances '+esc(inv.open_balance_count||0)+' · overdue '+esc(inv.overdue_count||0)+'</p>'+
+   '<h3>Career integrity</h3><p class="meta">Career events '+esc(career.events||0)+' · reversals '+esc(career.reversals||0)+' · duplicate source events '+esc(career.duplicate_source_events||0)+'</p>'+
+   '<h3>Reward exposure</h3><p class="meta">Live claims '+esc(reward.live_claims||0)+' · live '+Number(reward.live_hours||0).toFixed(2)+'h / BBD '+Number(reward.live_value_bbd||0).toFixed(2)+' · theoretical '+Number(reward.worst_case_hours||0).toFixed(2)+'h / BBD '+Number(reward.worst_case_value_bbd||0).toFixed(2)+' · 90-day budget '+Number(reward.planning_hours_90d||0).toFixed(2)+'h</p>'+
+   '<button class="btn" id="assurance-refresh">Run checks again</button>';
+   document.getElementById("assurance-refresh").onclick=renderAssurance;
  }
 
  function renderCalendar(){
