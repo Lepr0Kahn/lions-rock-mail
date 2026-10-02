@@ -19,5 +19,12 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/studio.html",
+      "permanent": false
+    }
   ]
 }
