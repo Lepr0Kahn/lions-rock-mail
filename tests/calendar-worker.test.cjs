@@ -34,7 +34,7 @@ async function run(name,alter,mode){
  r=await run("recovery",null,"recoverFound");assert.equal(r.result.state,"synced");assert.equal(r.calls.filter(x=>x.method==="POST").length,0);
  r=await run("recovery absent",null,"recoverAbsent");assert.equal(r.result.state,"review");assert.equal(r.calls.filter(x=>x.method==="POST").length,0);
  r=await run("cancel",j=>{j.operation.desired_status="cancelled";j.link={provider_uid:"cal-a",event_type_id:eventId};});assert.equal(r.result.state,"synced");assert.equal(r.calls.filter(x=>x.path.endsWith("/cancel")).length,1);
- r=await run("reschedule",j=>{j.link={provider_uid:"cal-a",event_type_id:eventId};}, "reschedule");assert.equal(r.result.state,"synced");assert.equal(r.calls.filter(x=>x.path.endsWith("/reschedule")).length,1);assert.equal(r.calls.filter(x=>x.path==="/bookings"&&x.method==="POST").length,0);
+ r=await run("reschedule",j=>{j.link={provider_uid:"cal-a",event_type_id:eventId};}, "reschedule");assert.equal(r.result.state,"synced");assert.equal(r.calls.filter(x=>x.path.endsWith("/reschedule")).length,1);assert.ok(r.calls.find(x=>x.path.startsWith("/slots?")).path.includes("bookingUidToReschedule=cal-a"));assert.equal(r.calls.filter(x=>x.path==="/bookings"&&x.method==="POST").length,0);
 context.goodEvent=event;vm.runInContext("validateEvent(goodEvent,60)",context);
  context.badEvent={...event,price:100};assert.throws(()=>vm.runInContext("validateEvent(badEvent,60)",context));
  context.badEvent={...event,ownerId:1};assert.throws(()=>vm.runInContext("validateEvent(badEvent,60)",context));
@@ -56,7 +56,7 @@ context.calMock=async(path,method="GET",body)=>{
  throw Error("unexpected replacement "+path);
 };
 const replaced=await vm.runInContext("processOperation(calMock,backendMock,jobMock,false)",context);
-assert.equal(replaced.state,"synced");assert.equal(replacementOutcome.eventTypeId,9001);
+assert.equal(replaced.state,"synced");assert.equal(replacementOutcome.eventTypeId,9001);assert.ok(replacementCalls.find(x=>x.path.startsWith("/slots?")).path.includes("bookingUidToReschedule=old-booking"));
 assert.ok(replacementCalls.findIndex(x=>x.path.endsWith("/cancel"))<replacementCalls.findIndex(x=>x.path==="/bookings"&&x.method==="POST"));
 assert.equal(replacementCalls.find(x=>x.path==="/bookings").body.attendee.email,"guardian@example.test");
 const secret="test-only-secret",raw='{"payload":{"uid":"one"}}';

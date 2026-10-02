@@ -6,7 +6,7 @@ The server worker, private durable outbox, one-use availability tickets, signed 
 
 Six verified hidden services are mapped. New confirmed sessions enqueue creation; changes enqueue rescheduling or cancellation. Invoice generation and document-number allocation stay in their existing path. The worker never creates invoices, alters prices, collects deposits or issues refunds. Artist requests hold only OS availability until Owner confirmation.
 
-The worker verifies the host, event, OS metadata, start/end and provider status before marking an operation synchronized. It checks provider availability again before mutations. Duration changes use a separate hidden event and a verified cancellation/replacement because Cal.com rescheduling does not change duration. The existing provider reservation can block a same-time duration expansion; choosing another available time is currently required.
+The worker verifies the host, event, OS metadata, start/end and provider status before marking an operation synchronized. It checks provider availability again before mutations. Duration changes use a separate hidden event and a verified cancellation/replacement because Cal.com rescheduling does not change duration. Availability checks exclude only the verified current provider booking, allowing overlapping time/duration changes while preserving checks against other reservations.
 
 A timeout after a provider mutation becomes uncertain. Recovery reads the known booking/reschedule chain or scans operation metadata; it never automatically recreates an unverified booking. Ambiguous outcomes require Owner review. The Recheck calendar control can verify an existing accepted booking after the Owner resolves it in Cal.com.
 
@@ -33,3 +33,8 @@ Official API references: https://cal.com/docs/api-reference/v2/bookings/create-a
 
 ## Activation fix — 2 October 2026
 The first real activation attempt registered its Cal.com webhook but could not enable the database flag: the service_role lacked USAGE on the private schema. Fixed with a server-role-only grant. Reproduced the error under SET LOCAL ROLE service_role and verified the actual role succeeds after the grant. Deployed worker diagnostics returned HTTP 200 and verified the account, all six hidden zero-price events and the installed webhook. Completed the previously requested activation: enabled=true, paused=false, with no operations or bookings generated. Live booking lifecycle acceptance is still pending.
+
+
+## Independent verification and reschedule correction
+Live read-only server diagnostics found available Cal.com slots for 5–7 October 2026; seven Monday slots match OS hours. No reservation was made. The scheduler reports successful idle runs. Added tests/booking-invoice-integration.sql: real booking/invoice functions, invoice retry, deposit/price snapshots, time/duration change, cancellation and shared generator/OS numbering all passed with rollback. No invoice/number reservation or queued operation remained.
+Rescheduling now passes bookingUidToReschedule only for the server-verified current booking. It no longer treats its own reservation as a competing event. Mock coverage verifies this for same-event rescheduling and duration replacements. Live mutation/browser acceptance remains pending.

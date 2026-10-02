@@ -66,7 +66,7 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Financial reward benefits remain disabled.
 
 ## Remaining build-dependent checks
-Online payment provider sandbox/production setup, guardian outbound notifications/dual receipts, automatic tagged previews, explain-only Direction Engine, admin MFA and original data reconciliation require their own checks as those features are implemented.
+Online payment provider setup, guardian outbound notifications/dual receipts and final admin MFA require their own acceptance. Tagged previews and the rule-based Direction Engine are implemented and need live/device checks. Historical import/export is excluded by user instruction.
 
 
 ## Optional admin authenticator setup
@@ -139,7 +139,7 @@ Synchronization is activated. Actual server-role access and live account/events/
 - [ ] Owner creates/confirms a mapped session; refresh after one minute; one accepted Cal.com booking, matching Barbados start/end, calendar state synchronized.
 - [ ] Original public paid links and prices still work; hidden OS events collect no payment.
 - [ ] Change time: one current calendar booking; follow reschedule UID; existing invoice ID, number, price and deposit unchanged.
-- [ ] Change duration at another available time: hidden duration event, original calendar booking cancelled, replacement verified. Same-time expansion may be blocked by the existing reservation and requires another available time.
+- [ ] Change duration at another available time: hidden duration event, original calendar booking cancelled, replacement verified. Verify same-time expansion checks other conflicts while excluding its own verified reservation.
 - [ ] Cancel from OS and from Cal.com: linked session cancelled on both sides; no automatic refund or new invoice.
 - [ ] Cal.com reschedule: matching linked OS booking updates; a conflicting/out-of-hours change requires Owner review rather than overwriting another session.
 - [ ] Provider failure/timeout: waiting, uncertain, or review state; no blind second creation. Owner can use Recheck calendar after checking/confirming the existing provider booking.
@@ -150,3 +150,5 @@ Synchronization is activated. Actual server-role access and live account/events/
 - [ ] Concurrent requests cannot claim the same OS slot; ticket expires in 60 seconds and cannot be reused.
 - [ ] Existing bookings/data are not backfilled; invoice/quote numbering stays shared across generator and OS orders.
 - [ ] Final security/MFA/session/suspension/isolation acceptance remains in the final test pass.
+
+Independent database booking/invoice lifecycle and shared numbering passed on 2 October 2026 using rollback-only integration tests. Read-only provider availability passed. These do not mark the live calendar mutation/browser items above as passed. Deferred Owner steps are saved in BUILD_NEXT_STEPS.md.

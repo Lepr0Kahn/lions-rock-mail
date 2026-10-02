@@ -47,10 +47,11 @@ async function eventFor(cal,variant,minutes,create=false){
  }
  return validateEvent((await cal("/event-types/"+e.id,"GET",undefined,"2026-06-12")).data,minutes);
 }
-async function matchingSlot(cal,event,start,end){
+async function matchingSlot(cal,event,start,end,bookingUid){
  const date=new Date(Date.parse(start)-4*3600000).toISOString().slice(0,10);
  const a=date+"T00:00:00-04:00",z=new Date(Date.parse(a)+86400000).toISOString();
  const q=new URLSearchParams({eventTypeId:String(event.id),start:new Date(a).toISOString(),end:z,timeZone:ZONE,format:"range"});
+ if(bookingUid)q.set("bookingUidToReschedule",bookingUid);
  const data=(await cal("/slots?"+q,"GET",undefined,"2024-09-04")).data;
  return Object.values(data||{}).flat().some(s=>equalTime(s.start,start)&&equalTime(s.end,end));
 }
@@ -112,7 +113,7 @@ async function processOperation(cal,backend,job,recovery=false){
   const contact=await backend("contact",{bookingId:b.id});
   let current=providerUid&&link?.event_type_id?await currentBooking(cal,providerUid,b.id,link.event_type_id):null;
   if(current&&verifiedDesired(current,op)){await finish("synced",null,current);return {processed:true,state:"synced"};}
-  if(!await matchingSlot(cal,event,op.desired_start,op.desired_end))throw Error("provider_slot_unavailable");
+  if(!await matchingSlot(cal,event,op.desired_start,op.desired_end,current?.status==="accepted"?current.uid:undefined))throw Error("provider_slot_unavailable");
   if(current&&current.status==="cancelled")throw Error("provider_cancelled_owner_review");
   if(current&&current.eventTypeId===event.id){
    await checkpoint("reschedule_requested",current.uid);mutating=true;
@@ -192,6 +193,10 @@ Deno.serve(async req=>{
   try{const profile=(await cal("/me")).data;checks.push({stage:"account",matches:profile.id===HOST&&profile.username==="bookleprokahn"});}catch(e){checks.push({stage:"account",error:e.message});}
   for(const eventId of Object.values(MAPPING)){try{const e=(await cal("/event-types/"+eventId,"GET",undefined,"2026-06-12")).data;checks.push({stage:"event",id:eventId,ownerMatches:e.ownerId===HOST,hidden:e.hidden,price:Number(e.price||0),minutes:e.lengthInMinutes,confirmationType:e.confirmationPolicy?.type,confirmationDisabled:e.confirmationPolicy?.disabled});}catch(e){checks.push({stage:"event",id:eventId,error:e.message});}}
   try{const list=(await cal("/webhooks","GET",undefined,"")).data;const hooks=Array.isArray(list)?list:list?.webhooks||[];const url=Deno.env.get("SUPABASE_URL")+"/functions/v1/studio-calendar-worker";checks.push({stage:"webhooks",array:Array.isArray(list),keys:Array.isArray(list)?[]:Object.keys(list||{}),matching:hooks.filter(h=>h.subscriberUrl===url).map(h=>({id:h.id,userId:h.userId,active:h.active,triggers:h.triggers,subscriberMatches:true}))});}catch(e){checks.push({stage:"webhooks",error:e.message});}
+  for(const date of (Array.isArray(body.previewDates)?body.previewDates:[]).slice(0,3)){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
+  try{const start=date+"T00:00:00-04:00",end=new Date(Date.parse(start)+86400000).toISOString();const q=new URLSearchParams({eventTypeId:"7314681",start:new Date(start).toISOString(),end,timeZone:ZONE,format:"range"});const slots=Object.values((await cal("/slots?"+q,"GET",undefined,"2024-09-04")).data||{}).flat();checks.push({stage:"read_only_availability",date,count:slots.length,slots:slots.slice(0,12).map(x=>({start:x.start,end:x.end}))});}catch(e){checks.push({stage:"read_only_availability",date,error:e.message});}
+ }
   return reply({checks});
  }
   if(["process","recover"].includes(action)){
@@ -242,15 +247,17 @@ Deno.serve(async req=>{
   if(!Number.isInteger(minutes)||minutes<15||minutes>720||!Number.isFinite(Date.parse(start))||Date.parse(start)<=Date.now())return reply({error:"Choose a future session time and valid duration"},400);
   const end=new Date(Date.parse(start)+minutes*60000).toISOString();
   const event=await eventFor(cal,variantId,minutes,owner);
-  let same=false;
-  if(b&&equalTime(start,b.starts_at)&&equalTime(end,b.ends_at)){
+  let same=false,existingUid;
+  if(b){
    const ctx=await backend("context",{bookingId:b.id});
    if(ctx.link?.provider_uid){
     const linked=await currentBooking(cal,ctx.link.provider_uid,b.id,ctx.link.event_type_id);
-    same=linked.status==="accepted"&&equalTime(linked.start,start)&&equalTime(linked.end,end);
+    if(linked.status!=="accepted")return reply({error:"The linked calendar session needs review before changing it."},409);
+    existingUid=linked.uid;
+    same=equalTime(linked.start,start)&&equalTime(linked.end,end);
    }
   }
-  if(!same&&!await matchingSlot(cal,event,start,end))return reply({error:"That time is unavailable in Cal.com. Choose another time."},409);
+  if(!same&&!await matchingSlot(cal,event,start,end,existingUid))return reply({error:"That time is unavailable in Cal.com. Choose another time."},409);
   return reply(await backend("ticket",{actorId:user.id,bookingId:b?.id,variantId,start,end}));
  }catch(e){console.error(JSON.stringify({component:"studio-calendar-worker",stage:"request_failed",code:String(e.code||e.message||"unknown").replace(/[^a-z0-9_ -]/gi,"_").slice(0,120)}));return reply({error:"Calendar operation could not be completed. Refresh and check its status before retrying."},503);}
 });

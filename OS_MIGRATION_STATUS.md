@@ -17,7 +17,7 @@ Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live bro
 
 - In-app notifications: booking request/confirmation/cancellation and delivery/reissue alerts, own-account read state and Owner/member destinations.
 - Owner analytics: activity windows, evidence-stage roster, track averages, booking status and currency-separated recorded invoice balances.
-- Recognition-only rewards: Owner approved XP, levels and badges on 2026-10-01. Implemented from new eligible evidence with corrections and per-project delivery caps. Discounts/free-service benefits remain disabled. Claim/fulfilment/capacity exposure remains outstanding.
+- Recognition-only rewards: Owner approved XP, levels and badges on 2026-10-01. Implemented from new eligible evidence with corrections and per-project delivery caps. Paid-menu discounts remain disabled. The separate artist-development benefit catalogue, claims, approval, capacity and fulfilment are implemented; Owner configuration and final live acceptance remain pending.
 
 ## Remaining work
 
@@ -40,9 +40,11 @@ Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidenc
 - Verify source behavior and adapt deliberately; source settings such as VAT, reward prices and membership applications are not automatically approved settings for this deployment.
 
 
-## Original data reconciliation
-Source/schema comparison recorded in DATA_RECONCILIATION.md. Historical records and file bytes cannot be declared reconciled without an authoritative source database export and explicit account/file mapping. Demo seeds were identified and not imported. Beat mood/key metadata and exclusive pricing are confirmed source/target feature gaps; existing master/lease release controls must be preserved when extending the catalogue.
-
+## Historical data scope
+Historical import/export is explicitly excluded by the user. DATA_RECONCILIATION.md remains a historical source/schema reference; no source export, demo seed import or reconciliation sign-off is required for this build. Mood/key metadata and exclusive handling are implemented and await their recorded live checks.
 
 ## Artist development reward benefits
 Custom future rewards can be added, edited, activated and archived by Owner. Claims reserve catalogue capacity and preserve reward scope/XP snapshots; approval/fulfilment recheck Artist eligibility. Historical-data import is not required per user instruction. See REWARD_BENEFITS_STATUS.md for final-phase checks.
+
+## Calendar synchronization and current next steps
+Cal.com synchronization is active, with six hidden zero-payment services, a signed webhook and durable server queue. Server-role access and live read-only account/event/webhook/availability checks passed. Booking/invoice integration and shared sequence checks passed in rollback-only transactions. A self-conflict in rescheduling availability was fixed using the verified existing provider UID. Real booking, notifications, webhook lifecycle and browser acceptance remain pending. See CAL_COM_SYNC_STATUS.md and BUILD_NEXT_STEPS.md; approval/sign-in tasks are saved there while independent work proceeds.
