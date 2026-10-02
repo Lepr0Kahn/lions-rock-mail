@@ -12,6 +12,10 @@
 .access-list{display:grid;gap:10px}.access-card{border:1px solid var(--border);background:#111}.access-summary{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,.9fr) minmax(150px,.7fr) auto;gap:12px;align-items:center;padding:13px 14px}.access-person .name{margin-bottom:3px}.access-badges{min-width:0}.access-status{text-align:left}.access-date{font-size:10px;color:var(--muted);line-height:1.45}.access-card details{border-top:1px solid rgba(255,255,255,.06)}.access-card summary{cursor:pointer;list-style:none;padding:10px 14px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.access-card summary::-webkit-details-marker{display:none}.access-card summary::after{content:"+";float:right;color:var(--text)}.access-card details[open] summary::after{content:"–"}.access-edit{padding:0 14px 14px;display:grid;grid-template-columns:minmax(220px,.8fr) minmax(280px,1.2fr);gap:14px}.access-edit .field{margin-bottom:8px}.access-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end}.access-meta-line{font-size:10px;color:var(--muted);line-height:1.45;margin-top:5px}.access-filterbar{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}.access-filterbar button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .choice-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.choice-btn{border:1px solid var(--border);background:#0d0d0d;color:var(--text);padding:10px 12px;font:inherit;font-size:11px;font-weight:700;cursor:pointer;text-align:center}.choice-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}.guardian-fields.hidden{display:none}.guardian-fields{padding-top:4px}.choice-help{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4}@media(max-width:800px){.access-summary{grid-template-columns:1fr}.access-status{text-align:left}.access-edit{grid-template-columns:1fr}}
 @media(max-width:800px){body{padding:10px}.stats{grid-template-columns:1fr 1fr}.form-grid,.row{grid-template-columns:1fr}.linkrow{grid-template-columns:1fr}.head{align-items:center}.actions{justify-content:flex-start}}
+
+/* mac-horizontal-nav-fix */
+.tabs{max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-gutter:stable;}
+.tabs > *{flex:0 0 auto!important;}
 </style>
 </head>
 <body>
@@ -290,6 +294,10 @@
  sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT"||event==="SIGNED_IN"){security.leave();setTimeout(load,0);}});
  load();
 })();
+</script>
+
+<script data-mac-horizontal-nav-fix>
+(()=>{const selector=".tabs";function bind(root=document){root.querySelectorAll(selector).forEach(el=>{if(el.dataset.hscrollBound)return;el.dataset.hscrollBound="1";el.addEventListener("wheel",e=>{if(el.scrollWidth<=el.clientWidth)return;const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!delta)return;e.preventDefault();el.scrollLeft+=delta;},{passive:false});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>bind());else bind();})();
 </script>
 </body>
 </html>
