@@ -62,8 +62,9 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
  let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistMinorIds=new Set(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
- function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=15";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
- function shortcut(name){selected=null;show(name);notice("");requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
+ function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=17";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
+ function landAtTop(){requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
+ function shortcut(name){selected=null;show(name);notice("");landAtTop();}
  el("rewards-tab").onclick=()=>shortcut("rewards");
  el("bookings-tab").onclick=()=>shortcut("bookings");
  el("shortcut-booking-requests").onclick=()=>shortcut("bookings");
@@ -90,7 +91,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
  }
  el("project-quote").onclick=()=>{if(isOwner&&selected)window.parent.postMessage({type:"lions-rock-project-quote",projectId:selected},location.origin);};
  el("save-budget").onclick=async()=>{if(!selected)return;const button=el("save-budget"),projectId=selected,raw=el("budget-amount").value.trim(),amount=raw===""?null:Number(raw);if(amount!==null&&(!Number.isFinite(amount)||amount<0)){notice("Enter a budget of zero or more.",true);return;}button.disabled=true;try{const r=await sb.from("artist_projects").update({budget_amount:amount,budget_currency:amount===null?null:el("budget-currency").value}).eq("id",projectId).select("id").single();if(r.error)throw r.error;await load();notice("Project budget saved.");}catch(error){notice(error.message||"Could not save budget.",true);}finally{button.disabled=false;}};
- function open(id){el("budget-controls").classList.toggle("hidden",isMinor);const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;el("budget-amount").value=p.budget_amount??"";el("budget-currency").value=p.budget_currency||"BBD";el("project-quote").classList.toggle("hidden",!isOwner);show("detail");loadFiles(id);}
+ function open(id){el("budget-controls").classList.toggle("hidden",isMinor);const p=items.find(p=>p.id===id);if(!p)return;selected=id;el("detail-title").textContent=p.title;el("detail-kind").textContent="Project · "+p.kind;el("detail-date").textContent=p.target_date?"Target "+p.target_date:"No target date set";el("detail-brief").textContent=p.brief||"No brief added.";el("detail-status").value=p.status;el("budget-amount").value=p.budget_amount??"";el("budget-currency").value=p.budget_currency||"BBD";el("project-quote").classList.toggle("hidden",!isOwner);show("detail");landAtTop();loadFiles(id);}
  function renderOperations(data){
    if(!isOwner)return;
    el("ops-pending").textContent=data.pending_count;
@@ -106,7 +107,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
      if(!rows.length){const p=document.createElement("p");p.className="muted";p.textContent=empty;box.append(p);return;}
      rows.forEach(item=>{const button=document.createElement("button");button.type="button";button.className="row";const title=document.createElement("strong"),meta=document.createElement("span");meta.className="muted ops-meta";const text=describe(item);title.textContent=text[0];meta.textContent=text[1];button.append(title,meta);button.onclick=()=>action(item);box.append(button);});
    }
-   const bookings=()=>{selected=null;show("bookings");notice("Review the session in Services & bookings.");};
+   const bookings=()=>{shortcut("bookings");notice("Review the session in Services & bookings.");};
    queue("ops-requests",data.booking_requests||[],"No active requests awaiting confirmation.",b=>[b.service_name,(artistNames.get(b.user_id)||"Artist")+" · "+date(b.starts_at)+" · Hold ends "+date(b.hold_expires_at)],bookings);
    queue("ops-sessions",data.upcoming_sessions||[],"No upcoming confirmed sessions.",b=>[b.service_name,(artistNames.get(b.user_id)||"Artist")+" · "+date(b.starts_at)],bookings);
    queue("ops-invoices",data.due_invoices||[],"No unpaid invoices.",d=>[d.doc_number+" · "+(d.client_name||"Client"),money(d.balance_due,d.currency)+(d.due_date?" · Due "+d.due_date:" · No due date")+(d.overdue?" · Overdue":"")],d=>window.parent.postMessage({type:"lions-rock-management-document",documentId:d.id},location.origin));
@@ -143,7 +144,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
        const why=document.createElement("p");why.textContent=action.why;
        const evidence=document.createElement("p");evidence.className="muted";evidence.textContent=action.evidence+" "+action.horizon+" · "+action.effort+" effort.";
        const button=document.createElement("button");button.textContent=action.destination==="profile"?(isOwner?"Review artist identity":"Open career profile"):action.destination==="bookings"?"Open bookings":"Open projects";
-       button.onclick=()=>{if(!uid||version!==milestoneGeneration||workspaceVersion!==generation)return;if(action.destination==="profile"){el(isOwner?"selected-career-profile":"career-profile-form").scrollIntoView({block:"start"});}else{show(action.destination);}};
+       button.onclick=()=>{if(!uid||version!==milestoneGeneration||workspaceVersion!==generation)return;if(action.destination==="profile"){el(isOwner?"selected-career-profile":"career-profile-form").scrollIntoView({block:"start"});}else{shortcut(action.destination);}};
        row.append(title,why,evidence,button);root.append(row);
      });
      const details=document.createElement("details"),summary=document.createElement("summary");summary.textContent="Track evidence used";details.append(summary);
@@ -267,9 +268,9 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
        await loadNotifications();
        if(uid!==user)return;
        if(n.action_kind==="project"){if(items.some(p=>p.id===n.project_id))open(n.project_id);else notice("This project is unavailable. Refresh to check your access.",true);}
-       else if(n.action_kind==="vault"){show("vault");await loadVault();}
-       else if(n.action_kind==="payments"&&isOwner){show("payments");await loadPayments();}
-       else if(n.action_kind==="bookings")show("bookings");
+       else if(n.action_kind==="vault"){shortcut("vault");await loadVault();}
+       else if(n.action_kind==="payments"&&isOwner){shortcut("payments");await loadPayments();}
+       else if(n.action_kind==="bookings")shortcut("bookings");
      }catch(error){notice(error.message||"Could not open notification.",true);}finally{button.disabled=false;}};
      row.append(title,body,date,button);el("notification-list").append(row);
    });
