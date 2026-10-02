@@ -25,7 +25,33 @@ Deno.serve(async (req) => {
  if(profile.status!=="success"||profile.data?.username!=="bookleprokahn"||profile.data?.id!==2390745) return reply({configured:true,verified:false,syncEnabled:false,error:"Key does not match the configured Lions Rock Cal.com account."},409);
  let body;try{body=await req.json();}catch{return reply({error:"Invalid request"},400);}
  const action=body.action||"check";
- if(!["check","full-mix-duration","instrumental-creation"].includes(action))return reply({error:"Unknown action"},400);
+ if(!["check","full-mix-duration","instrumental-creation","availability-preview"].includes(action))return reply({error:"Unknown action"},400);
+ if(action==="availability-preview"){
+   const mapping=[["0b305aae-87cc-4274-9656-bf1e921364ef",5500451,"Record an Ad",60],["8fc7f59d-cb46-4dd4-9d60-0c000fe7a814",5499308,"Record a Song",60],["7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15",5500448,"Instrumental Mix",60],["c1d6d89d-08ad-4a52-806c-fad0bab4eb51",5500367,"Vocal Mix",60],["196c7505-e8e8-4638-b0bb-83b6b2adf4c6",5500456,"Full Mix",120],["98954691-a825-48b9-8469-bf3bb4cd79ca",7314363,"Create Instrumental",180]];
+   const selected=mapping.find(row=>row[0]===body.offeringId);
+   const date=String(body.date||""),start=Date.parse(date+"T00:00:00-04:00");
+   if(!selected||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(start)||new Date(start).toISOString().slice(0,10)!==date||start<Date.now()-86400000||start>Date.now()+180*86400000)return reply({error:"Choose a mapped service and a date within 180 days."},400);
+   const variant=await sb.from("studio_service_variants").select("duration_minutes").eq("id",selected[0]).maybeSingle();
+   if(variant.error||variant.data?.duration_minutes!==selected[3])return reply({error:"OS duration changed. Update the calendar mapping before checking availability."},409);
+   const eventResponse=await fetch("https://api.cal.com/v2/event-types/"+selected[1],{headers:{Authorization:"Bearer "+key,"cal-api-version":"2026-06-12"},redirect:"error",signal:AbortSignal.timeout(10000)});
+   if(!eventResponse.ok)return reply({error:"Cal.com event access failed."},502);
+   const event=await eventResponse.json();
+   if(event.status!=="success"||event.data?.ownerId!==2390745||event.data?.lengthInMinutes!==selected[3])return reply({error:"Cal.com event duration or ownership does not match the OS mapping."},409);
+   const os=await sb.rpc("studio_availability",{booking_date:date,offering_id:selected[0]});
+   if(os.error||!Array.isArray(os.data))return reply({error:"OS availability could not be checked."},502);
+   const query=new URLSearchParams({eventTypeId:String(selected[1]),start:new Date(start).toISOString(),end:new Date(start+86400000-1).toISOString(),timeZone:"America/Barbados",format:"range"});
+   const response=await fetch("https://api.cal.com/v2/slots?"+query,{headers:{Authorization:"Bearer "+key,"cal-api-version":"2024-09-04"},redirect:"error",signal:AbortSignal.timeout(10000)});
+   if(!response.ok)return reply({error:"Cal.com availability could not be checked. No OS-only fallback was used."},502);
+   const provider=await response.json();
+   if(provider.status!=="success"||!provider.data||typeof provider.data!=="object"||Array.isArray(provider.data))return reply({error:"Unexpected calendar response."},502);
+   const starts=new Set();
+   for(const rows of Object.values(provider.data)){
+     if(!Array.isArray(rows))return reply({error:"Unexpected calendar slots."},502);
+     for(const slot of rows){const t=Date.parse(slot.start),end=Date.parse(slot.end);if(!Number.isFinite(t)||!Number.isFinite(end)||end-t!==selected[3]*60000)return reply({error:"Calendar slot duration could not be verified."},502);starts.add(t);}
+   }
+   const slots=os.data.filter(slot=>slot.available&&Date.parse(slot.starts_at)>Date.now()&&starts.has(Date.parse(slot.starts_at))).map(slot=>({start:slot.starts_at}));
+   return reply({verified:true,syncEnabled:false,slots,message:slots.length+" matching times available. Preview only; no slot is reserved or booking synchronized."});
+ }
  if(action==="instrumental-creation"){
    const base="https://api.cal.com/v2/event-types";
    const h={Authorization:"Bearer "+key,"cal-api-version":"2026-06-12","Content-Type":"application/json"};

@@ -4,48 +4,55 @@
   "bookingUrl": "https://cal.com/bookleprokahn",
   "timeZone": "America/Barbados",
   "enabled": false,
-  "status": "mapping-only-not-connected",
+  "status": "owner-availability-preview",
   "events": [
     {
       "eventTypeId": 5500451,
       "title": "Record an AD",
       "slug": "record-an-ad",
       "observedDurationMinutes": 60,
-      "targetDurationMinutes": 60
+      "targetDurationMinutes": 60,
+      "offeringId": "0b305aae-87cc-4274-9656-bf1e921364ef"
     },
     {
       "eventTypeId": 5499308,
       "title": "Record a song",
       "slug": "leprokahn",
       "observedDurationMinutes": 60,
-      "targetDurationMinutes": 60
+      "targetDurationMinutes": 60,
+      "offeringId": "8fc7f59d-cb46-4dd4-9d60-0c000fe7a814"
     },
     {
       "eventTypeId": 5500448,
       "title": "Instrumental mix",
       "slug": "instrumental-mix",
       "observedDurationMinutes": 60,
-      "targetDurationMinutes": 60
+      "targetDurationMinutes": 60,
+      "offeringId": "7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15"
     },
     {
       "eventTypeId": 5500367,
       "title": "Vocal mix",
       "slug": "vocal-mix",
       "observedDurationMinutes": 60,
-      "targetDurationMinutes": 60
+      "targetDurationMinutes": 60,
+      "offeringId": "c1d6d89d-08ad-4a52-806c-fad0bab4eb51"
     },
     {
       "eventTypeId": 5500456,
       "title": "Full mix",
       "slug": "full-mix",
-      "observedDurationMinutes": 60,
-      "targetDurationMinutes": 120
+      "observedDurationMinutes": 120,
+      "targetDurationMinutes": 120,
+      "offeringId": "196c7505-e8e8-4638-b0bb-83b6b2adf4c6"
     },
     {
-      "eventTypeId": null,
+      "eventTypeId": 7314363,
       "title": "Instrumental creation",
-      "slug": null,
-      "targetDurationMinutes": 180
+      "slug": "instrumental-creation",
+      "targetDurationMinutes": 180,
+      "offeringId": "98954691-a825-48b9-8469-bf3bb4cd79ca",
+      "observedDurationMinutes": 180
     }
   ],
   "depositPercent": 50

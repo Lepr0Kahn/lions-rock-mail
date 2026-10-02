@@ -82,24 +82,26 @@
  }
 
  function renderCalendar(){
-   content.innerHTML='<h2>Cal.com connection</h2><p class="note">Check server access to bookleprokahn. Booking synchronization is still off.</p><button class="btn primary" id="check-cal">Check Cal.com connection</button><button class="btn" id="cal-full-mix">Set Full mix to 2 hours</button><p class="note">Instrumental creation: create a hidden 3-hour event requiring studio confirmation. OS pricing and deposits are not synchronized yet.</p><button class="btn" id="cal-instrumental">Prepare 3-hour Instrumental creation</button><p id="cal-status" role="status" aria-live="polite"></p>';
+   content.innerHTML='<h2>Cal.com connection</h2><p class="note">Check server access to bookleprokahn. Booking synchronization is still off.</p><button class="btn primary" id="check-cal">Check Cal.com connection</button><button class="btn" id="cal-full-mix">Set Full mix to 2 hours</button><p class="note">Instrumental creation: create a hidden 3-hour event requiring studio confirmation. OS pricing and deposits are not synchronized yet.</p><button class="btn" id="cal-instrumental">Prepare 3-hour Instrumental creation</button><h3>Availability preview</h3><div class="field"><label for="cal-offering">OS service</label><select id="cal-offering"><option value="0b305aae-87cc-4274-9656-bf1e921364ef">Record an Ad · 60 minutes</option><option value="8fc7f59d-cb46-4dd4-9d60-0c000fe7a814">Record a Song · 60 minutes</option><option value="7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15">Instrumental Mix · 60 minutes</option><option value="c1d6d89d-08ad-4a52-806c-fad0bab4eb51">Vocal Mix · 60 minutes</option><option value="196c7505-e8e8-4638-b0bb-83b6b2adf4c6">Full Mix · 120 minutes</option><option value="98954691-a825-48b9-8469-bf3bb4cd79ca">Create Instrumental · 180 minutes</option></select></div><div class="field"><label for="cal-date">Date — Barbados</label><input id="cal-date" type="date"></div><button class="btn" id="cal-preview">Check matching availability</button><p id="cal-status" role="status" aria-live="polite"></p><div id="cal-slots"></div>';
    const check=document.getElementById("check-cal"),update=document.getElementById("cal-full-mix"),instrumental=document.getElementById("cal-instrumental");
    instrumental.onclick=function(){runCal.call(this,"instrumental-creation");};
    update.onclick=function(){runCal.call(this,"full-mix-duration");};
    check.onclick=function(){runCal.call(this,"check");};
+   const preview=document.getElementById("cal-preview");preview.onclick=function(){runCal.call(this,"availability-preview");};
    async function runCal(action){
      const button=this,status=document.getElementById("cal-status");
-     check.disabled=true;update.disabled=true;instrumental.disabled=true;button.textContent=action==="check"?"Checking…":"Updating…";status.textContent=action==="check"?"Checking account access…":action==="instrumental-creation"?"Preparing Instrumental creation in Cal.com…":"Updating Full mix duration in Cal.com…";
+     check.disabled=true;update.disabled=true;instrumental.disabled=true;preview.disabled=true;document.getElementById("cal-offering").disabled=true;document.getElementById("cal-date").disabled=true;document.getElementById("cal-slots").replaceChildren();button.textContent=action==="check"?"Checking…":"Updating…";status.textContent=action==="check"?"Checking account access…":action==="instrumental-creation"?"Preparing Instrumental creation in Cal.com…":"Updating Full mix duration in Cal.com…";
      try {
        if(!await requireOwner())return;
-       const result=await sb.functions.invoke("studio-cal-connection",{body:{action}});
+       const result=await sb.functions.invoke("studio-cal-connection",{body:{action,offeringId:document.getElementById("cal-offering").value,date:document.getElementById("cal-date").value}});
        if(view!=="calendar"||!status.isConnected)return;
        let data=result.data;
        if(result.error){try{data=await result.error.context.json();}catch(_){}throw new Error(data?.error||"Could not verify the connection. Check your sign-in and server secret.");}
        if(data?.error)throw new Error(data.error);
        status.textContent=data?.message||"Connection is not configured.";
+       (data?.slots||[]).forEach(slot=>{const p=document.createElement("p");p.textContent=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(slot.start));document.getElementById("cal-slots").append(p);});
      }catch(error){if(view==="calendar"&&status.isConnected)status.textContent=error.message||"Connection check failed.";}
-     finally{check.disabled=false;update.disabled=false;instrumental.disabled=false;instrumental.textContent="Prepare 3-hour Instrumental creation";check.textContent="Check Cal.com connection";update.textContent="Set Full mix to 2 hours";}
+     finally{check.disabled=false;update.disabled=false;instrumental.disabled=false;preview.disabled=false;document.getElementById("cal-offering").disabled=false;document.getElementById("cal-date").disabled=false;preview.textContent="Check matching availability";instrumental.textContent="Prepare 3-hour Instrumental creation";check.textContent="Check Cal.com connection";update.textContent="Set Full mix to 2 hours";}
    };
  }
  function renderInvite(){
