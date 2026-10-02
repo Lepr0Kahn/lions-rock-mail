@@ -25,6 +25,7 @@ begin
   select jsonb_build_object(
     'requested_holds',count(*) filter(where status='requested' and hold_expires_at>now()),
     'expired_requested_holds',count(*) filter(where status='requested' and hold_expires_at<=now()),
+    'past_uncompleted',count(*) filter(where status='confirmed' and ends_at<now() and not exists(select 1 from private.studio_session_completions c where c.booking_id=b.id)),
     'confirmed_without_invoice',count(*) filter(where status='confirmed' and not exists(select 1 from public.documents d where d.booking_id=b.id and d.user_id=auth.uid() and d.doc_type='invoice' and d.status<>'void')),
     'confirmed_calendar_mismatch',count(*) filter(where status='confirmed' and exists(select 1 from private.studio_calendar_links l where l.booking_id=b.id and(l.synchronized_status is distinct from b.status or l.synchronized_start is distinct from b.starts_at or l.synchronized_end is distinct from b.ends_at))),
     'confirmed_without_calendar_link',count(*) filter(where status='confirmed' and coalesce((select enabled from private.studio_calendar_settings where singleton=true),false) and not exists(select 1 from private.studio_calendar_links l where l.booking_id=b.id))
@@ -35,6 +36,7 @@ begin
     union all select 3,'Calendar worker lease is stale',(cal->>'stale_leases')::int where (cal->>'stale_leases')::int>0
     union all select 3,'Invoice arithmetic mismatch',(inv->>'arithmetic_mismatches')::int where (inv->>'arithmetic_mismatches')::int>0
     union all select 3,'Negative invoice amount',(inv->>'negative_amounts')::int where (inv->>'negative_amounts')::int>0
+    union all select 2,'Past confirmed session needs completion review',(bookings->>'past_uncompleted')::int where (bookings->>'past_uncompleted')::int>0
     union all select 2,'Confirmed booking has no invoice',(bookings->>'confirmed_without_invoice')::int where (bookings->>'confirmed_without_invoice')::int>0
     union all select 2,'Confirmed booking does not match synchronized calendar record',(bookings->>'confirmed_calendar_mismatch')::int where (bookings->>'confirmed_calendar_mismatch')::int>0
     union all select 2,'Confirmed booking has no calendar link',(bookings->>'confirmed_without_calendar_link')::int where (bookings->>'confirmed_without_calendar_link')::int>0
