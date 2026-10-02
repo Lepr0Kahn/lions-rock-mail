@@ -1,8 +1,8 @@
 # Cal.com booking synchronization
 
-Implemented 2 October 2026; live activation pending an Owner session.
+Implemented and activated 2 October 2026; live booking lifecycle acceptance remains pending.
 
-The server worker, private durable outbox, one-use availability tickets, signed webhook receiver, one-minute scheduler, booking status labels and Owner activation/pause/recovery controls are implemented. Synchronization remains disabled in the database. No real Cal.com bookings or notifications were created during the automated checks.
+The server worker, private durable outbox, one-use availability tickets, signed webhook receiver, one-minute scheduler, booking status labels and Owner activation/pause/recovery controls are implemented. Synchronization is now enabled in the database after the Owner activation attempt and permission fix below. No real Cal.com bookings or notifications were created during the automated checks.
 
 Six verified hidden services are mapped. New confirmed sessions enqueue creation; changes enqueue rescheduling or cancellation. Invoice generation and document-number allocation stay in their existing path. The worker never creates invoices, alters prices, collects deposits or issues refunds. Artist requests hold only OS availability until Owner confirmation.
 
@@ -29,3 +29,7 @@ Apply supabase/calendar-sync.sql, supabase/calendar-runtime.sql, supabase/calend
 Run node tests/calendar-worker.test.cjs.
 
 Official API references: https://cal.com/docs/api-reference/v2/bookings/create-a-booking, https://cal.com/docs/api-reference/v2/bookings/reschedule-a-booking, https://cal.com/docs/api-reference/v2/bookings/get-a-booking, https://cal.com/docs/api-reference/v2/webhooks/update-a-webhook.
+
+
+## Activation fix — 2 October 2026
+The first real activation attempt registered its Cal.com webhook but could not enable the database flag: the service_role lacked USAGE on the private schema. Fixed with a server-role-only grant. Reproduced the error under SET LOCAL ROLE service_role and verified the actual role succeeds after the grant. Deployed worker diagnostics returned HTTP 200 and verified the account, all six hidden zero-price events and the installed webhook. Completed the previously requested activation: enabled=true, paused=false, with no operations or bookings generated. Live booking lifecycle acceptance is still pending.

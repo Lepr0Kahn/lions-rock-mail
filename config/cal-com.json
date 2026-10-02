@@ -3,8 +3,8 @@
   "username": "bookleprokahn",
   "bookingUrl": "https://cal.com/bookleprokahn",
   "timeZone": "America/Barbados",
-  "enabled": false,
-  "status": "booking-sync-implemented-owner-activation-pending",
+  "enabled": true,
+  "status": "activated-live-booking-acceptance-pending",
   "events": [
     {
       "eventTypeId": 7314681,

@@ -133,7 +133,7 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 
 
 ## Cal.com synchronization — added 2 October 2026
-Implementation is staged with synchronization OFF. Automated worker mocks and rollback-only database checks passed; live booking acceptance has not passed yet.
+Synchronization is activated. Actual server-role access and live account/events/webhook diagnostics passed after a permission fix. Automated worker mocks and rollback-only database checks passed; live booking acceptance has not passed yet.
 - [ ] Owner: Admin → Calendar Connection → activate; verify hidden events and signed webhook registration succeed.
 - [ ] Create an OS request; it holds the OS slot but makes no Cal.com booking until Owner confirmation.
 - [ ] Owner creates/confirms a mapped session; refresh after one minute; one accepted Cal.com booking, matching Barbados start/end, calendar state synchronized.

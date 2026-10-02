@@ -1,4 +1,5 @@
 -- Calendar synchronization is disabled until the Owner explicitly activates it.
+grant usage on schema private to service_role;
 create table private.studio_calendar_settings (
  singleton boolean primary key default true check(singleton), enabled boolean not null default false,
  updated_at timestamptz not null default now()

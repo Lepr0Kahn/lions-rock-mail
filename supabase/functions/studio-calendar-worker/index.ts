@@ -21,7 +21,7 @@ async function verifySignature(secret,raw,signature){
 function providerClient(key){
  return async function cal(path,method="GET",body,version="2026-02-25"){
   const r=await fetch("https://api.cal.com/v2"+path,{method,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json",...(version?{"cal-api-version":version}:{})},...(body?{body:JSON.stringify(body)}:{}),redirect:"error",signal:AbortSignal.timeout(10000)});
-  if(!r.ok)throw Error("cal_http_"+r.status);
+  if(!r.ok){console.error(JSON.stringify({component:"studio-calendar-worker",stage:"provider",method,path:path.split("?")[0],status:r.status}));throw Error("cal_http_"+r.status);}
   const j=await r.json();if(j.status!=="success")throw Error("cal_invalid_response");return j;
  };
 }
@@ -185,7 +185,15 @@ Deno.serve(async req=>{
   }
   let body;try{body=await req.json();}catch{return reply({error:"Invalid request"},400);}
   const action=body.action||"status";
-  if(runner&&!["process","recover"].includes(action))return reply({error:"Runner operation not allowed"},403);
+  if(runner&&!["process","recover","diagnose"].includes(action))return reply({error:"Runner operation not allowed"},403);
+  if(action==="diagnose"){
+  if(!runner&&!owner)return reply({error:"Owner access required"},403);
+  const checks=[];
+  try{const profile=(await cal("/me")).data;checks.push({stage:"account",matches:profile.id===HOST&&profile.username==="bookleprokahn"});}catch(e){checks.push({stage:"account",error:e.message});}
+  for(const eventId of Object.values(MAPPING)){try{const e=(await cal("/event-types/"+eventId,"GET",undefined,"2026-06-12")).data;checks.push({stage:"event",id:eventId,ownerMatches:e.ownerId===HOST,hidden:e.hidden,price:Number(e.price||0),minutes:e.lengthInMinutes,confirmationType:e.confirmationPolicy?.type,confirmationDisabled:e.confirmationPolicy?.disabled});}catch(e){checks.push({stage:"event",id:eventId,error:e.message});}}
+  try{const list=(await cal("/webhooks","GET",undefined,"")).data;const hooks=Array.isArray(list)?list:list?.webhooks||[];const url=Deno.env.get("SUPABASE_URL")+"/functions/v1/studio-calendar-worker";checks.push({stage:"webhooks",array:Array.isArray(list),keys:Array.isArray(list)?[]:Object.keys(list||{}),matching:hooks.filter(h=>h.subscriberUrl===url).map(h=>({id:h.id,userId:h.userId,active:h.active,triggers:h.triggers,subscriberMatches:true}))});}catch(e){checks.push({stage:"webhooks",error:e.message});}
+  return reply({checks});
+ }
   if(["process","recover"].includes(action)){
    if(!runner&&!owner)return reply({error:"Owner access required"},403);
    const profile=(await cal("/me")).data;if(profile.id!==HOST||profile.username!=="bookleprokahn")throw Error("wrong_calendar_account");
@@ -244,5 +252,5 @@ Deno.serve(async req=>{
   }
   if(!same&&!await matchingSlot(cal,event,start,end))return reply({error:"That time is unavailable in Cal.com. Choose another time."},409);
   return reply(await backend("ticket",{actorId:user.id,bookingId:b?.id,variantId,start,end}));
- }catch(e){return reply({error:"Calendar operation could not be completed. Refresh and check its status before retrying."},503);}
+ }catch(e){console.error(JSON.stringify({component:"studio-calendar-worker",stage:"request_failed",code:String(e.code||e.message||"unknown").replace(/[^a-z0-9_ -]/gi,"_").slice(0,120)}));return reply({error:"Calendar operation could not be completed. Refresh and check its status before retrying."},503);}
 });
