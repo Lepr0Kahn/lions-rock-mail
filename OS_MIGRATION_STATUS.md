@@ -80,3 +80,11 @@ Cal.com synchronization is active, with six hidden zero-payment services, a sign
 - Replaced the previous elapsed-time approximation in career tracks with authoritative completion records.
 - Booking Queue now separates **Needs completion** from **Completed** and provides the Owner-only completion action.
 - Assurance now reports past confirmed sessions awaiting completion review.
+
+
+## Release-cycle completion — 2026-10-02
+- Mirrored the Emergent rule: a full cycle closes when a project first enters Released status.
+- The same project transition now records both `release_published` and `cycle_completed`, idempotently per project.
+- `cycle_completed` awards 300 XP.
+- The Emergent **Repeat Cycle** badge is now available after two completed release cycles.
+- Rollback verification confirmed one release event and one cycle event per project, and the two-cycle badge/600 XP assertion passed.
