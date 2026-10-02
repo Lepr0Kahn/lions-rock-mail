@@ -86,3 +86,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Added 15-second timeout/error exits for project audio playback and file downloads and object-URL cleanup when project/file context changes.
 - Final actual audio-byte playback/download acceptance still requires at least one real audio project file in the bucket; the current production object is text/plain, not audio.
 - Vercel production was still on commit `e81f47a...` when checked, so the latest Artist workspace audio UI and final cache/version bumps were in GitHub but not yet reflected by the production deployment.
+
+
+## Mail sending / attachments acceptance — 2 October 2026
+- Confirmed Mail sends through the Gmail API using the authenticated user's Gmail OAuth token and writes messages to Gmail Sent when successful.
+- Confirmed real MIME attachments are included with `Content-Disposition: attachment` and per-file MIME types.
+- Confirmed Documents/Invoices generates a real PDF attachment in-browser, base64-encodes it, and passes it to Mail via the Studio shell handoff.
+- Hardened Gmail sends with a 20-second timeout and an explicit warning that a timed-out send may still have completed, so Sent should be checked before retrying.
+- Unified the attachment limit at 20 MB and made the UI text match the actual guard.
+- Added the same 20 MB total guard to Studio-generated PDF attachments so document handoff cannot bypass the manual attachment limit.
+- Source-level regression check: no duplicate named functions introduced; MIME attachment construction and Studio document handoff remain present.
+- Live Gmail-send acceptance still requires the Owner's interactive Google OAuth session; no real outbound message was sent automatically during this implementation pass.
