@@ -858,7 +858,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//9k=
         <div id="tracks-empty" class="empty">
           <div style="font-size: 24px; opacity: 0.4; margin-bottom: 8px;">♫</div>
           <div style="font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);">No attachments</div>
-          <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">MP3 · WAV · M4A · FLAC · OGG · up to 25MB total</div>
+          <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">MP3 · WAV · M4A · FLAC · OGG · up to 20 MB total</div>
         </div>
         <div id="tracks-list"></div>
       </div>
@@ -1048,7 +1048,10 @@ const SIGNATURE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBA
 const CLIENT_ID = "773250602648-f1o63tevas55si5pdk0r8q1babam7ouk.apps.googleusercontent.com";
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 const GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
+const ATTACHMENT_LIMIT_BYTES = 20*1024*1024;
 let tokenClient = null, accessToken = "", tracks = [];
+function attachmentBytes(list=tracks){return list.reduce((n,t)=>n+Number(t.size||0),0);}
+async function fetchWithTimeout(url,options={},ms=20000){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),ms);try{return await fetch(url,{...options,signal:controller.signal});}catch(error){if(error?.name==="AbortError")throw new Error("Gmail took too long to respond. Nothing was confirmed as sent; check Sent before retrying.");throw error;}finally{clearTimeout(timer);}}
 const TEMPLATES = {
   "blank":{subject:"",preheader:"",greeting:"",body:"",signoff:""},
   "studio-follow-up":{
@@ -1371,9 +1374,9 @@ function initGoogle(){if(!(window.google&&google.accounts&&google.accounts.oauth
 document.addEventListener("DOMContentLoaded",()=>{
   setImages();
   ["subject","preheader","greeting","body","signoff","senderName","senderTitle","accent-color","accent-hex"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",renderPreview);});
-  const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>20*1024*1024){toastMsg("Audio too large","Keep total under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}clearTrackUrls();tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f),url:URL.createObjectURL(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
+  const mb=$("music-btn"),mi=$("music-input");if(mb&&mi){mb.onclick=()=>mi.click();mi.onchange=async()=>{const fs=[...(mi.files||[])];const total=fs.reduce((n,f)=>n+f.size,0);if(total>ATTACHMENT_LIMIT_BYTES){toastMsg("Attachments too large","Keep total attachments under 20 MB.",true);mi.value="";tracks=[];renderTracks();return;}clearTrackUrls();tracks=[];for(const f of fs)tracks.push({name:f.name,size:f.size,mime:mime(f.name,f.type),base64:await readB64(f),url:URL.createObjectURL(f)});renderTracks();renderPreview();toastMsg(tracks.length+" track(s) ready");};}
   const sign=$("gmail-signin");if(sign)sign.onclick=()=>{if(!tokenClient){gmailNote("Google is not ready yet.",true);initGoogle();return;}gmailNote("Opening Google authorization…");tokenClient.requestAccessToken({prompt:"consent"});};
-  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})});if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" attachment"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
+  const send=$("send-gmail");if(send)send.onclick=async()=>{const s=getState();if(!s.to){toastMsg("Recipient required","Enter an email address.",true);return;}if(!accessToken){toastMsg("Sign in first","Connect Google before sending.",true);return;}if(attachmentBytes()>ATTACHMENT_LIMIT_BYTES){toastMsg("Attachments too large","Keep total attachments under 20 MB.",true);return;}send.disabled=true;send.textContent="Sending…";try{const r=await fetchWithTimeout(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw()})},20000);if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}addRecentRecipient(s.to);toastMsg("Email sent!","Check your Gmail Sent folder.");gmailNote("✓ Email sent successfully.");const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ SENT — "+tracks.length+" attachment"+(tracks.length===1?"":"s")+" to "+s.to+". Ready for the next one when you are."; }}catch(e){toastMsg("Send failed",e.message,true);gmailNote("Send failed: "+e.message,true);}finally{send.disabled=false;send.textContent="✉ Send with Gmail";}};
   const copy=$("copy-html");if(copy)copy.onclick=async()=>{try{const h=buildEmailHtml(),t=buildPlain();if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([h],{type:"text/html"}),"text/plain":new Blob([t],{type:"text/plain"})})]);}else await navigator.clipboard.writeText(t);toastMsg("Copied");}catch(e){toastMsg("Copy failed",e.message,true);}};
   const dl=$("dl-html");if(dl)dl.onclick=()=>{const u=URL.createObjectURL(new Blob([buildEmailHtml()],{type:"text/html;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-email.html";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("HTML downloaded");};
   const eml=$("dl-eml");if(eml)eml.onclick=()=>{const u=URL.createObjectURL(new Blob([buildMimeMessage()],{type:"message/rfc822"}));const a=document.createElement("a");a.href=u;a.download="lions-rock-draft.eml";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);toastMsg("Draft download started");};
@@ -1401,7 +1404,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     sendTest.disabled=true;const old=sendTest.textContent;sendTest.textContent="Sending test…";
     try{
       const s=getState();
-      const r=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+s.subject})})});
+      if(attachmentBytes()>ATTACHMENT_LIMIT_BYTES)throw new Error("Keep total attachments under 20 MB.");const r=await fetchWithTimeout(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+s.subject})})},20000);
       if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}throw new Error(d);}
       toastMsg("Test sent",address);
     }catch(e){toastMsg("Test failed",e.message,true);}finally{sendTest.disabled=false;sendTest.textContent=old;}
@@ -1441,6 +1444,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!att || !att.base64 || !att.name)return;
     tracks=tracks.filter(t=>t.kind!=="studio-document");
     const size=Number(att.size)||Math.floor(String(att.base64).length*3/4);
+    if(attachmentBytes(tracks)+size>ATTACHMENT_LIMIT_BYTES){if(typeof toastMsg==="function")toastMsg("Document not attached","Total attachments would exceed 20 MB.",true);return;}
     tracks.push({
       name:String(att.name),
       size:size,
