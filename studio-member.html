@@ -592,7 +592,8 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    button.disabled=true;el("billing-status").textContent="Opening PayPal…";
    try{
      const sdkGlobal=await loadPayPalSdk(config.mode);
-     const sdk=await sdkGlobal.createInstance({clientId:config.clientId,components:["paypal-payments"],pageType:"checkout"});
+     const tokenData=await paypalCall({action:"client-token"});
+     const sdk=await sdkGlobal.createInstance({clientToken:tokenData.clientToken,components:["paypal-payments"],pageType:"checkout"});
      const eligible=await sdk.findEligibleMethods({currencyCode:config.chargeCurrency});
      if(!eligible.isEligible("paypal"))throw Error("PayPal is not available for this browser/account.");
      let intentId=null;
@@ -604,16 +605,22 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
          await loadBilling();
        },
        onCancel:()=>{el("billing-status").textContent="PayPal checkout cancelled. No payment was recorded.";},
-       onError:()=>{el("billing-status").textContent="PayPal checkout could not be completed. Check the invoice before retrying.";}
+       onError:error=>{console.error("PayPal session error",error);el("billing-status").textContent="PayPal checkout could not be completed. Check the invoice before retrying.";}
      });
-     const createOrder=async()=>{
+     const createOrderPromise=(async()=>{
        const created=await paypalCall({action:"create",invoiceId:invoice.id,portion});
        intentId=created.intentId;
        el("billing-status").textContent="PayPal will charge "+created.chargeCurrency+" "+Number(created.chargeAmount).toFixed(2)+" for "+created.invoiceCurrency+" "+Number(created.amount).toFixed(2)+". Review the amount in PayPal before approving.";
        return {orderId:created.orderId};
-     };
-     await session.start({presentationMode:"auto"},createOrder());
-   }catch(e){el("billing-status").textContent=e.message||"PayPal checkout could not be started.";}
+     })();
+     const modes=["popup","modal"];
+     let lastError=null;
+     for(const presentationMode of modes){
+       try{await session.start({presentationMode},createOrderPromise);lastError=null;break;}
+       catch(error){lastError=error;if(!error?.isRecoverable)break;}
+     }
+     if(lastError)throw lastError;
+   }catch(e){console.error("PayPal checkout start failed",e);el("billing-status").textContent=e.message||"PayPal checkout could not be started.";}
    finally{button.disabled=false;}
  }
  async function loadBilling(){
