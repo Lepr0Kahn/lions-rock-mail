@@ -287,6 +287,10 @@
     .cloud-signed .btn { flex:1; }
   }
 
+
+/* mac-horizontal-nav-fix */
+.nav-tabs{max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-gutter:stable;}
+.nav-tabs > *{flex:0 0 auto!important;}
 </style>
 <style>
   body { padding: 12px !important; }
@@ -1088,6 +1092,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wireEmail);else wireEmail();
 })();
+</script>
+
+<script data-mac-horizontal-nav-fix>
+(()=>{const selector=".nav-tabs";function bind(root=document){root.querySelectorAll(selector).forEach(el=>{if(el.dataset.hscrollBound)return;el.dataset.hscrollBound="1";el.addEventListener("wheel",e=>{if(el.scrollWidth<=el.clientWidth)return;const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!delta)return;e.preventDefault();el.scrollLeft+=delta;},{passive:false});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>bind());else bind();})();
 </script>
 </body>
 </html>
