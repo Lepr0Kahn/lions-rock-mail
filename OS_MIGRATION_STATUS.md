@@ -48,3 +48,10 @@ Custom future rewards can be added, edited, activated and archived by Owner. Cla
 
 ## Calendar synchronization and current next steps
 Cal.com synchronization is active, with six hidden zero-payment services, a signed webhook and durable server queue. Server-role access and live read-only account/event/webhook/availability checks passed. Booking/invoice integration and shared sequence checks passed in rollback-only transactions. A self-conflict in rescheduling availability was fixed using the verified existing provider UID. Real booking, notifications, webhook lifecycle and browser acceptance remain pending. See CAL_COM_SYNC_STATUS.md and BUILD_NEXT_STEPS.md; approval/sign-in tasks are saved there while independent work proceeds.
+
+
+## Emergent parity hardening — 2026-10-02
+- Progression integrity was re-audited against the Emergent rewards implementation. The merged app intentionally computes XP from an immutable, idempotent career-event ledger rather than storing a second mutable XP total. Duplicate source events are prevented by database uniqueness, replay reads do not award XP, reversals preserve evidence while removing current credit, and per-project delivery scoring is capped.
+- Emergent has 12 badges; the merged app currently exposes 9. The three intentionally omitted badges depend on authoritative `session_completed` / `cycle_completed` events. Elapsed calendar time is not treated as verified attendance, so those awards remain disabled until a trustworthy completion record exists.
+- Owner reward exposure planning is implemented: configurable estimated hours/BBD value per reward, 90-day planning-hours budget, live/fulfilled/theoretical exposure and capacity warnings. It does not alter paid services or invoices.
+- A read-only Owner Assurance tab is implemented in Admin. It checks calendar queue failures/stale leases, booking/calendar/invoice consistency, invoice arithmetic, career-event duplication, reward exposure and unread Owner notifications. The live database check on 2026-10-02 returned healthy with zero integrity exceptions.
