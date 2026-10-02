@@ -17,10 +17,11 @@ const message=t=>{el("notice").textContent=t;resize();};
 const time=t=>new Intl.DateTimeFormat("en-GB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(t));
 function option(select,value,label){const o=document.createElement("option");o.value=value;o.textContent=label;select.append(o);}
 function resize(){parent.postMessage({type:"lions-rock-booking-height",height:Math.ceil(document.body.getBoundingClientRect().height)},location.origin);}
+async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
 async function load(){
- const version=++generation;const session=(await sb.auth.getSession()).data.session;
+ const version=++generation;let session;try{session=(await withLoadTimeout(sb.auth.getSession(),"Booking sign-in check",10000)).data.session;}catch(error){message(error.message||"Could not check booking access. Refresh to retry.");return;}
  el("workspace").classList.add("hidden");if(!session){message("Sign in to Studio to access bookings.");return;}
- uid=session.user.id;const mr=await sb.from("app_memberships").select("*").eq("user_id",uid).single();const m=mr.data;
+ uid=session.user.id;let mr;try{mr=await withLoadTimeout(sb.from("app_memberships").select("*").eq("user_id",uid).single(),"Booking access check");}catch(error){message(error.message||"Could not check booking access. Refresh to retry.");return;}const m=mr.data;
  if(version!==generation)return;
  if(mr.error||!m||m.access_status!=="active"||!["paid","comped"].includes(m.payment_status)||(m.expires_at&&new Date(m.expires_at)<=new Date())||(m.role!=="owner"&&!m.artist_member_enabled)){message("Active Artist access is required.");return;}
  owner=m.role==="owner";minor=!!m.is_minor;document.body.classList.toggle("owner-workspace",owner);el("catalogue").classList.toggle("hidden",!owner);el("artist-field").classList.toggle("hidden",!owner);
