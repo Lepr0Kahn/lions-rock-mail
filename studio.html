@@ -142,7 +142,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=9" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=32" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=33" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=14" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -492,6 +492,7 @@ body.studio-authenticated .login-gate{display:none!important}
  window.addEventListener("message",async e=>{
    if(e.origin!==location.origin||!e.data)return;
    if(e.data.type==="lions-rock-member-height"){if(e.source===member.contentWindow)fitSoon(member);return;}
+   if(e.data.type==="lions-rock-member-scroll-top"){if(e.source===member.contentWindow){fitSoon(member);requestAnimationFrame(()=>{const y=Math.max(0,member.getBoundingClientRect().top+window.scrollY-118);try{window.scrollTo({top:y,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,y);}});}return;}
    if(e.data.type==="lions-rock-hub-view-changed"){
      if(e.source!==hub.contentWindow||!hub.classList.contains("active")||!canBusiness(currentMembership)||!["clients","projects"].includes(e.data.view))return;
      pendingHubView=e.data.view;
