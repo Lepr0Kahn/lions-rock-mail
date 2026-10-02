@@ -26,8 +26,8 @@ Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live bro
 - Payment-provider selection/configuration and sandbox/production charges/refunds.
 - Direction Engine rule-based fallback is implemented, using authoritative evidence with five explain-only actions. Live UI and AI provider-backed generation remain outstanding. External operational notifications still require configuration.
 - Admin MFA enrollment/backup setup, inactive database/storage gates and caller-token invite guards are implemented. Enforcement remains off. User deferred remaining security acceptance tests to the final phase on 2026-10-01; no authenticator setup is required to continue build work.
-- Original data reconciliation, genuinely simultaneous committed invoice orders and final live browser verification remain outstanding.
-- Recognition-only XP/levels/badges remain enabled; monetary benefit claims/fulfilment/capacity remain disabled pending explicit approval.
+- Historical data import is explicitly out of scope by user decision: there are no old records to export. Genuinely simultaneous committed invoice orders and final live browser verification remain outstanding.
+- Artist development reward catalogue and claim/approval/fulfilment queue are implemented separately from the paid menu. Five draft experiences remain inactive until Owner configures scope, XP milestone and capacity. XP is eligibility, not spent currency; no price discounts or automatic paid-menu bookings.
 
 Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidence remains in FUNCTIONAL_TESTS.md.
 
@@ -42,3 +42,7 @@ Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidenc
 
 ## Original data reconciliation
 Source/schema comparison recorded in DATA_RECONCILIATION.md. Historical records and file bytes cannot be declared reconciled without an authoritative source database export and explicit account/file mapping. Demo seeds were identified and not imported. Beat mood/key metadata and exclusive pricing are confirmed source/target feature gaps; existing master/lease release controls must be preserved when extending the catalogue.
+
+
+## Artist development reward benefits
+Custom future rewards can be added, edited, activated and archived by Owner. Claims reserve catalogue capacity and preserve reward scope/XP snapshots; approval/fulfilment recheck Artist eligibility. Historical-data import is not required per user instruction. See REWARD_BENEFITS_STATUS.md for final-phase checks.

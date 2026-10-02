@@ -112,3 +112,12 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 - Check Barbados session times, delivery access expiry, vault status and exclusive prior-lease disclosure. No public download tokens or audio attachments.
 - Existing Mail resets prior draft attachments/CC/BCC; review before manually sending. Live forwarding/UI/Gmail checks remain final phase.
 - Automated notice module checks passed adult/guardian recipients, no attachment, missing guardian, cancelled booking and invalid kind. All modified page scripts parse.
+
+
+## Artist development reward benefits
+- Owner Rewards: add/edit a custom reward, set scope, XP milestone and capacity, activate/archive. Draft defaults stay inactive until configured.
+- Artist: eligible claim, insufficient XP and sold-out state; repeat request reuses claim. Confirm one successful claim per reward.
+- Owner queue: approve, decline with reason, record delivered experience with notes; repeat fulfilment is safe. Confirm paid menu prices and invoices unchanged.
+- Verify snapshots remain after catalogue edits; corrected XP or suspended Artist blocks approval/fulfilment. Confirm capacity cannot drop below reserved/fulfilled claims.
+- Final phase: concurrent last-place requests, account isolation, Owner MFA, phone layout and live Auth updates.
+- No old-data export/import required; user explicitly excluded historical migration.
