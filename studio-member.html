@@ -60,6 +60,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
 (function(){
  const sb=window.supabase.createClient("https://xsvczfqvscnvmngwcmtp.supabase.co","sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const el=id=>document.getElementById(id);
+async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistMinorIds=new Set(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
@@ -293,10 +294,10 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
 
  async function load(){
    el("workspace").classList.add("hidden");const version=++generation;
-   const session=(await sb.auth.getSession()).data.session;
+   let session;try{session=(await withLoadTimeout(sb.auth.getSession(),"Artist sign-in check",10000)).data.session;}catch(error){return deny(error.message||"Could not check your sign-in. Refresh to retry.");}
    if(version!==generation)return;
    if(!session)return deny("Sign in to Lions Rock Studio to open your artist workspace.");
-   const member=await sb.from("app_memberships").select("role,access_status,payment_status,expires_at,business_name,artist_member_enabled,is_minor").eq("user_id",session.user.id).maybeSingle();
+   let member;try{member=await withLoadTimeout(sb.from("app_memberships").select("role,access_status,payment_status,expires_at,business_name,artist_member_enabled,is_minor").eq("user_id",session.user.id).maybeSingle(),"Artist access check");}catch(error){return deny(error.message||"Could not check artist access. Refresh to retry.");}
    if(version!==generation)return;
    const m=member.data;
    if(member.error)return deny("Could not check artist access. Refresh to retry.");
