@@ -123,3 +123,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Release guard acceptance: Owner cannot release before full invoice payment is recorded.
 - Delete integrity acceptance: once lease/request history exists, the instrumental cannot be permanently deleted because the request FK protects history; use Archive instead.
 - Live approval/payment/release was intentionally not committed while the requesting Artist has no Artist Name. Once that Artist signs in and completes onboarding, the existing request can continue normally without recreating it.
+
+
+## PayPal sandbox acceptance — 2 October 2026
+- Sandbox credentials verified in the secure Supabase payment worker.
+- Artist checkout created a PayPal order for INV-0005 and captured USD 50.00 for BBD 100.00 at the configured 2.00 BBD/USD conversion.
+- Verified capture recorded exactly one Lions Rock payment: receipt INV-0005-P001; invoice status paid; amount paid BBD 100.00; balance BBD 0.00.
+- Nejes lease released only after full payment and the Artist gained clean-master access after release.
+- PayPal webhook configuration repaired: one matching listener now subscribes to CHECKOUT.ORDER.APPROVED, PAYMENT.CAPTURE.COMPLETED, PAYMENT.CAPTURE.DENIED and PAYMENT.CAPTURE.REFUNDED.
+- Real PAYMENT.CAPTURE.COMPLETED event replayed from PayPal and accepted with HTTP 200, stored once in studio_paypal_events.
+- Same PayPal event replayed again; idempotency passed: one webhook row, one payment row, no duplicate invoice credit.
+- PayPal health endpoint is read-only after testing. Refund semantics remain intentionally unimplemented pending business rules for refunded licences/releases.
