@@ -108,7 +108,7 @@
      if(r.error)throw r.error;const d=r.data;box.replaceChildren();
      function line(text,tag="p"){const n=document.createElement(tag);n.textContent=text;box.append(n);return n;}
      line("Level "+d.level+" · "+d.title,"h3");line(d.xp+" XP"+(d.next_at?" · "+d.xp_to_next+" XP to the next level":" · Highest level"));
-     line("Recognition starts "+new Date(d.starts_at).toLocaleDateString("en-BB",{timeZone:"America/Barbados"})+". Current eligible evidence counts; corrections can reduce XP. Discounts and free-service benefits are disabled.").className="muted";
+     line("Recognition starts "+new Date(d.starts_at).toLocaleDateString("en-BB",{timeZone:"America/Barbados"})+". Current eligible evidence counts; corrections can reduce XP. Artist development experiences are managed separately in Rewards; XP is not spent.").className="muted";
      line("Badges","h3");d.badges.forEach(b=>{const p=line((b.earned?"Earned · ":"To earn · ")+b.name+" · "+b.requirement);if(!b.earned)p.className="muted";});
      const detail=document.createElement("details"),summary=document.createElement("summary");summary.textContent="XP evidence ("+d.awards.length+")";detail.append(summary);
      d.awards.forEach(a=>{const p=document.createElement("p");p.textContent="+"+a.points+" · "+a.key.replaceAll("_"," ")+" · "+new Date(a.occurred_at).toLocaleDateString();detail.append(p);});box.append(detail);

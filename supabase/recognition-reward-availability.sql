@@ -1,0 +1,1 @@
+do $$declare d text;begin select pg_get_functiondef(p.oid) into d from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='artist_recognition';d:=replace(d,'''benefits_enabled'',false','''benefits_enabled'',exists(select 1 from private.studio_rewards where active and not archived)');execute d;end;$$;
