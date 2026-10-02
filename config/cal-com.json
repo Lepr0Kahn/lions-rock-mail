@@ -1,0 +1,52 @@
+{
+  "provider": "cal.com",
+  "username": "bookleprokahn",
+  "bookingUrl": "https://cal.com/bookleprokahn",
+  "timeZone": "America/Barbados",
+  "enabled": false,
+  "status": "mapping-only-not-connected",
+  "events": [
+    {
+      "eventTypeId": 5500451,
+      "title": "Record an AD",
+      "slug": "record-an-ad",
+      "observedDurationMinutes": 60,
+      "targetDurationMinutes": 60
+    },
+    {
+      "eventTypeId": 5499308,
+      "title": "Record a song",
+      "slug": "leprokahn",
+      "observedDurationMinutes": 60,
+      "targetDurationMinutes": 60
+    },
+    {
+      "eventTypeId": 5500448,
+      "title": "Instrumental mix",
+      "slug": "instrumental-mix",
+      "observedDurationMinutes": 60,
+      "targetDurationMinutes": 60
+    },
+    {
+      "eventTypeId": 5500367,
+      "title": "Vocal mix",
+      "slug": "vocal-mix",
+      "observedDurationMinutes": 60,
+      "targetDurationMinutes": 60
+    },
+    {
+      "eventTypeId": 5500456,
+      "title": "Full mix",
+      "slug": "full-mix",
+      "observedDurationMinutes": 60,
+      "targetDurationMinutes": 120
+    },
+    {
+      "eventTypeId": null,
+      "title": "Instrumental creation",
+      "slug": null,
+      "targetDurationMinutes": 180
+    }
+  ],
+  "depositPercent": 50
+}
