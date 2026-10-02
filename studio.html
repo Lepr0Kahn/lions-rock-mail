@@ -214,6 +214,19 @@ body.studio-authenticated .login-gate{display:none!important}
    }
    if(status){status.classList.remove("err");status.textContent="Checking access…";}
 
+   // Validate cached credentials against Auth before presenting privileged workspaces.
+   const verifiedUser=await sb.auth.getUser();
+   if(!isCurrent())return;
+   if(verifiedUser.error||!verifiedUser.data?.user||verifiedUser.data.user.id!==session.user.id){
+     const invalidSession=["session_not_found","refresh_token_not_found","refresh_token_already_used","bad_jwt"].includes(verifiedUser.error?.code);
+     accessDenialMessage=invalidSession?"Your Studio session has ended. Sign in again.":"Unable to verify your Studio session. Please try signing in again.";
+     currentSession=null;currentMembership=null;
+     showGateSection("signin-view");
+     if(status){status.textContent=accessDenialMessage;status.classList.add("err");}
+     if(invalidSession)await sb.auth.signOut({scope:"local"});
+     return;
+   }
+
    const m=await sb.from("app_memberships")
      .select("role,access_status,payment_status,expires_at,business_name,business_tools_enabled,artist_member_enabled,plan")
      .eq("user_id",session.user.id)
