@@ -75,3 +75,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Verified each OS booking retained exactly one invoice throughout the lifecycle: INV-0003 and INV-0004 respectively.
 - Verified the booking invoices retained the configured 50% deposit percentage after reschedule/duration replacement.
 - Final cancellation leaves the linked invoice void, as intended, without creating a replacement invoice number.
+
+
+## File / audio delivery acceptance — 2 October 2026
+- Verified the private `artist-project-files` bucket and RLS read policy only expose registered project files to an active Artist owner of the file or the Studio Owner, and deny expired deliveries.
+- Verified existing production delivery metadata matches the registered file record exactly (41-byte legacy text test master; no audio object existed yet for byte-level playback acceptance).
+- Rollback-only production test: forced the existing master expiry into the past; storage visibility dropped to 0; called `reissue_artist_delivery`; storage visibility returned to 1; transaction rolled back so production expiry was unchanged.
+- Verified master / MP3 registration receives a 30-day expiry and collection recording requires a currently available own delivery.
+- Added inline audio playback for project files with common audio extensions (MP3, WAV, M4A, AAC, OGG/OGA, FLAC, WebM), using the same authenticated private-bucket download path.
+- Added 15-second timeout/error exits for project audio playback and file downloads and object-URL cleanup when project/file context changes.
+- Final actual audio-byte playback/download acceptance still requires at least one real audio project file in the bucket; the current production object is text/plain, not audio.
+- Vercel production was still on commit `e81f47a...` when checked, so the latest Artist workspace audio UI and final cache/version bumps were in GitHub but not yet reflected by the production deployment.
