@@ -121,3 +121,11 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 - Verify snapshots remain after catalogue edits; corrected XP or suspended Artist blocks approval/fulfilment. Confirm capacity cannot drop below reserved/fulfilled claims.
 - Final phase: concurrent last-place requests, account isolation, Owner MFA, phone layout and live Auth updates.
 - No old-data export/import required; user explicitly excluded historical migration.
+
+
+## Reward scheduling and notices
+- Owner: approve then schedule/reschedule with future Barbados date/time, duration and location. Verify Artist/guardian views see the latest details.
+- Cancel requested/approved claim with reason; verify capacity is returned and Artist can submit a fresh claim. Fulfilled claims cannot cancel.
+- Prepare approval/scheduled/fulfilled/declined/cancelled reward email; verify current artist or guardian address, no old attachments, manual review/send.
+- Check missing recipient blocks draft. Confirm scheduling creates no paid-menu booking/invoice and manually check calendar availability.
+- Live phone input, frame forwarding, email sending and security acceptance remain final phase.

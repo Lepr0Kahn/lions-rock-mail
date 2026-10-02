@@ -1,5 +1,13 @@
 /* Prepare drafts from current records; never send automatically. */
 async function studioNoticeEmail(sb,kind,id){
+ if(kind==='reward'){
+  const r=await sb.rpc('studio_reward_workspace',{operation:'notice',payload:{claim_id:id}});if(r.error)throw Error(r.error.message||'Could not load reward notice.');
+  const c=r.data.claim,to=r.data.recipient;if(!to||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to.email||''))throw Error('Save a valid artist or guardian contact first.');
+  const time=v=>new Intl.DateTimeFormat('en-BB',{timeZone:'America/Barbados',dateStyle:'full',timeStyle:'short'}).format(new Date(v));
+  const state=c.status==='approved'?(c.scheduled_at?'scheduled':'approved'):c.status==='fulfilled'?'fulfilled':c.status==='cancelled'?'cancelled':'declined';
+  const body='Your artist development reward has been '+state+'.\n\nReward: '+c.title_snapshot+'\nScope: '+c.description_snapshot+(c.status==='approved'&&c.scheduled_at?'\nWhen: '+time(c.scheduled_at)+' (Barbados)\nDuration: '+c.duration_minutes+' minutes\nLocation: '+c.location:'')+(c.owner_note?'\nStudio note: '+c.owner_note:'')+(c.status==='approved'&&!c.scheduled_at?'\nThe studio will arrange scheduling with you.':'')+'\n\nOpen Studio: https://lions-rock-mail.vercel.app/studio';
+  return {name:to.name||'Artist',email:to.email,attachment:null,subject:'Artist reward '+state+' — '+c.title_snapshot,greeting:'Hello '+(to.name||'Artist')+',',body,signoff:'Lions Rock Studio',documentType:'reward notice'};
+ }
  const tables={booking:'studio_bookings',delivery:'artist_project_files',vault:'studio_instrumental_requests'};
  if(!tables[kind]||! /^[0-9a-f-]{36}$/i.test(id||''))throw Error('Invalid notice record.');
  const source=await sb.from(tables[kind]).select('*').eq('id',id).single();if(source.error)throw Error('Could not load the notice record.');const row=source.data;

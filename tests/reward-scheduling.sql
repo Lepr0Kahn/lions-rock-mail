@@ -1,0 +1,20 @@
+begin;
+update public.app_memberships set access_status='active',payment_status='comped',deleted_at=null,expires_at=null,artist_member_enabled=true where user_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1';
+do $$declare reward uuid;claim uuid;newclaim uuid;result jsonb;begin
+perform set_config('request.jwt.claims','{"sub":"1204ab25-7433-43a5-80e1-7a66b2eee057","role":"authenticated","aal":"aal2"}',true);
+reward:=(public.studio_reward_workspace('save','{"title":"Reward schedule fixture","description":"Brand experience","minimum_xp":0,"capacity":1,"active":true}'::jsonb)->>'id')::uuid;
+perform set_config('request.jwt.claims','{"sub":"8da3fa1f-10ef-4fac-8294-279e6a9e61b1","role":"authenticated","aal":"aal1"}',true);
+claim:=(public.studio_reward_workspace('claim',jsonb_build_object('reward_id',reward))->>'id')::uuid;
+perform set_config('request.jwt.claims','{"sub":"1204ab25-7433-43a5-80e1-7a66b2eee057","role":"authenticated","aal":"aal2"}',true);
+perform public.studio_reward_workspace('approve',jsonb_build_object('claim_id',claim));
+result:=public.studio_reward_workspace('schedule',jsonb_build_object('claim_id',claim,'scheduled_at',now()+interval '3 days','duration_minutes',60,'location','Studio'));
+if (result->>'duration_minutes')::int<>60 or result->>'location'<>'Studio' then raise exception 'Schedule not saved';end if;
+result:=public.studio_reward_workspace('notice',jsonb_build_object('claim_id',claim));if result->'recipient'->>'email' is null then raise exception 'Notice recipient absent';end if;
+perform public.studio_reward_workspace('cancel',jsonb_build_object('claim_id',claim,'note','Scheduling conflict'));
+perform public.studio_reward_workspace('cancel',jsonb_build_object('claim_id',claim,'note','Retry'));
+perform set_config('request.jwt.claims','{"sub":"8da3fa1f-10ef-4fac-8294-279e6a9e61b1","role":"authenticated","aal":"aal1"}',true);
+newclaim:=(public.studio_reward_workspace('claim',jsonb_build_object('reward_id',reward))->>'id')::uuid;
+if newclaim=claim then raise exception 'Cancellation did not release place';end if;
+end;$$;
+select 'Schedule, notice payload, cancellation retry, released capacity and fresh claim passed' result;
+rollback;
