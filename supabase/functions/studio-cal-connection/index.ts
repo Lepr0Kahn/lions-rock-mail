@@ -25,7 +25,32 @@ Deno.serve(async (req) => {
  if(profile.status!=="success"||profile.data?.username!=="bookleprokahn"||profile.data?.id!==2390745) return reply({configured:true,verified:false,syncEnabled:false,error:"Key does not match the configured Lions Rock Cal.com account."},409);
  let body;try{body=await req.json();}catch{return reply({error:"Invalid request"},400);}
  const action=body.action||"check";
- if(!["check","full-mix-duration"].includes(action))return reply({error:"Unknown action"},400);
+ if(!["check","full-mix-duration","instrumental-creation"].includes(action))return reply({error:"Unknown action"},400);
+ if(action==="instrumental-creation"){
+   const base="https://api.cal.com/v2/event-types";
+   const h={Authorization:"Bearer "+key,"cal-api-version":"2026-06-12","Content-Type":"application/json"};
+   const listResponse=await fetch(base+"?username=bookleprokahn&eventSlug=instrumental-creation",{headers:h,redirect:"error",signal:AbortSignal.timeout(10000)});
+   if(!listResponse.ok)return reply({error:"Cal.com event access could not be verified."},502);
+   const listed=await listResponse.json();
+   if(listed.status!=="success"||!Array.isArray(listed.data))return reply({error:"Unexpected event response; no event was created."},502);
+   const existing=listed.data.filter(e=>e.slug==="instrumental-creation");
+   let id;
+   if(existing.length){
+     if(existing.length!==1||existing[0].ownerId!==2390745||existing[0].lengthInMinutes!==180||existing[0].hidden!==true||existing[0].confirmationPolicy?.type!=="always"||existing[0].confirmationPolicy?.disabled===true)return reply({error:"An Instrumental creation event already exists with different settings. Review it in Cal.com; it was not changed."},409);
+     id=existing[0].id;
+   }else{
+     const payload={title:"Instrumental creation",slug:"instrumental-creation",lengthInMinutes:180,hidden:true,confirmationPolicy:{type:"always",blockUnconfirmedBookingsInBooker:true,disabled:false},locations:[{type:"address",address:"Gunhill St.George",public:true}],description:"Three-hour instrumental creation session. Studio confirmation required. Service pricing and 50% deposit are managed through Lions Rock Studio OS."};
+     const created=await fetch(base,{method:"POST",headers:h,body:JSON.stringify(payload),redirect:"error",signal:AbortSignal.timeout(10000)});
+     if(!created.ok)return reply({error:"Event creation was not confirmed. Check Cal.com before trying again; no automatic retry was made."},502);
+     const result=await created.json();id=result.data?.id;
+     if(result.status!=="success"||!Number.isSafeInteger(id))return reply({error:"Event creation result is uncertain. Check Cal.com before trying again."},502);
+   }
+   const verifyResponse=await fetch(base+"/"+id,{headers:h,redirect:"error",signal:AbortSignal.timeout(10000)});
+   if(!verifyResponse.ok)return reply({error:"Event may exist, but verification failed. Check Cal.com before trying again."},502);
+   const verified=await verifyResponse.json(),event=verified.data;
+   if(verified.status!=="success"||event?.slug!=="instrumental-creation"||event?.ownerId!==2390745||event?.lengthInMinutes!==180||event?.hidden!==true||event?.confirmationPolicy?.type!=="always"||event?.confirmationPolicy?.disabled===true)return reply({error:"Event settings could not be verified. Review the event in Cal.com."},502);
+   return reply({verified:true,eventTypeId:id,syncEnabled:false,message:"Instrumental creation is verified at 3 hours, hidden from your public profile and requiring studio confirmation. OS pricing and deposits are not synchronized yet."});
+ }
  if(action==="full-mix-duration"){
    const url="https://api.cal.com/v2/event-types/5500456";
    const h={Authorization:"Bearer "+key,"cal-api-version":"2026-06-12","Content-Type":"application/json"};
