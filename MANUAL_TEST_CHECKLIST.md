@@ -95,3 +95,12 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 - Owner: add/edit an instrumental with mood and musical key; save, refresh and reopen. Confirm values remain and catalogue displays them.
 - Blank metadata is allowed for existing items. Key is descriptive text, not automatic audio-key detection. Unicode sharps/flats should display correctly.
 - Database rollback saved Reflective / F♯ minor successfully; current scripts parse and save/display wiring checks passed. Live UI checks remain in final phase.
+
+
+## Exclusive instrumental flow
+- Owner sets optional exclusive price and separate terms; blank price disables offering. Artist/guardian sees prior-lease disclosure.
+- Request exclusive; approve twice and verify same invoice/number. Competing exclusive or lease approvals must be blocked during reservation; resolve already approved leases first.
+- Unpaid/draft/void invoice must not release. Full recorded payment plus Owner release marks sold and removes future offers; repeat release is safe.
+- Existing released licensees retain catalogue/master path subject to existing payment/guardian checks. No download expiry is treated as licence termination.
+- Minor views show availability, never exclusive price/terms. Guardian reviews invoiced terms.
+- Refund after release, concurrent browser requests, actual download bytes, refreshed UI and guardian flows remain final acceptance checks.
