@@ -37,6 +37,10 @@ Owner sign-in, initial booking synchronization, linked invoice reuse, duration/t
 4. Any paid AI provider connection, if requested. Current Direction Engine uses the existing rule-based guidance; no paid provider purchase is required for that path.
 5. Final security/MFA/invite/suspension/isolation acceptance, as deferred by the user.
 
+## Remaining implementation
+
+- Implement an authoritative **session completed** record/action (Owner-confirmed completion, not inferred from elapsed calendar time), then use that evidence for the Emergent `session_completed` XP/badges and future cycle-completion logic.
+
 ## Deferred acceptance — final testing phase
 
 Real calendar webhook delivery/rescheduling/cancellation, recovery under a real provider timeout, simultaneous committed orders, actual file playback/download, Mail sending and device checks remain on MANUAL_TEST_CHECKLIST.md. Database rollback tests and mocks do not establish those passes.
