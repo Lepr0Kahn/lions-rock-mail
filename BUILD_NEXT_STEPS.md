@@ -37,10 +37,6 @@ Owner sign-in, initial booking synchronization, linked invoice reuse, duration/t
 4. Any paid AI provider connection, if requested. Current Direction Engine uses the existing rule-based guidance; no paid provider purchase is required for that path.
 5. Final security/MFA/invite/suspension/isolation acceptance, as deferred by the user.
 
-## Remaining implementation
-
-- Implement an authoritative **session completed** record/action (Owner-confirmed completion, not inferred from elapsed calendar time), then use that evidence for the Emergent `session_completed` XP/badges and future cycle-completion logic.
-
 ## Deferred acceptance — final testing phase
 
 Real calendar webhook delivery/rescheduling/cancellation, recovery under a real provider timeout, simultaneous committed orders, actual file playback/download, Mail sending and device checks remain on MANUAL_TEST_CHECKLIST.md. Database rollback tests and mocks do not establish those passes.
@@ -53,3 +49,13 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Added Owner-configurable reward cost estimates and 90-day exposure planning. Live backend and deployed rewards UI verified present.
 - Added a read-only Owner Assurance RPC and Admin tab. Current live database result is healthy: zero pending/failed calendar operations, zero stale leases, zero booking/invoice integrity exceptions and zero duplicate career source events.
 - The remaining three Emergent badges tied to session/cycle completion stay intentionally disabled until authoritative completion evidence exists; elapsed time alone is not accepted as attendance.
+
+
+## Authoritative session completion — completed 2 October 2026
+- Owner can mark a past confirmed session completed from Studio Booking Queue.
+- Completion is a separate one-per-booking record; booking/calendar status is not rewritten.
+- Completion writes one idempotent `session_completed` career event, worth 200 XP.
+- Emergent badges **In The Room** (1 completed session) and **Studio Regular** (5 completed sessions) are now available.
+- Career track `sessions_completed` now uses Owner-confirmed records instead of elapsed confirmed bookings.
+- Owner Assurance flags past confirmed sessions that still need completion review.
+- Real acceptance of the completion button remains naturally deferred until there is an actual past confirmed session to complete.
