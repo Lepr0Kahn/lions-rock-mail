@@ -104,3 +104,11 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 - Existing released licensees retain catalogue/master path subject to existing payment/guardian checks. No download expiry is treated as licence termination.
 - Minor views show availability, never exclusive price/terms. Guardian reviews invoiced terms.
 - Refund after release, concurrent browser requests, actual download bytes, refreshed UI and guardian flows remain final acceptance checks.
+
+
+## Studio notice email drafts
+- Owner: confirmed booking → Prepare confirmation email; master/MP3 delivery → Prepare delivery email; approved/released vault request → Prepare vault email.
+- Verify current artist recipient for adults and recorded guardian for minors. Missing guardian must block drafting.
+- Check Barbados session times, delivery access expiry, vault status and exclusive prior-lease disclosure. No public download tokens or audio attachments.
+- Existing Mail resets prior draft attachments/CC/BCC; review before manually sending. Live forwarding/UI/Gmail checks remain final phase.
+- Automated notice module checks passed adult/guardian recipients, no attachment, missing guardian, cancelled booking and invalid kind. All modified page scripts parse.

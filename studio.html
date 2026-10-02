@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0d0c0c">
+<script src="studio-notice-email.js?v=1"></script>
 <script src="owner-mfa-gate.js?v=1"></script>
 <script src="payment-receipt.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -141,7 +142,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=9" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=24" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=25" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=6" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -519,6 +520,14 @@ body.studio-authenticated .login-gate{display:none!important}
        activate("documents","generator",{type:"lions-rock-booking-document",...r.data});
      }catch(error){toast(error.message||"Could not open the booking invoice.");}
      return;
+   }
+   if(e.data.type==="lions-rock-notice-email"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     const account=currentSession?.user?.id;if(!account)return;const request=++receiptEmailGeneration;
+     try{const draft=await studioNoticeEmail(sb,e.data.kind,e.data.recordId);
+       if(request!==receiptEmailGeneration||currentSession?.user?.id!==account||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+       pendingClient=draft;activate("mail");setTimeout(()=>{if(request!==receiptEmailGeneration||currentSession?.user?.id!==account||currentMembership?.role!=="owner"||!canBusiness(currentMembership)||pendingClient!==draft)return;mail.contentWindow.postMessage({type:"lions-rock-mail-client",...draft},location.origin);},60);
+     }catch(error){if(request===receiptEmailGeneration&&currentSession?.user?.id===account)toast(error.message||"Could not prepare notice.");}return;
    }
    if(e.data.type==="lions-rock-receipt-email"){
      if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
