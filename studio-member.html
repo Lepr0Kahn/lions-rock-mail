@@ -19,6 +19,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
 <section id="owner-operations" class="hidden owner-zone priority" aria-label="Studio action center">
 <div class="zone-head"><div><div class="eyebrow">Today at a glance</div><h2 class="zone-title">Studio action center</h2><p class="zone-copy">Start here. These are the items that may need your attention now.</p></div></div>
 <p id="operations-summary" class="muted ops-summary" role="status"></p>
+<div class="actions" id="owner-quick-access" aria-label="Owner quick access"><button type="button" id="quick-bookings">Bookings</button><button type="button" id="quick-payments">Payments</button><button type="button" id="quick-rewards">Rewards</button><button type="button" id="quick-analytics">Analytics</button><button type="button" id="quick-notifications">Notifications</button></div>
 <div class="ops-stats">
 <div class="card"><div class="eyebrow">Needs decision</div><div id="ops-pending" class="stat-value">—</div><p class="muted">Booking requests waiting for confirmation</p></div>
 <div class="card"><div class="eyebrow">On the calendar</div><div id="ops-upcoming" class="stat-value">—</div><p class="muted">Upcoming confirmed studio sessions</p></div>
@@ -71,6 +72,11 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
  el("shortcut-upcoming-sessions").onclick=()=>shortcut("bookings");
  el("shortcut-payments").onclick=()=>{if(isOwner){shortcut("payments");loadPayments();}};
  el("shortcut-projects").onclick=()=>shortcut("projects");
+ el("quick-bookings").onclick=()=>shortcut("bookings");
+ el("quick-payments").onclick=()=>{if(isOwner){shortcut("payments");loadPayments();}};
+ el("quick-rewards").onclick=()=>shortcut("rewards");
+ el("quick-analytics").onclick=()=>{if(isOwner){shortcut("analytics");loadAnalytics();}};
+ el("quick-notifications").onclick=()=>{shortcut("notifications");loadNotifications();};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&(e.source===el("booking-frame").contentWindow||e.source===el("rewards-frame").contentWindow)&&["lions-rock-booking-invoice","lions-rock-notice-email"].includes(e.data?.type)&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height)){el("booking-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);return;}if(e.origin===location.origin&&e.source===el("rewards-frame").contentWindow&&e.data?.type==="lions-rock-rewards-height"&&Number.isFinite(e.data.height)){el("rewards-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);}});
  function deny(text){clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
