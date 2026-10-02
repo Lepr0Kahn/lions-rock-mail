@@ -42,6 +42,10 @@ body{overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-in
 body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{display:none!important}
 body.studio-authenticated .login-gate{display:none!important}
 @media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
+
+/* mac-horizontal-nav-fix */
+.nav{max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-gutter:stable;}
+.nav > *{flex:0 0 auto!important;}
 </style>
 </head>
 <body>
@@ -673,6 +677,10 @@ body.studio-authenticated .login-gate{display:none!important}
  if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}
  init();
 })();
+</script>
+
+<script data-mac-horizontal-nav-fix>
+(()=>{const selector=".nav";function bind(root=document){root.querySelectorAll(selector).forEach(el=>{if(el.dataset.hscrollBound)return;el.dataset.hscrollBound="1";el.addEventListener("wheel",e=>{if(el.scrollWidth<=el.clientWidth)return;const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!delta)return;e.preventDefault();el.scrollLeft+=delta;},{passive:false});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>bind());else bind();})();
 </script>
 </body>
 </html>
