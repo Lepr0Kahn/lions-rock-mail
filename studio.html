@@ -26,7 +26,7 @@ body{overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-in
 .account{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.on{background:var(--green)}.pill{border:1px solid var(--border);padding:7px 10px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
 .authbox{display:none;align-items:center;gap:6px}.authbox input{width:150px;background:#111;border:1px solid var(--border);color:#fff;padding:8px}
 .nav{height:52px;display:flex;gap:5px;padding:6px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.04)}.nav button{flex:0 0 auto;background:transparent;border:0;color:var(--muted);padding:9px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer}.nav button.active{background:#b91c1c;border-color:#b91c1c;color:white}
-.stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;height:calc(100vh - 118px);border:0;background:var(--bg);display:none;overflow:hidden}.frame.active{display:block}
+.stage{min-height:calc(100vh - 118px);height:auto;position:relative}.frame{position:relative;width:100%;min-height:calc(100vh - 118px);height:auto;border:0;background:var(--bg);display:none;overflow:visible}.frame.active{display:block}
 .toast{position:fixed;right:16px;bottom:16px;background:#1c1b1b;border:1px solid var(--border);padding:12px 14px;font-size:12px;z-index:50;max-width:320px}
 .login-gate{min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(194,77,44,.13),transparent 32%),var(--bg)}
 .login-card{width:min(430px,100%);border:1px solid var(--border);background:rgba(20,19,19,.96);padding:34px 30px;box-shadow:0 28px 80px rgba(0,0,0,.48);text-align:center}
@@ -142,7 +142,7 @@ body.studio-authenticated .login-gate{display:none!important}
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=9" title="Lions Rock Mail"></iframe>
   <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=11" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=6" title="Lions Rock Clients and Projects"></iframe>
-  <iframe class="frame" id="member-frame" src="/studio-member.html?v=30" title="Lions Rock Artist Member"></iframe>
+  <iframe class="frame" id="member-frame" src="/studio-member.html?v=31" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=14" title="Lions Rock Access Administration"></iframe>
 </div>
 <script>
@@ -491,6 +491,7 @@ body.studio-authenticated .login-gate{display:none!important}
  let receiptEmailGeneration=0;
  window.addEventListener("message",async e=>{
    if(e.origin!==location.origin||!e.data)return;
+   if(e.data.type==="lions-rock-member-height"){if(e.source===member.contentWindow)fitSoon(member);return;}
    if(e.data.type==="lions-rock-hub-view-changed"){
      if(e.source!==hub.contentWindow||!hub.classList.contains("active")||!canBusiness(currentMembership)||!["clients","projects"].includes(e.data.view))return;
      pendingHubView=e.data.view;
