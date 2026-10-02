@@ -586,14 +586,14 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
 
  let billingGeneration=0,paypalSdkPromise=null;
  function clearBilling(){++billingGeneration;el("billing-list").replaceChildren();el("billing-status").textContent="";}
- async function paypalCall(body){const r=await withLoadTimeout(sb.functions.invoke("studio-paypal",{body}),"PayPal",18000);if(r.error)throw r.error;if(r.data?.error)throw Error(r.data.error);return r.data;}
+ async function paypalCall(body){const r=await withLoadTimeout(sb.functions.invoke("studio-paypal",{body}),"PayPal",18000);if(r.error){let message=r.error.message||"PayPal request failed.";try{const data=await r.error.context?.json();if(data?.error)message=data.error;}catch{}throw Error(message);}if(r.data?.error)throw Error(r.data.error);return r.data;}
  function loadPayPalSdk(mode){if(window.paypal?.createInstance)return Promise.resolve(window.paypal);if(paypalSdkPromise)return paypalSdkPromise;paypalSdkPromise=new Promise((resolve,reject)=>{const s=document.createElement("script");s.async=true;s.src=(mode==="live"?"https://www.paypal.com":"https://www.sandbox.paypal.com")+"/web-sdk/v6/core";s.onload=()=>window.paypal?.createInstance?resolve(window.paypal):reject(Error("PayPal SDK did not initialize."));s.onerror=()=>reject(Error("PayPal checkout could not load."));document.head.append(s);});return paypalSdkPromise;}
  async function startPayPalCheckout(invoice,portion,button,config){
    button.disabled=true;el("billing-status").textContent="Opening PayPal…";
    try{
      const sdkGlobal=await loadPayPalSdk(config.mode);
-     const tokenData=await paypalCall({action:"client-token"});
-     const sdk=await sdkGlobal.createInstance({clientToken:tokenData.clientToken,components:["paypal-payments"],pageType:"checkout"});
+     if(!config.clientId)throw Error("PayPal Client ID is not available to checkout.");
+     const sdk=await sdkGlobal.createInstance({clientId:config.clientId,components:["paypal-payments"],pageType:"checkout"});
      const eligible=await sdk.findEligibleMethods({currencyCode:config.chargeCurrency});
      if(!eligible.isEligible("paypal"))throw Error("PayPal is not available for this browser/account.");
      let intentId=null;
@@ -613,7 +613,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        el("billing-status").textContent="PayPal will charge "+created.chargeCurrency+" "+Number(created.chargeAmount).toFixed(2)+" for "+created.invoiceCurrency+" "+Number(created.amount).toFixed(2)+". Review the amount in PayPal before approving.";
        return {orderId:created.orderId};
      })();
-     const modes=["popup","modal"];
+     const modes=["payment-handler","popup","modal"];
      let lastError=null;
      for(const presentationMode of modes){
        try{await session.start({presentationMode},createOrderPromise);lastError=null;break;}
