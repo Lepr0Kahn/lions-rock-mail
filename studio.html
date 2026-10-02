@@ -187,6 +187,7 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  function canBusiness(m){return !!m&&(m.role==="owner"||m.business_tools_enabled===true)}
  function canArtist(m){return !!m&&(m.role==="owner"||m.artist_member_enabled===true)}
+ async function withAccessTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Please sign in again or refresh.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let sessionCheckGeneration=0;
  document.getElementById("mfa-signout").onclick=async()=>{await sb.auth.signOut({scope:"local"});await setSession(null);};
  async function setSession(session){
@@ -215,7 +216,9 @@ body.studio-authenticated .login-gate{display:none!important}
    if(status){status.classList.remove("err");status.textContent="Checking access…";}
 
    // Validate cached credentials against Auth before presenting privileged workspaces.
-   const verifiedUser=await sb.auth.getUser();
+   let verifiedUser;
+   try{verifiedUser=await withAccessTimeout(sb.auth.getUser(),"Studio access check");}
+   catch(error){if(!isCurrent())return;accessDenialMessage=error.message||"Unable to verify your Studio session.";currentSession=null;currentMembership=null;showGateSection("signin-view");if(status){status.textContent=accessDenialMessage;status.classList.add("err");}return;}
    if(!isCurrent())return;
    if(verifiedUser.error||!verifiedUser.data?.user||verifiedUser.data.user.id!==session.user.id){
      const invalidSession=["session_not_found","refresh_token_not_found","refresh_token_already_used","bad_jwt"].includes(verifiedUser.error?.code);
@@ -227,10 +230,12 @@ body.studio-authenticated .login-gate{display:none!important}
      return;
    }
 
-   const m=await sb.from("app_memberships")
+   let m;
+   try{m=await withAccessTimeout(sb.from("app_memberships")
      .select("role,access_status,payment_status,expires_at,business_name,business_tools_enabled,artist_member_enabled,plan")
      .eq("user_id",session.user.id)
-     .maybeSingle();
+     .maybeSingle(),"Membership check");}
+   catch(error){if(!isCurrent())return;accessDenialMessage=error.message||"Could not check your Lions Rock access.";currentSession=null;currentMembership=null;showGateSection("signin-view");if(status){status.textContent=accessDenialMessage;status.classList.add("err");}return;}
 
    if(inviteMode){
      if(!["business_tools","artist_member"].includes(inviteAccess)){
@@ -336,7 +341,9 @@ body.studio-authenticated .login-gate{display:none!important}
      window.scrollTo(0,0);
      setTimeout(()=>window.scrollTo(0,0),120);
    }
-   const s=await sb.auth.getSession();
+   let s;
+   try{s=await withAccessTimeout(sb.auth.getSession(),"Studio sign-in check",10000);}
+   catch(error){showGateSection("signin-view");const status=document.getElementById("gate-status");if(status){status.textContent=error.message||"Could not check your Studio sign-in. Refresh and try again.";status.classList.add("err");}return;}
    await setSession(s.data&&s.data.session);
  }
  async function signIn(email,password){
