@@ -64,3 +64,11 @@ Cal.com synchronization is active, with six hidden zero-payment services, a sign
 - Booking queue now has at-a-glance counts and filters for Needs Action, Upcoming, Past and Cancelled/Expired, with active work shown by default.
 - Embedded page versions were bumped to avoid stale cached UI.
 - Authoritative session completion is now an explicit remaining implementation item; completion will be Owner-confirmed evidence rather than inferred from elapsed time.
+
+
+## Mobile scrolling hardening — 2026-10-02
+- Fixed Rewards on mobile: the rewards page now reports its actual content height to Studio OS instead of relying on a fixed 1600px iframe.
+- Bookings and Rewards nested frames now resize dynamically and notify the outer Studio shell when their height changes.
+- Removed the outer Studio shell's viewport-height/hidden-overflow frame trap so active embedded pages can grow with their content and the browser remains the primary scroll surface.
+- Bumped embedded page versions to avoid stale cached layouts.
+- Reviewed Mail, Documents, Clients/Projects and Admin for the same full-page clipping pattern. No equivalent page-level trap was found. Mail's 700px iPhone preview remains intentionally internally scrollable and does not limit page scrolling.
