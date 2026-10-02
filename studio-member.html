@@ -8,6 +8,10 @@
 .ops-stats .card{padding:18px}.ops-stats .stat-value{font-size:28px}.ops-lists .card{padding:18px}.ops-lists .card h3{margin:0 0 6px;font-size:18px;font-family:Georgia,serif;font-weight:400}.ops-lists .card>.muted{margin-top:0}
 details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,.015);margin-top:24px}details.dashboard-fold>summary{cursor:pointer;list-style:none;padding:18px 20px;font-family:Georgia,serif;font-size:20px}details.dashboard-fold>summary::-webkit-details-marker{display:none}details.dashboard-fold>summary::after{content:"+";float:right;color:var(--gold);font-family:system-ui}details.dashboard-fold[open]>summary::after{content:"–"}details.dashboard-fold>.fold-body{padding:0 20px 20px}
 .section-divider{height:1px;background:var(--line);margin:24px 0}.project-audio{width:100%;margin-top:10px}.hidden{display:none!important}@media(max-width:700px){.ops-stats{grid-template-columns:1fr 1fr;gap:8px}.ops-lists{grid-template-columns:1fr;gap:14px}.wrap{padding:20px 14px}h1{font-size:30px}.layout{grid-template-columns:1fr}.card{padding:18px}.stats{gap:8px}.stats .card{padding:14px}.stat-value{font-size:26px}}
+
+/* mac-horizontal-nav-fix */
+nav{max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-gutter:stable;}
+nav > *{flex:0 0 auto!important;}
 </style></head><body><main class="wrap">
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
@@ -732,4 +736,8 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
  sb.auth.onAuthStateChange((_event,session)=>{if(!session){++generation;deny("Sign in to Lions Rock Studio to open your artist workspace.");}else setTimeout(load,0);});
  load();
 })();
-</script></body></html>
+</script>
+<script data-mac-horizontal-nav-fix>
+(()=>{const selector="nav";function bind(root=document){root.querySelectorAll(selector).forEach(el=>{if(el.dataset.hscrollBound)return;el.dataset.hscrollBound="1";el.addEventListener("wheel",e=>{if(el.scrollWidth<=el.clientWidth)return;const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!delta)return;e.preventDefault();el.scrollLeft+=delta;},{passive:false});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>bind());else bind();})();
+</script>
+</body></html>
