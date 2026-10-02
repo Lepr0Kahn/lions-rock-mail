@@ -38,3 +38,7 @@ Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidenc
 - Preserve live catalogue edits. Defaults: Full Mix two hours, instrumental creation three hours, other initial defaults one hour, adjustable booking time/duration and 50 percent deposits; exclude membership packages from the service import.
 - Reuse the shared account-scoped document allocator. Never create a second invoice numbering sequence for new OS modules.
 - Verify source behavior and adapt deliberately; source settings such as VAT, reward prices and membership applications are not automatically approved settings for this deployment.
+
+
+## Original data reconciliation
+Source/schema comparison recorded in DATA_RECONCILIATION.md. Historical records and file bytes cannot be declared reconciled without an authoritative source database export and explicit account/file mapping. Demo seeds were identified and not imported. Beat mood/key metadata and exclusive pricing are confirmed source/target feature gaps; existing master/lease release controls must be preserved when extending the catalogue.
