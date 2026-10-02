@@ -266,7 +266,7 @@
     var docs = (remote.documents || []).map(function (d) {
       var amountPaid = Number(d.amount_paid || 0);
       var total = Number(d.total || 0);
-      var localStatus = (typeof window.getStatusFromNumbers === "function")
+      var localStatus = d.status === "void" ? "void" : (typeof window.getStatusFromNumbers === "function")
         ? window.getStatusFromNumbers(d.doc_type, total, amountPaid, d.due_date)
         : (d.doc_type === "quote" ? "quote" : (amountPaid >= total && total > 0 ? "paid" : amountPaid > 0 ? "partial" : "due"));
       return {
@@ -428,6 +428,7 @@
   }
 
   function cloudDocStatus(d) {
+    if (d.payment_status === "void" || d.status === "void") return "void";
     var st = d.payment_status;
     if (!st && typeof window.getStatusFromNumbers === "function") st = window.getStatusFromNumbers(d.type, d.total, d.amount_paid, d.due_date);
     if (d.type === "quote") return "open";
