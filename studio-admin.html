@@ -32,6 +32,7 @@
     <button class="tab" data-view="members">Access List</button>
     <button class="tab" data-view="removed">Removed Members</button>
     <button class="tab" data-view="security">Admin Security</button>
+    <button class="tab" data-view="calendar">Calendar Connection</button>
   </div>
   <div class="panel" id="content"><div class="empty">Loading…</div></div>
 </div>
@@ -76,9 +77,27 @@
  function render(){
    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
    if(view==="security"){security.show();return;} security.leave();
+   if(view==="calendar"){renderCalendar();return;}
    view==="invite"?renderInvite():renderMembers();
  }
 
+ function renderCalendar(){
+   content.innerHTML='<h2>Cal.com connection</h2><p class="note">Check server access to bookleprokahn. Booking synchronization is still off.</p><button class="btn primary" id="check-cal">Check Cal.com connection</button><p id="cal-status" role="status" aria-live="polite"></p>';
+   document.getElementById("check-cal").onclick=async function(){
+     const button=this,status=document.getElementById("cal-status");
+     button.disabled=true;button.textContent="Checking…";status.textContent="Checking account access…";
+     try {
+       if(!await requireOwner())return;
+       const result=await sb.functions.invoke("studio-cal-connection",{body:{}});
+       if(view!=="calendar"||!status.isConnected)return;
+       let data=result.data;
+       if(result.error){try{data=await result.error.context.json();}catch(_){}throw new Error(data?.error||"Could not verify the connection. Check your sign-in and server secret.");}
+       if(data?.error)throw new Error(data.error);
+       status.textContent=data?.verified===true?"Connected to bookleprokahn. Account verified; automatic booking synchronization is still off.":data?.message||"Connection is not configured.";
+     }catch(error){if(view==="calendar"&&status.isConnected)status.textContent=error.message||"Connection check failed.";}
+     finally{button.disabled=false;button.textContent="Check Cal.com connection";}
+   };
+ }
  function renderInvite(){
    content.innerHTML=
      '<div class="form-grid">'+
