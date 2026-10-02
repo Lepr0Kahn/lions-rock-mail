@@ -241,6 +241,25 @@ body.studio-authenticated .login-gate{display:none!important}
      .maybeSingle(),"Membership check");}
    catch(error){if(!isCurrent())return;accessDenialMessage=error.message||"Could not check your Lions Rock access.";currentSession=null;currentMembership=null;showGateSection("signin-view");if(status){status.textContent=accessDenialMessage;status.classList.add("err");}return;}
 
+   // Recover an invite flow even if the auth redirect drops the invite query parameters.
+   if(!inviteMode && m.data?.access_status==="pending"){
+     const pendingAuto=await sb.from("studio_invites")
+       .select("id,access_type,status,expires_at,invited_at")
+       .eq("user_id",session.user.id)
+       .eq("status","pending")
+       .order("invited_at",{ascending:false})
+       .limit(1)
+       .maybeSingle();
+     if(!pendingAuto.error && pendingAuto.data && new Date(pendingAuto.data.expires_at)>new Date()){
+       inviteMode=true;
+       inviteAccess=pendingAuto.data.access_type;
+       const createdAt=new Date(session.user.created_at||0).getTime();
+       const invitedAt=new Date(pendingAuto.data.invited_at||0).getTime();
+       inviteExisting=!!createdAt && !!invitedAt && Math.abs(invitedAt-createdAt)>60000;
+       history.replaceState({},document.title,"/studio.html?invite=1&access="+encodeURIComponent(inviteAccess)+"&existing="+(inviteExisting?"1":"0"));
+     }
+   }
+
    if(inviteMode){
      if(!["business_tools","artist_member"].includes(inviteAccess)){
        accessDenialMessage="This invitation link is invalid.";
