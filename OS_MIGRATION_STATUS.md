@@ -72,3 +72,11 @@ Cal.com synchronization is active, with six hidden zero-payment services, a sign
 - Removed the outer Studio shell's viewport-height/hidden-overflow frame trap so active embedded pages can grow with their content and the browser remains the primary scroll surface.
 - Bumped embedded page versions to avoid stale cached layouts.
 - Reviewed Mail, Documents, Clients/Projects and Admin for the same full-page clipping pattern. No equivalent page-level trap was found. Mail's 700px iPhone preview remains intentionally internally scrollable and does not limit page scrolling.
+
+
+## Authoritative session completion — 2026-10-02
+- Added a private one-to-one completion record for confirmed studio bookings, recorded only by active Owner access after the scheduled end time.
+- Added an idempotent `session_completed` career event (200 XP), plus the **In The Room** and **Studio Regular** badges from the Emergent reference implementation.
+- Replaced the previous elapsed-time approximation in career tracks with authoritative completion records.
+- Booking Queue now separates **Needs completion** from **Completed** and provides the Owner-only completion action.
+- Assurance now reports past confirmed sessions awaiting completion review.
