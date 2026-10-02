@@ -25,7 +25,34 @@ Deno.serve(async (req) => {
  if(profile.status!=="success"||profile.data?.username!=="bookleprokahn"||profile.data?.id!==2390745) return reply({configured:true,verified:false,syncEnabled:false,error:"Key does not match the configured Lions Rock Cal.com account."},409);
  let body;try{body=await req.json();}catch{return reply({error:"Invalid request"},400);}
  const action=body.action||"check";
- if(!["check","full-mix-duration","instrumental-creation","availability-preview"].includes(action))return reply({error:"Unknown action"},400);
+ if(!["check","full-mix-duration","instrumental-creation","availability-preview","prepare-os-events"].includes(action))return reply({error:"Unknown action"},400);
+ if(action==="prepare-os-events"){
+   const specs=[["os-record-an-ad","OS · Record an Ad",60,5500451],["os-record-a-song","OS · Record a Song",60,5499308],["os-instrumental-mix","OS · Instrumental Mix",60,5500448],["os-vocal-mix","OS · Vocal Mix",60,5500367],["os-full-mix","OS · Full Mix",120,5500456]];
+   const base="https://api.cal.com/v2/event-types",h={Authorization:"Bearer "+key,"cal-api-version":"2026-06-12","Content-Type":"application/json"};
+   const request=async(url,options={})=>{const r=await fetch(url,{headers:h,redirect:"error",signal:AbortSignal.timeout(10000),...options});if(!r.ok)throw Error("provider");const data=await r.json();if(data.status!=="success")throw Error("provider");return data.data;};
+   const listed=await request(base);
+   if(!Array.isArray(listed))return reply({error:"Cal.com event list could not be verified."},502);
+   const completed=[];
+   const matches=(e,spec)=>e?.ownerId===2390745&&e.slug===spec[0]&&e.lengthInMinutes===spec[2]&&e.hidden===true&&Number(e.price||0)===0&&e.confirmationPolicy?.type==="always"&&e.confirmationPolicy?.disabled!==true;
+   for(const spec of specs){
+     try {
+       const found=listed.filter(e=>e.slug===spec[0]);let id;
+       if(found.length){if(found.length!==1||!matches(found[0],spec))return reply({error:"An OS event already exists with different settings. Review "+spec[1]+" in Cal.com.",completed},409);id=found[0].id;}
+       else{
+         const source=await request(base+"/"+spec[3]);
+         if(source?.ownerId!==2390745)return reply({error:"Source event ownership could not be verified.",completed},409);
+         const payload={title:spec[1],slug:spec[0],lengthInMinutes:spec[2],hidden:true,confirmationPolicy:{type:"always",blockUnconfirmedBookingsInBooker:true,disabled:false},locations:[{type:"address",address:"Gunhill St.George",public:true}],description:"Managed through Lions Rock Studio OS. Studio confirmation required; invoices and 50% deposits are handled separately in the OS."};
+         if(Number.isSafeInteger(source.scheduleId))payload.scheduleId=source.scheduleId;
+         const created=await request(base,{method:"POST",body:JSON.stringify(payload)});id=created?.id;
+         if(!Number.isSafeInteger(id))throw Error("uncertain");
+       }
+       const verified=await request(base+"/"+id);
+       if(!matches(verified,spec))throw Error("verification");
+       completed.push({id,slug:spec[0],durationMinutes:spec[2]});
+     }catch{return reply({error:"Preparation stopped at "+spec[1]+". Check Cal.com before trying again; completed events will be reused. No automatic retry was made.",completed},502);}
+   }
+   return reply({verified:true,syncEnabled:false,events:completed,message:"Five hidden OS events verified with no Cal.com payment collection. Your public paid events are unchanged. Booking synchronization is still off."});
+ }
  if(action==="availability-preview"){
    const mapping=[["0b305aae-87cc-4274-9656-bf1e921364ef",5500451,"Record an Ad",60],["8fc7f59d-cb46-4dd4-9d60-0c000fe7a814",5499308,"Record a Song",60],["7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15",5500448,"Instrumental Mix",60],["c1d6d89d-08ad-4a52-806c-fad0bab4eb51",5500367,"Vocal Mix",60],["196c7505-e8e8-4638-b0bb-83b6b2adf4c6",5500456,"Full Mix",120],["98954691-a825-48b9-8469-bf3bb4cd79ca",7314363,"Create Instrumental",180]];
    const selected=mapping.find(row=>row[0]===body.offeringId);
