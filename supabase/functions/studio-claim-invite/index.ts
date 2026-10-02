@@ -34,10 +34,6 @@ Deno.serve(async (req) => {
   const user = u.data?.user;
   if (u.error || !user) return json({ error: "Unauthorized" }, 401, h);
 
-  const callerClient = createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_ANON_KEY")!,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
-  const security = await callerClient.rpc("owner_mfa_status");
-  if (security.error || security.data?.allowed !== true) return json({error:"Verify your authenticator before accepting this invitation."},403,h);
-
   let body: Record<string, unknown>;
   try { body = await req.json(); }
   catch { return json({ error: "Invalid request" }, 400, h); }
