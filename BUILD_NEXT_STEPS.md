@@ -134,3 +134,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Real PAYMENT.CAPTURE.COMPLETED event replayed from PayPal and accepted with HTTP 200, stored once in studio_paypal_events.
 - Same PayPal event replayed again; idempotency passed: one webhook row, one payment row, no duplicate invoice credit.
 - PayPal health endpoint is read-only after testing. Refund semantics remain intentionally unimplemented pending business rules for refunded licences/releases.
+
+
+## Real audio delivery acceptance — 2 October 2026
+- Created a disposable Artist project for Lepr0Kahn and used a genuine 5.2 MB MP3 master from private Studio storage as the delivery payload.
+- Registered the delivered file as kind=master with a 30-day expiry in artist-project-files.
+- Authenticated Artist RLS could read the full object metadata as audio/mpeg; delivery collection RPC succeeded.
+- Forced expiry removed Artist storage visibility immediately.
+- Owner reissue RPC restored a fresh 30-day window.
+- Repeated collection remained idempotent: exactly one artist_delivery_collections row.
+- Disposable acceptance project archived after testing.
+- Temporary server-copy endpoint was disabled immediately after the one-time copy and left JWT-protected/inert.
