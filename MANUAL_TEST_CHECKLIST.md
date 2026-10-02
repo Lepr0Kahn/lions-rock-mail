@@ -89,3 +89,9 @@ Online payment provider sandbox/production setup, guardian outbound notification
 
 ## Final-phase security testing — user scheduling decision
 On 2026-10-01 the user deferred all remaining security acceptance tests until the end of the build. Keep MFA enforcement off; do not block independent migration work on authenticator setup. Final-phase checks include primary/backup enrollment, fresh sign-in challenge, recovery, privileged RPC/table/storage denial, invite creation/claim, suspension/removal, workspace isolation and explicit enforcement activation only after acceptance.
+
+
+## Vault mood and musical key
+- Owner: add/edit an instrumental with mood and musical key; save, refresh and reopen. Confirm values remain and catalogue displays them.
+- Blank metadata is allowed for existing items. Key is descriptive text, not automatic audio-key detection. Unicode sharps/flats should display correctly.
+- Database rollback saved Reflective / F♯ minor successfully; current scripts parse and save/display wiring checks passed. Live UI checks remain in final phase.
