@@ -88,3 +88,11 @@ Cal.com synchronization is active, with six hidden zero-payment services, a sign
 - `cycle_completed` awards 300 XP.
 - The Emergent **Repeat Cycle** badge is now available after two completed release cycles.
 - Rollback verification confirmed one release event and one cycle event per project, and the two-cycle badge/600 XP assertion passed.
+
+
+## Shortcut navigation polish — 2026-10-02
+- Fixed Studio OS shortcut navigation so cross-section jumps reset both the inner Studio OS scroll position and the outer app frame to the top of the destination.
+- Applied the behavior to All Projects, Next Project, project detail opens, Direction Engine destination buttons, notification action buttons, and the main Artist OS section tabs that act as shortcuts.
+- Added Owner Quick Access on Management for Bookings, Payments, Rewards, Analytics and Notifications.
+- Added contextual shortcut buttons to Booking Requests, Upcoming Sessions, Invoice Follow-up and Delivery Watch cards.
+- Updated the stale lazy-loaded bookings URL to the current embedded version.
