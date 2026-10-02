@@ -22,10 +22,11 @@ Database and source checks are recorded in FUNCTIONAL_TESTS.md. Current live bro
 ## Remaining work
 
 - Vault catalogue/lease request/invoice/release, recorded payments/refunds/corrections and printing are implemented. Actual byte playback/download and live printing remain unverified. Browser-generated BPM/bar-based custom-tag previews are implemented; actual playback/upload and phone performance remain unverified. Exclusive licensing remains outstanding.
-- Guardian/minor invoice approval and financial projections are implemented. Cash intent and recorded settlement use existing invoice/payment systems. Guardian identity is bearer-link recipient asserted; operational email, online checkout and dual formal receipts remain outstanding. Guardian booking approval is through invoice review after studio confirmation; it is not a separate approval gate before booking confirmation.
+- Guardian/minor invoice approval and financial projections are implemented. Cash intent and recorded settlement use existing invoice/payment systems. Guardian identity is bearer-link recipient asserted; guardian approval email drafts and payment/refund/correction receipt email drafts are implemented using the existing composer. Live sending, online checkout and dual formal receipts remain outstanding. Guardian booking approval is through invoice review after studio confirmation; it is not a separate approval gate before booking confirmation.
 - Payment-provider selection/configuration and sandbox/production charges/refunds.
 - Direction Engine rule-based fallback is implemented, using authoritative evidence with five explain-only actions. Live UI and AI provider-backed generation remain outstanding. External operational notifications still require configuration.
-- Admin MFA, original data reconciliation, genuinely simultaneous committed invoice orders and final live browser verification.
+- Admin MFA enrollment/backup setup, inactive database/storage gates and caller-token invite guards are implemented. Enforcement remains off. User deferred remaining security acceptance tests to the final phase on 2026-10-01; no authenticator setup is required to continue build work.
+- Original data reconciliation, genuinely simultaneous committed invoice orders and final live browser verification remain outstanding.
 - Recognition-only XP/levels/badges remain enabled; monetary benefit claims/fulfilment/capacity remain disabled pending explicit approval.
 
 Manual steps are maintained in MANUAL_TEST_CHECKLIST.md; database/source evidence remains in FUNCTIONAL_TESTS.md.

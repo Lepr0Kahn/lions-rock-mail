@@ -85,3 +85,7 @@ Online payment provider sandbox/production setup, guardian outbound notification
 - Live Gmail send, iPhone attachment viewing and printed receipt remain pending.
 
 - MFA recovery preparation: after verifying the primary authenticator, add and verify a backup on a separate device. Check both factors can verify a fresh session. Remove unfinished setups only. Enforcement stays off pending full backend and login-gate validation; see MFA_ENFORCEMENT_REVIEW.md.
+
+
+## Final-phase security testing — user scheduling decision
+On 2026-10-01 the user deferred all remaining security acceptance tests until the end of the build. Keep MFA enforcement off; do not block independent migration work on authenticator setup. Final-phase checks include primary/backup enrollment, fresh sign-in challenge, recovery, privileged RPC/table/storage denial, invite creation/claim, suspension/removal, workspace isolation and explicit enforcement activation only after acceptance.
