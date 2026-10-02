@@ -72,7 +72,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
  const el=id=>document.getElementById(id);
 async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let milestoneGeneration=0;
- let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistMinorIds=new Set(),fileGeneration=0,projectAudioUrls=[];
+ let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),fileGeneration=0,projectAudioUrls=[];
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=20";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  function landAtTop(){requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
@@ -345,7 +345,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(version!==generation)return;
    if(result.error)return deny("Could not load your projects. Refresh to retry.");
    items=result.data||[];
-   artistNames=new Map();artistMinorIds=new Set();
+   artistNames=new Map();artistProfileNames=new Map();artistMinorIds=new Set();
    const artistSelect=el("project-artist");artistSelect.replaceChildren();
    if(isOwner){
      const artists=await sb.from("app_memberships").select("user_id,business_name,email,role,access_status,artist_member_enabled,is_minor").eq("access_status","active");
@@ -358,7 +358,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        artistIds.length?sb.from("studio_invites").select("user_id,full_name,invited_at").in("user_id",artistIds).not("full_name","is",null).order("invited_at",{ascending:false}):Promise.resolve({data:[],error:null})
      ]);
      if(version!==generation)return;
-     const profileNames=new Map((profiles.data||[]).filter(p=>p.artist_name?.trim()).map(p=>[p.user_id,p.artist_name.trim()]));
+     const profileNames=new Map((profiles.data||[]).filter(p=>p.artist_name?.trim()).map(p=>[p.user_id,p.artist_name.trim()]));artistProfileNames=profileNames;
      const inviteNames=new Map();(invites.data||[]).forEach(i=>{if(!inviteNames.has(i.user_id)&&i.full_name?.trim())inviteNames.set(i.user_id,i.full_name.trim());});
      activeArtists.forEach(a=>{const name=profileNames.get(a.user_id)||inviteNames.get(a.user_id)||a.business_name||"Artist Member";artistNames.set(a.user_id,name);if(a.is_minor)artistMinorIds.add(a.user_id);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
      artistSelect.value=uid;
@@ -515,12 +515,12 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    });
    if(!requests.data.length)queue.textContent="No lease requests.";
    requests.data.forEach(r=>{
-     const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=r.title_snapshot+" · "+(r.licence_kind==="exclusive"?"Exclusive":"Lease")+" · "+r.status;const meta=document.createElement("p");meta.textContent=(isOwner?(artistNames.get(r.user_id)||"Artist")+" · ":"")+(isMinor?"Financial approval handled by guardian":r.currency+" "+Number(r.price_snapshot).toFixed(2));row.append(title,meta);
+     const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=r.title_snapshot+" · "+(r.licence_kind==="exclusive"?"Exclusive":"Lease")+" · "+r.status;const meta=document.createElement("p");meta.textContent=(isOwner?(artistNames.get(r.user_id)||"Artist Member")+" · ":"")+(isMinor?"Financial approval handled by guardian":r.currency+" "+Number(r.price_snapshot).toFixed(2));row.append(title,meta);if(isOwner&&!artistProfileNames.has(r.user_id)){const identity=document.createElement("p");identity.className="muted";identity.textContent="Artist Name required before approval.";row.append(identity);}
      const terms=document.createElement("p");terms.textContent="Requested terms: "+r.terms_snapshot;terms.className="brief muted";row.append(terms);
      if(isOwner){
        if(["approved","released"].includes(r.status))vaultButton(row,"Prepare vault email",async()=>window.parent.postMessage({type:"lions-rock-notice-email",kind:"vault",recordId:r.id},location.origin));
        const decide=async decision=>{const v=await sb.rpc("decide_instrumental_lease",{request_id:r.id,decision});if(v.error)throw v.error;await loadVault();el("vault-status").textContent=decision==="approve"?"Invoice created using the shared document sequence.":decision==="release"?"Master released after recorded full payment.":"Request denied.";};
-       if(r.status==="requested"){vaultButton(row,"Approve & create invoice",()=>decide("approve"));vaultButton(row,"Deny request",()=>decide("deny"));}
+       if(r.status==="requested"){if(artistProfileNames.has(r.user_id))vaultButton(row,"Approve & create invoice",()=>decide("approve"));vaultButton(row,"Deny request",()=>decide("deny"));}
        if(r.status==="approved")vaultButton(row,"Release paid master",()=>decide("release"));
        if(r.invoice_id)vaultButton(row,"Open invoice",async()=>window.parent.postMessage({type:"lions-rock-vault-invoice",documentId:r.invoice_id},location.origin));
      }else if(r.status==="released"){const beat=lookup.get(r.instrumental_id);if(beat?.master_filename)vaultButton(row,"Download licensed master",async()=>{const v=await sb.storage.from("studio-instrumentals").download(beat.id+"/master/"+beat.master_filename);if(v.error)throw v.error;if(version!==vaultGeneration||uid!==account)return;const url=URL.createObjectURL(v.data),a=document.createElement("a");a.href=url;a.download=beat.master_filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);});else{const p=document.createElement("p");p.textContent="Contact the studio for this archived catalogue item.";row.append(p);}}
