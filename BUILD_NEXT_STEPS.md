@@ -111,3 +111,15 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Added timeout protection to sign-in, reset request, password update, invite password setup, invite claim, and post-claim session refresh.
 - Owner MFA enforcement is currently NOT enabled because `private.owner_mfa_settings` has no Owner row. Do not enable automatically without confirming an authenticator is enrolled, to avoid lockout.
 - Supabase security advisor still reports leaked-password protection disabled; this is an account-level Auth hardening setting.
+
+
+## Instrumental Vault acceptance — 2 October 2026
+- Existing Nejes catalogue item verified published, non-archived, with stored clean master and watermarked preview.
+- Existing Artist lease request verified in requested state at BBD 100.
+- Artist without an Artist Name is now blocked at the database layer from creating new lease/exclusive requests.
+- Owner approval is now blocked until the requesting Artist has an Artist Name; generated lease invoices use Artist Name as client_name.
+- Owner UI marks legacy requests missing Artist Name with "Artist Name required before approval" and withholds the Approve button until identity is complete.
+- Storage RLS acceptance: published preview visible to Artist; clean master hidden before release.
+- Release guard acceptance: Owner cannot release before full invoice payment is recorded.
+- Delete integrity acceptance: once lease/request history exists, the instrumental cannot be permanently deleted because the request FK protects history; use Archive instead.
+- Live approval/payment/release was intentionally not committed while the requesting Artist has no Artist Name. Once that Artist signs in and completes onboarding, the existing request can continue normally without recreating it.
