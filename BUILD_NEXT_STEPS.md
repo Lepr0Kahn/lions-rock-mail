@@ -42,3 +42,10 @@ Owner sign-in, initial booking synchronization, linked invoice reuse, duration/t
 Real calendar webhook delivery/rescheduling/cancellation, recovery under a real provider timeout, simultaneous committed orders, actual file playback/download, Mail sending and device checks remain on MANUAL_TEST_CHECKLIST.md. Database rollback tests and mocks do not establish those passes.
 
 Historical import/export is out of scope: user explicitly has no old data to bring over. Preserve existing tools, catalogue edits, invoice sequence and Owner managerial landing.
+
+
+## Migration hardening completed — 2 October 2026
+- Re-audited Emergent progression/XP semantics against the Supabase implementation; no duplicate XP ledger was added because the current immutable career-event ledger already provides idempotency and reversible credit.
+- Added Owner-configurable reward cost estimates and 90-day exposure planning. Live backend and deployed rewards UI verified present.
+- Added a read-only Owner Assurance RPC and Admin tab. Current live database result is healthy: zero pending/failed calendar operations, zero stale leases, zero booking/invoice integrity exceptions and zero duplicate career source events.
+- The remaining three Emergent badges tied to session/cycle completion stay intentionally disabled until authoritative completion evidence exists; elapsed time alone is not accepted as attendance.
