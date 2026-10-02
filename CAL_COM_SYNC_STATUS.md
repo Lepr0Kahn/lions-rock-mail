@@ -38,3 +38,11 @@ The first real activation attempt registered its Cal.com webhook but could not e
 ## Independent verification and reschedule correction
 Live read-only server diagnostics found available Cal.com slots for 5–7 October 2026; seven Monday slots match OS hours. No reservation was made. The scheduler reports successful idle runs. Added tests/booking-invoice-integration.sql: real booking/invoice functions, invoice retry, deposit/price snapshots, time/duration change, cancellation and shared generator/OS numbering all passed with rollback. No invoice/number reservation or queued operation remained.
 Rescheduling now passes bookingUidToReschedule only for the server-verified current booking. It no longer treats its own reservation as a competing event. Mock coverage verifies this for same-event rescheduling and duration replacements. Live mutation/browser acceptance remains pending.
+
+## Live Owner acceptance — 2 October 2026
+
+Secure Owner sign-in succeeded and the managerial dashboard rendered. Browser-created Record an Ad test for 5 October 10am Barbados synchronized and confirmed in Cal.com. Its linked invoice INV-0003 showed BBD100 and 50%/BBD50 deposit; reopening after changing time/duration preserved invoice identity and amount.
+
+Changing to 6 October 11am–1pm created a confirmed two-hour calendar replacement. The live test exposed a delayed old-reservation cancellation webhook overwriting the durable link and cancelling the OS record. Fixed in worker version 7: callbacks resolve the current durable reservation and ignore a different obsolete reservation. Database reconciliation additionally locks and compares the expected durable provider UID before mutation. Signed delayed-callback regression and rollback database guard passed. The affected disposable record was repaired to its independently verified replacement before cancellation.
+
+Normal OS cancellation then synchronized successfully; Cal.com independently reports the replacement cancelled. Test invoice INV-0003 was voided with amount paid zero and its number retained. No active test reservation or collectible test invoice remains. Real notification receipt, external Cal.com-to-OS changes and a fresh duration replacement after this fix still require acceptance; do not mark all calendar tests complete. Invoice notes retain the original booked schedule snapshot.

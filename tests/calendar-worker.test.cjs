@@ -76,5 +76,15 @@ let response2=await handler(new Request("https://test",{method:"POST",body:"{}"}
 response2=await handler(new Request("https://test",{method:"POST",headers:{authorization:"Bearer test"},body:JSON.stringify({action:"process"})}));assert.equal(response2.status,403);
 member={...member,role:"owner",business_tools_enabled:true};response2=await handler(new Request("https://test",{method:"POST",headers:{authorization:"Bearer test"},body:JSON.stringify({action:"status"})}));assert.equal(response2.status,403);
 member={...member,role:"artist",access_status:"suspended"};response2=await handler(new Request("https://test",{method:"POST",headers:{authorization:"Bearer test"},body:"{}"}));assert.equal(response2.status,403);
+// Delayed cancellation for the old duration must not cancel its replacement.
+const webhookRaw=JSON.stringify({payload:{uid:"old-booking"}}),webhookCalls=[];
+context.createClient=()=>({rpc:async(name,args)=>{webhookCalls.push(args.command);return {data:args.command==="lookup"?{bookingId:id,seen:false}:args.command==="context"?{enabled:true,booking:{variant_id:variant},link:{provider_uid:"replacement",event_type_id:9001}}:{ok:true}};}});
+context.fetch=async url=>new Response(JSON.stringify({status:"success",data:String(url).endsWith("/bookings/old-booking")?{...booking("cancelled","old-booking")}:String(url).endsWith("/bookings/replacement")?{...booking("accepted","replacement"),eventTypeId:9001,end:"2026-12-01T16:00:00Z"}:extended}),{status:200,headers:{"content-type":"application/json"}});
+const signingSecret=await vm.runInContext('webhookSecret("test-only-key")',context);
+const signingKey=await webcrypto.subtle.importKey("raw",new TextEncoder().encode(signingSecret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+const webhookSignature=Buffer.from(await webcrypto.subtle.sign("HMAC",signingKey,new TextEncoder().encode(webhookRaw))).toString("hex");
+const staleResponse=await handler(new Request("https://test",{method:"POST",headers:{"x-cal-signature-256":webhookSignature},body:webhookRaw}));
+assert.equal(staleResponse.status,200);assert.equal((await staleResponse.json()).ignored,true);assert.equal(webhookCalls.includes("reconcile"),false);assert.equal(webhookCalls.includes("external-review"),false);
+console.log("PASS: signed delayed cancellation cannot reconcile a replacement.");
 console.log("PASS: create, confirm, availability failure, ambiguous timeout, metadata recovery, no blind retries, cancel, reschedule, duration replacement, guardian contact, event/booking isolation, raw-body signatures, missing secret.");
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -13,10 +13,14 @@ Updated 2 October 2026, following the user's instruction to continue independent
 - Fixed rescheduling availability to exclude only the server-verified current provider UID, so the session does not block itself. Mock reschedule and duration-replacement regressions passed; deployed worker includes the fix.
 - Frontend allocation/mapping regressions passed; modified admin scripts parse.
 
-## Saved for the Owner session
+## Live Owner work now completed
+
+Owner sign-in, initial booking synchronization, linked invoice reuse, duration/time replacement and normal cancellation were exercised live. A delayed old-reservation cancellation race was found and fixed (worker v7 plus guarded reconciliation). The disposable session is cancelled in both systems and INV-0003 voided unpaid. Fresh replacement acceptance and external calendar edits remain pending; see CAL_COM_SYNC_STATUS.md.
+
+## Remaining Owner acceptance
 
 1. Real booking/notification lifecycle and browser acceptance. Candidate: Record an Ad, Monday 5 October 2026 at 10am Barbados, one hour; BBD100 with 50% deposit recorded in the OS. Use the Owner's own contact, not an external artist. Recheck the current catalogue and availability before creation. Move to an available Tuesday time, verify duration change, then cancel and verify both systems. No real payment is part of this test.
-2. The Cal.com plugin reports private events unsupported, and the connected browser's Owner session is unavailable. Do not bypass the authentication block or simulate a logged-in browser. Keep this live test visibly pending.
+2. Secure Owner browser sign-in succeeded on 2 October. Preserve that session when available; never extract credentials or tokens. The live test above does not establish all external webhook changes or notification receipt.
 3. Online payment provider/business account selection and secure merchant sign-in; no provider chosen automatically, no production charges/refunds enabled.
 4. Any paid AI provider connection, if requested. Current Direction Engine uses the existing rule-based guidance; no paid provider purchase is required for that path.
 5. Final security/MFA/invite/suspension/isolation acceptance, as deferred by the user.

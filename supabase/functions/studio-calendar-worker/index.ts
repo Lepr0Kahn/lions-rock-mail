@@ -165,10 +165,13 @@ Deno.serve(async req=>{
    const ctx=await backend("context",{bookingId:known.bookingId});if(!ctx.enabled)return reply({ignored:true});
    const fetched=(await cal("/bookings/"+encodeURIComponent(uid))).data;
    const current=await currentBooking(cal,uid,known.bookingId,fetched.eventTypeId);
+   if(!ctx.link?.provider_uid)return reply({ignored:true});
+   const canonical=await currentBooking(cal,ctx.link.provider_uid,known.bookingId,ctx.link.event_type_id);
+   if(canonical.uid!==current.uid)return reply({ignored:true});
    const event=(await cal("/event-types/"+current.eventTypeId,"GET",undefined,"2026-06-12")).data;validateEvent(event,(Date.parse(current.end)-Date.parse(current.start))/60000);
    const base=(await cal("/event-types/"+MAPPING[ctx.booking.variant_id],"GET",undefined,"2026-06-12")).data;
    if(event.slug!==base.slug&&!event.slug.startsWith(base.slug+"-"))throw Error("unmapped_provider_event");
-   try{await backend("reconcile",{bookingId:known.bookingId,providerUid:current.uid,start:current.start,end:current.end,status:current.status,digest:hash});}
+   try{await backend("reconcile",{bookingId:known.bookingId,providerUid:current.uid,start:current.start,end:current.end,status:current.status,digest:hash,expectedProviderUid:ctx.link.provider_uid});}
   catch(e){if(String(e.message).includes("busy"))throw e;await backend("external-review",{bookingId:known.bookingId,providerUid:current.uid,digest:hash});return reply({review:true});}
   return reply({ok:true});
   }
