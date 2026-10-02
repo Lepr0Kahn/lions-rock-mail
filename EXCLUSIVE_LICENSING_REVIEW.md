@@ -13,8 +13,9 @@ Proposed behavior:
 - Preserve previously released nonexclusive lease access under their original terms. Make that fact visible to the Owner and exclusive buyer; do not imply an unencumbered copyright transfer.
 - No automatic legal terms, copyright ownership claim, refund/transfer, or retroactive termination of prior licences.
 
-Owner decisions needed before activation:
-1. Confirm whether prior nonexclusive leases remain valid after an exclusive purchase. Proposed default: preserve prior leases and disclose them.
-2. Supply or approve the actual exclusive licence terms for each instrumental. Price and legal scope are independent; the app must not invent rights.
+Owner policy approved 2026-10-01:
+- Preserve existing nonexclusive licences under their original agreed terms and disclose them to the exclusive buyer.
+- Download/access expiry is separate from licence expiry. Do not infer that prior licences expire or promise sole remaining rights without explicit licence end dates.
+- Actual exclusive licence terms must still be supplied or approved per instrumental; price does not establish copyright or legal scope.
 
 Verification to accompany implementation: competing exclusive approvals; ordinary lease versus exclusive reservation; existing approved/released leases; retry/release after payment; draft/void/unpaid rejection; guardian/minor flow; metadata edits versus snapshots; existing master access after catalogue removal; unchanged INV/QUO sequence. Final live security/device acceptance remains deferred.
