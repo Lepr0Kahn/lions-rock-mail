@@ -66,3 +66,12 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Each completed cycle is worth 300 XP.
 - **Repeat Cycle** now unlocks after two completed release cycles, matching the Emergent reference behavior.
 - Rollback tests passed for event uniqueness, XP and badge eligibility.
+
+
+## Live booking lifecycle acceptance — completed 2 October 2026
+- Reused the two existing production Cal.com lifecycle test bookings rather than creating another notification-generating test event.
+- Verified initial 60-minute Cal.com creation, replacement to a 120-minute duration/time, and final cancellation all reached synchronized state.
+- Verified Cal.com still contains the original and replacement booking UIDs as cancelled records, matching the OS calendar aliases and final provider links.
+- Verified each OS booking retained exactly one invoice throughout the lifecycle: INV-0003 and INV-0004 respectively.
+- Verified the booking invoices retained the configured 50% deposit percentage after reschedule/duration replacement.
+- Final cancellation leaves the linked invoice void, as intended, without creating a replacement invoice number.
