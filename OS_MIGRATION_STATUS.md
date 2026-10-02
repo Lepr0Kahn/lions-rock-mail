@@ -55,3 +55,12 @@ Cal.com synchronization is active, with six hidden zero-payment services, a sign
 - Emergent has 12 badges; the merged app currently exposes 9. The three intentionally omitted badges depend on authoritative `session_completed` / `cycle_completed` events. Elapsed calendar time is not treated as verified attendance, so those awards remain disabled until a trustworthy completion record exists.
 - Owner reward exposure planning is implemented: configurable estimated hours/BBD value per reward, 90-day planning-hours budget, live/fulfilled/theoretical exposure and capacity warnings. It does not alter paid services or invoices.
 - A read-only Owner Assurance tab is implemented in Admin. It checks calendar queue failures/stale leases, booking/calendar/invoice consistency, invoice arithmetic, career-event duplication, reward exposure and unread Owner notifications. The live database check on 2026-10-02 returned healthy with zero integrity exceptions.
+
+
+## UI organization pass — 2026-10-02
+- Studio OS now occupies the far-left position in the authenticated top navigation for Owner accounts.
+- Owner Management Dashboard is compartmentalized into a first-priority Studio Action Center, a collapsible Artist Development & Career Progress section, and a separate Recent Work / Next Move section.
+- Studio booking management is reordered for Owner workflow: booking queue first, create booking second, rescheduling third, service catalogue/configuration last.
+- Booking queue now has at-a-glance counts and filters for Needs Action, Upcoming, Past and Cancelled/Expired, with active work shown by default.
+- Embedded page versions were bumped to avoid stale cached UI.
+- Authoritative session completion is now an explicit remaining implementation item; completion will be Owner-confirmed evidence rather than inferred from elapsed time.
