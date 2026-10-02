@@ -26,10 +26,10 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
 <div class="card"><div class="eyebrow">Delivery watch</div><div id="ops-expiring" class="stat-value">—</div><p class="muted">Files expiring within seven days</p></div>
 </div>
 <div class="ops-lists">
-<div class="card"><h3>1. Booking requests</h3><p class="muted">Confirm, review or decline new session requests.</p><div id="ops-requests"></div></div>
-<div class="card"><h3>2. Upcoming sessions</h3><p class="muted">Confirmed sessions already on the studio calendar.</p><div id="ops-sessions"></div></div>
-<div class="card"><h3>3. Invoice follow-up</h3><p class="muted">Invoices that still have a balance due.</p><div id="ops-invoices"></div></div>
-<div class="card"><h3>4. Delivery watch</h3><p class="muted">Masters and deliveries nearing expiry.</p><div id="ops-deliveries"></div></div>
+<div class="card"><h3>1. Booking requests</h3><p class="muted">Confirm, review or decline new session requests.</p><button type="button" id="shortcut-booking-requests">Open booking queue</button><div id="ops-requests"></div></div>
+<div class="card"><h3>2. Upcoming sessions</h3><p class="muted">Confirmed sessions already on the studio calendar.</p><button type="button" id="shortcut-upcoming-sessions">Open bookings</button><div id="ops-sessions"></div></div>
+<div class="card"><h3>3. Invoice follow-up</h3><p class="muted">Invoices that still have a balance due.</p><button type="button" id="shortcut-payments">Open payments</button><div id="ops-invoices"></div></div>
+<div class="card"><h3>4. Delivery watch</h3><p class="muted">Masters and deliveries nearing expiry.</p><button type="button" id="shortcut-projects">Open projects</button><div id="ops-deliveries"></div></div>
 </div><p class="muted">Showing up to five items in each area. Session times use Barbados time.</p>
 </section>
 <details id="artist-development-zone" class="dashboard-fold" open><summary id="artist-development-summary">Artist development & career progress</summary><div class="fold-body"><p class="muted">Profile, stage, XP, badges, tracks and direction guidance are grouped here so they stay separate from day-to-day studio operations.</p><form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
@@ -63,8 +63,13 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistMinorIds=new Set(),fileGeneration=0;
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=15";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
- el("rewards-tab").onclick=()=>{selected=null;show("rewards");notice("");};
- el("bookings-tab").onclick=()=>{selected=null;show("bookings");notice("");};
+ function shortcut(name){selected=null;show(name);notice("");requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
+ el("rewards-tab").onclick=()=>shortcut("rewards");
+ el("bookings-tab").onclick=()=>shortcut("bookings");
+ el("shortcut-booking-requests").onclick=()=>shortcut("bookings");
+ el("shortcut-upcoming-sessions").onclick=()=>shortcut("bookings");
+ el("shortcut-payments").onclick=()=>{if(isOwner){shortcut("payments");loadPayments();}};
+ el("shortcut-projects").onclick=()=>shortcut("projects");
  window.addEventListener("message",e=>{if(e.origin===location.origin&&(e.source===el("booking-frame").contentWindow||e.source===el("rewards-frame").contentWindow)&&["lions-rock-booking-invoice","lions-rock-notice-email"].includes(e.data?.type)&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height)){el("booking-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);return;}if(e.origin===location.origin&&e.source===el("rewards-frame").contentWindow&&e.data?.type==="lions-rock-rewards-height"&&Number.isFinite(e.data.height)){el("rewards-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);}});
  function deny(text){clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
@@ -269,7 +274,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
      row.append(title,body,date,button);el("notification-list").append(row);
    });
  }
- el("notifications-tab").onclick=()=>{show("notifications");loadNotifications();};
+ el("notifications-tab").onclick=()=>{shortcut("notifications");loadNotifications();};
  el("notifications-read-all").onclick=async()=>{
    const user=uid,button=el("notifications-read-all");if(!user)return;
    button.disabled=true;try{
@@ -390,8 +395,8 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
    if(!uid||!selected)return;const button=el("save-status");button.disabled=true;
    try{const result=isMinor?await sb.rpc("minor_project_write",{project_id:selected,project_values:{status:el("detail-status").value}}):await sb.from("artist_projects").update({status:el("detail-status").value}).eq("id",selected).select("id").single();if(result.error)throw result.error;await load();notice("Project status saved.");}catch(error){notice(error.message||"Could not save status.",true);}finally{button.disabled=false;}
  };
- ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>{selected=null;show("projects");notice("");});
- el("dashboard-tab").onclick=()=>{selected=null;show("dashboard");notice("");};
+ ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>shortcut("projects"));
+ el("dashboard-tab").onclick=()=>shortcut("dashboard");
 
  let analyticsGeneration=0;
  function clearAnalytics(){++analyticsGeneration;el("analytics-content").replaceChildren();el("analytics-status").textContent="";el("analytics-tab").classList.add("hidden");}
@@ -413,7 +418,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
      el("analytics-status").textContent="Updated "+new Date(d.computed_at).toLocaleTimeString();
    }catch(e){if(version===analyticsGeneration&&account===uid&&isOwner)el("analytics-status").textContent="Could not load analytics. Refresh to retry.";}
  }
- el("analytics-tab").onclick=()=>{if(isOwner){show("analytics");loadAnalytics();}};
+ el("analytics-tab").onclick=()=>{if(isOwner){shortcut("analytics");loadAnalytics();}};
  el("analytics-window").onchange=loadAnalytics;
 
 
@@ -452,7 +457,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
      queue.append(row);
    });el("vault-status").textContent="Vault updated.";
  }
- el("vault-tab").onclick=()=>{show("vault");loadVault();};el("vault-new").onclick=newVaultItem;
+ el("vault-tab").onclick=()=>{shortcut("vault");loadVault();};el("vault-new").onclick=newVaultItem;
  function resetVaultPreview(){
    ++vaultPreviewGeneration;if(vaultPreviewAbort)vaultPreviewAbort.abort();vaultPreviewAbort=null;vaultPreviewFile=null;vaultPreviewSource=null;
    const audio=el("vault-generated-audio");audio.pause();audio.removeAttribute("src");audio.load();audio.classList.add("hidden");if(vaultPreviewUrl)URL.revokeObjectURL(vaultPreviewUrl);vaultPreviewUrl=null;
@@ -547,7 +552,7 @@ details.dashboard-fold{border:1px solid var(--line);background:rgba(255,255,255,
    el("guardian-link-status").textContent="Opening the email draft for your review. Press Send in Mail when ready.";
  };
  el("guardian-link-copy").onclick=async()=>{try{await navigator.clipboard.writeText(el("guardian-link-output").value);el("guardian-link-status").textContent="Copied. Send this link only to the recorded guardian.";}catch(_){el("guardian-link-output").focus();el("guardian-link-output").select();el("guardian-link-status").textContent="Select and copy the private link."; }};
- el("payments-tab").onclick=()=>{if(isOwner){show("payments");loadPayments();}};
+ el("payments-tab").onclick=()=>{if(isOwner){shortcut("payments");loadPayments();}};
  el("payment-invoice").onchange=()=>{clearGuardianDraft();paymentRequestKey=null;renderPaymentHistory();};el("payment-kind").onchange=()=>{paymentRequestKey=null;el("payment-notes").required=el("payment-kind").value!=="payment";renderPaymentHistory();};
  el("payment-form").onsubmit=async e=>{
    e.preventDefault();if(!uid||!isOwner)return;const button=el("payment-submit"),account=uid;button.disabled=true;el("payments-status").textContent="Recording entry…";paymentRequestKey=paymentRequestKey||crypto.randomUUID();
