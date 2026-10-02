@@ -129,3 +129,24 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 - Prepare approval/scheduled/fulfilled/declined/cancelled reward email; verify current artist or guardian address, no old attachments, manual review/send.
 - Check missing recipient blocks draft. Confirm scheduling creates no paid-menu booking/invoice and manually check calendar availability.
 - Live phone input, frame forwarding, email sending and security acceptance remain final phase.
+
+
+
+## Cal.com synchronization — added 2 October 2026
+Implementation is staged with synchronization OFF. Automated worker mocks and rollback-only database checks passed; live booking acceptance has not passed yet.
+- [ ] Owner: Admin → Calendar Connection → activate; verify hidden events and signed webhook registration succeed.
+- [ ] Create an OS request; it holds the OS slot but makes no Cal.com booking until Owner confirmation.
+- [ ] Owner creates/confirms a mapped session; refresh after one minute; one accepted Cal.com booking, matching Barbados start/end, calendar state synchronized.
+- [ ] Original public paid links and prices still work; hidden OS events collect no payment.
+- [ ] Change time: one current calendar booking; follow reschedule UID; existing invoice ID, number, price and deposit unchanged.
+- [ ] Change duration at another available time: hidden duration event, original calendar booking cancelled, replacement verified. Same-time expansion may be blocked by the existing reservation and requires another available time.
+- [ ] Cancel from OS and from Cal.com: linked session cancelled on both sides; no automatic refund or new invoice.
+- [ ] Cal.com reschedule: matching linked OS booking updates; a conflicting/out-of-hours change requires Owner review rather than overwriting another session.
+- [ ] Provider failure/timeout: waiting, uncertain, or review state; no blind second creation. Owner can use Recheck calendar after checking/confirming the existing provider booking.
+- [ ] Replay a signed webhook: no duplicate notifications or booking changes; invalid signature rejected.
+- [ ] Guardian contact receives minor's calendar communication; artist financial details remain hidden.
+- [ ] Pausing preserves availability checks and queues new changes; activation resumes scheduled work.
+- [ ] Unmapped offerings fail visibly; no fallback to a paid public event. Six services currently mapped.
+- [ ] Concurrent requests cannot claim the same OS slot; ticket expires in 60 seconds and cannot be reused.
+- [ ] Existing bookings/data are not backfilled; invoice/quote numbering stays shared across generator and OS orders.
+- [ ] Final security/MFA/session/suspension/isolation acceptance remains in the final test pass.
