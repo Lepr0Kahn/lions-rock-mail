@@ -4,7 +4,7 @@
   "bookingUrl": "https://cal.com/bookleprokahn",
   "timeZone": "America/Barbados",
   "enabled": false,
-  "status": "verified-hidden-event-mapping-owner-preview",
+  "status": "booking-sync-implemented-owner-activation-pending",
   "events": [
     {
       "eventTypeId": 7314681,
@@ -61,5 +61,8 @@
       "publicEventTypeId": null
     }
   ],
-  "depositPercent": 50
+  "depositPercent": 50,
+  "runtimeStatusSource": "public.studio_calendar_status",
+  "workerFunction": "studio-calendar-worker",
+  "liveAcceptancePassed": false
 }
