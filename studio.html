@@ -108,6 +108,15 @@ body.studio-authenticated .login-gate{display:none!important}
       <div class="login-status" id="invite-status"></div>
     </div>
 
+    <div class="gate-section" id="magic-view">
+      <div class="login-help"><b>You’re signed in with a magic link.</b><br>You can keep using passwordless sign-in, or set/change a password now.</div>
+      <div class="login-field"><label>New Password</label><input id="magic-password" type="password" autocomplete="new-password"></div>
+      <div class="login-field"><label>Confirm Password</label><input id="magic-confirm" type="password" autocomplete="new-password"></div>
+      <button class="login-button" id="magic-save">Save Password & Continue</button>
+      <button class="login-link" id="magic-skip" type="button">Skip for now</button>
+      <div class="login-status" id="magic-status"></div>
+    </div>
+
     <div class="login-foot">THE LION'S ROCK MEDIA FACILITY</div>
   </div>
 </div>
@@ -158,6 +167,7 @@ body.studio-authenticated .login-gate{display:none!important}
  let pendingView="generator",pendingHubView="clients",pendingClient=null,searchTimer=null,currentSession=null,currentMembership=null,accessDenialMessage="";
  const query=new URLSearchParams(location.search);
  let recoveryMode=query.get("reset")==="1" || new URLSearchParams(location.hash.slice(1)).get("type")==="recovery";
+ let magicMode=query.get("magic")==="1";
  let inviteMode=query.get("invite")==="1";
  let inviteAccess=query.get("access")||"";
  let inviteExisting=query.get("existing")==="1";
@@ -180,7 +190,7 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
  function showGateSection(id){
-   ["signin-view","apply-view","invite-view","reset-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
+   ["signin-view","apply-view","invite-view","reset-view","magic-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
  function setLoginMode(mode){
    loginMode=mode==="artist_member"?"artist_member":"business_tools";
@@ -316,6 +326,16 @@ body.studio-authenticated .login-gate{display:none!important}
    if(m.data.role==="owner"){try{if(!await ownerMfaGate(sb,showGateSection,async()=>setSession((await sb.auth.getSession()).data.session),isCurrent))return;}catch(error){if(isCurrent()){showGateSection("signin-view");status.textContent=error.message;status.classList.add("err");}return;}}
    if(!isCurrent())return;
    const businessOK=canBusiness(m.data),artistOK=canArtist(m.data);
+   if(magicMode && m.data.role!=="owner"){
+     currentMembership=m.data;
+     document.getElementById("cloud-dot").className="dot on";
+     document.getElementById("cloud-label").textContent=session.user.email;
+     document.getElementById("authbox").style.display="none";
+     document.getElementById("studio-signout").style.display="inline-block";
+     showGateSection("magic-view");
+     const ms=document.getElementById("magic-status");if(ms){ms.textContent="Signed in as "+session.user.email+".";ms.classList.remove("err");}
+     return;
+   }
    if(m.data.role!=="owner" && ((loginMode==="business_tools"&&!businessOK)||(loginMode==="artist_member"&&!artistOK))){
      const reason=loginMode==="artist_member"?"This account does not have Artist Member access.":"This account does not have Business Tools access.";
      accessDenialMessage=reason;
@@ -485,6 +505,25 @@ body.studio-authenticated .login-gate{display:none!important}
      button.textContent=inviteExisting?"Accept Invite & Open":"Set Password & Open Studio";
    }
  };
+ document.getElementById("magic-save").onclick=async()=>{
+   const p=document.getElementById("magic-password").value,c2=document.getElementById("magic-confirm").value,out=document.getElementById("magic-status"),button=document.getElementById("magic-save");
+   if(p.length<8){out.textContent="Use at least 8 characters.";out.classList.add("err");return;}
+   if(p!==c2){out.textContent="Passwords do not match.";out.classList.add("err");return;}
+   button.disabled=true;out.classList.remove("err");out.textContent="Saving password…";
+   try{
+     const r=await withAccessTimeout(sb.auth.updateUser({password:p}),"Password update",15000);
+     if(r.error)throw r.error;
+     magicMode=false;history.replaceState({},document.title,"/studio.html");
+     document.getElementById("magic-password").value="";document.getElementById("magic-confirm").value="";
+     await setSession((await withAccessTimeout(sb.auth.getSession(),"Session refresh",10000)).data.session);
+   }catch(e){out.textContent=e.message||"Could not save password.";out.classList.add("err");}
+   finally{button.disabled=false;}
+ };
+ document.getElementById("magic-skip").onclick=async()=>{
+   magicMode=false;history.replaceState({},document.title,"/studio.html");
+   await setSession((await withAccessTimeout(sb.auth.getSession(),"Session refresh",10000)).data.session);
+ };
+
 
  sb.auth.onAuthStateChange((event,s)=>{
    if(event==="PASSWORD_RECOVERY")recoveryMode=true;
