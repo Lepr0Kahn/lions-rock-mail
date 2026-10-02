@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
    return reply({verified:true,syncEnabled:false,events:completed,message:"Five hidden OS events verified with no Cal.com payment collection. Your public paid events are unchanged. Booking synchronization is still off."});
  }
  if(action==="availability-preview"){
-   const mapping=[["0b305aae-87cc-4274-9656-bf1e921364ef",5500451,"Record an Ad",60],["8fc7f59d-cb46-4dd4-9d60-0c000fe7a814",5499308,"Record a Song",60],["7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15",5500448,"Instrumental Mix",60],["c1d6d89d-08ad-4a52-806c-fad0bab4eb51",5500367,"Vocal Mix",60],["196c7505-e8e8-4638-b0bb-83b6b2adf4c6",5500456,"Full Mix",120],["98954691-a825-48b9-8469-bf3bb4cd79ca",7314363,"Create Instrumental",180]];
+   const mapping=[["0b305aae-87cc-4274-9656-bf1e921364ef",7314681,"Record an Ad",60],["8fc7f59d-cb46-4dd4-9d60-0c000fe7a814",7314682,"Record a Song",60],["7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15",7314683,"Instrumental Mix",60],["c1d6d89d-08ad-4a52-806c-fad0bab4eb51",7314684,"Vocal Mix",60],["196c7505-e8e8-4638-b0bb-83b6b2adf4c6",7314685,"Full Mix",120],["98954691-a825-48b9-8469-bf3bb4cd79ca",7314363,"Create Instrumental",180]];
    const selected=mapping.find(row=>row[0]===body.offeringId);
    const date=String(body.date||""),start=Date.parse(date+"T00:00:00-04:00");
    if(!selected||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(start)||new Date(start).toISOString().slice(0,10)!==date||start<Date.now()-86400000||start>Date.now()+180*86400000)return reply({error:"Choose a mapped service and a date within 180 days."},400);
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
    const eventResponse=await fetch("https://api.cal.com/v2/event-types/"+selected[1],{headers:{Authorization:"Bearer "+key,"cal-api-version":"2026-06-12"},redirect:"error",signal:AbortSignal.timeout(10000)});
    if(!eventResponse.ok)return reply({error:"Cal.com event access failed."},502);
    const event=await eventResponse.json();
-   if(event.status!=="success"||event.data?.ownerId!==2390745||event.data?.lengthInMinutes!==selected[3])return reply({error:"Cal.com event duration or ownership does not match the OS mapping."},409);
+   if(event.status!=="success"||event.data?.ownerId!==2390745||event.data?.lengthInMinutes!==selected[3]||event.data?.hidden!==true||Number(event.data?.price||0)!==0||event.data?.confirmationPolicy?.type!=="always"||event.data?.confirmationPolicy?.disabled===true)return reply({error:"Cal.com OS event ownership, duration, confirmation or payment settings do not match."},409);
    const os=await sb.rpc("studio_availability",{booking_date:date,offering_id:selected[0]});
    if(os.error||!Array.isArray(os.data))return reply({error:"OS availability could not be checked."},502);
    const query=new URLSearchParams({eventTypeId:String(selected[1]),start:new Date(start).toISOString(),end:new Date(start+86400000-1).toISOString(),timeZone:"America/Barbados",format:"range"});

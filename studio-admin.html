@@ -88,6 +88,8 @@
    update.onclick=function(){runCal.call(this,"full-mix-duration");};
    check.onclick=function(){runCal.call(this,"check");};
    const preview=document.getElementById("cal-preview");preview.onclick=function(){runCal.call(this,"availability-preview");};
+   document.getElementById("cal-date").value=new Date(Date.now()+86400000-4*3600000).toISOString().slice(0,10);
+   ["cal-date","cal-offering"].forEach(id=>document.getElementById(id).onchange=()=>{document.getElementById("cal-slots").replaceChildren();document.getElementById("cal-status").textContent="Check availability for the selected service and date.";});
    const prepare=document.getElementById("cal-prepare-os");prepare.onclick=function(){runCal.call(this,"prepare-os-events");};
    async function runCal(action){
      const button=this,status=document.getElementById("cal-status");

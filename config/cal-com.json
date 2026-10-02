@@ -4,47 +4,52 @@
   "bookingUrl": "https://cal.com/bookleprokahn",
   "timeZone": "America/Barbados",
   "enabled": false,
-  "status": "owner-availability-preview",
+  "status": "verified-hidden-event-mapping-owner-preview",
   "events": [
     {
-      "eventTypeId": 5500451,
+      "eventTypeId": 7314681,
       "title": "Record an AD",
-      "slug": "record-an-ad",
+      "slug": "os-record-an-ad",
       "observedDurationMinutes": 60,
       "targetDurationMinutes": 60,
-      "offeringId": "0b305aae-87cc-4274-9656-bf1e921364ef"
+      "offeringId": "0b305aae-87cc-4274-9656-bf1e921364ef",
+      "publicEventTypeId": 5500451
     },
     {
-      "eventTypeId": 5499308,
+      "eventTypeId": 7314682,
       "title": "Record a song",
-      "slug": "leprokahn",
+      "slug": "os-record-a-song",
       "observedDurationMinutes": 60,
       "targetDurationMinutes": 60,
-      "offeringId": "8fc7f59d-cb46-4dd4-9d60-0c000fe7a814"
+      "offeringId": "8fc7f59d-cb46-4dd4-9d60-0c000fe7a814",
+      "publicEventTypeId": 5499308
     },
     {
-      "eventTypeId": 5500448,
+      "eventTypeId": 7314683,
       "title": "Instrumental mix",
-      "slug": "instrumental-mix",
+      "slug": "os-instrumental-mix",
       "observedDurationMinutes": 60,
       "targetDurationMinutes": 60,
-      "offeringId": "7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15"
+      "offeringId": "7e8ee2af-dbf6-4be3-80aa-8c9525a0aa15",
+      "publicEventTypeId": 5500448
     },
     {
-      "eventTypeId": 5500367,
+      "eventTypeId": 7314684,
       "title": "Vocal mix",
-      "slug": "vocal-mix",
+      "slug": "os-vocal-mix",
       "observedDurationMinutes": 60,
       "targetDurationMinutes": 60,
-      "offeringId": "c1d6d89d-08ad-4a52-806c-fad0bab4eb51"
+      "offeringId": "c1d6d89d-08ad-4a52-806c-fad0bab4eb51",
+      "publicEventTypeId": 5500367
     },
     {
-      "eventTypeId": 5500456,
+      "eventTypeId": 7314685,
       "title": "Full mix",
-      "slug": "full-mix",
+      "slug": "os-full-mix",
       "observedDurationMinutes": 120,
       "targetDurationMinutes": 120,
-      "offeringId": "196c7505-e8e8-4638-b0bb-83b6b2adf4c6"
+      "offeringId": "196c7505-e8e8-4638-b0bb-83b6b2adf4c6",
+      "publicEventTypeId": 5500456
     },
     {
       "eventTypeId": 7314363,
@@ -52,7 +57,8 @@
       "slug": "instrumental-creation",
       "targetDurationMinutes": 180,
       "offeringId": "98954691-a825-48b9-8469-bf3bb4cd79ca",
-      "observedDurationMinutes": 180
+      "observedDurationMinutes": 180,
+      "publicEventTypeId": null
     }
   ],
   "depositPercent": 50
