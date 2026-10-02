@@ -1,6 +1,8 @@
 -- Owner-only Vault deletion policies.
 -- Lease/request history is protected by the existing FK from studio_instrumental_requests.
 
+grant delete on table public.studio_instrumentals to authenticated;
+
 drop policy if exists instrumentals_delete on public.studio_instrumentals;
 create policy instrumentals_delete
 on public.studio_instrumentals
