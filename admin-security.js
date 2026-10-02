@@ -2,13 +2,14 @@
 function installAdminSecurity(sb, content, requireOwner, toast) {
  let generation=0, pending=null;
  const current=n=>n===generation;
+ const withTimeout=async(promise,label,ms=12000)=>{let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh to retry.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}};
  function leave(){generation++;pending=null;}
  async function show(){
   const n=++generation;pending=null;
   content.innerHTML='<div class="empty">Checking security…</div>';
   try {
    if(!await requireOwner()||!current(n))return;
-   const [f,a]=await Promise.all([sb.auth.mfa.listFactors(),sb.auth.mfa.getAuthenticatorAssuranceLevel()]);
+   const [f,a]=await withTimeout(Promise.all([sb.auth.mfa.listFactors(),sb.auth.mfa.getAuthenticatorAssuranceLevel()]),"Security check");
    if(!current(n))return;if(f.error)throw f.error;if(a.error)throw a.error;
    const factors=f.data.totp||[];
    content.innerHTML='<h2>Admin Security</h2><p>Use an authenticator app to verify this session. Setup is optional for now; management-wide MFA enforcement is not enabled.</p><p id="mfa-status"></p><div id="mfa-actions"></div><div id="mfa-setup"></div>';
