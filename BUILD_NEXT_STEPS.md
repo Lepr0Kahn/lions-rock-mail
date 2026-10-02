@@ -59,3 +59,10 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Career track `sessions_completed` now uses Owner-confirmed records instead of elapsed confirmed bookings.
 - Owner Assurance flags past confirmed sessions that still need completion review.
 - Real acceptance of the completion button remains naturally deferred until there is an actual past confirmed session to complete.
+
+
+## Release-cycle completion — completed 2 October 2026
+- Project Released now records an idempotent `cycle_completed` event alongside `release_published`.
+- Each completed cycle is worth 300 XP.
+- **Repeat Cycle** now unlocks after two completed release cycles, matching the Emergent reference behavior.
+- Rollback tests passed for event uniqueness, XP and badge eligibility.
