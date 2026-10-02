@@ -82,20 +82,23 @@
  }
 
  function renderCalendar(){
-   content.innerHTML='<h2>Cal.com connection</h2><p class="note">Check server access to bookleprokahn. Booking synchronization is still off.</p><button class="btn primary" id="check-cal">Check Cal.com connection</button><p id="cal-status" role="status" aria-live="polite"></p>';
-   document.getElementById("check-cal").onclick=async function(){
+   content.innerHTML='<h2>Cal.com connection</h2><p class="note">Check server access to bookleprokahn. Booking synchronization is still off.</p><button class="btn primary" id="check-cal">Check Cal.com connection</button><button class="btn" id="cal-full-mix">Set Full mix to 2 hours</button><p id="cal-status" role="status" aria-live="polite"></p>';
+   const check=document.getElementById("check-cal"),update=document.getElementById("cal-full-mix");
+   update.onclick=function(){runCal.call(this,"full-mix-duration");};
+   check.onclick=function(){runCal.call(this,"check");};
+   async function runCal(action){
      const button=this,status=document.getElementById("cal-status");
-     button.disabled=true;button.textContent="Checking…";status.textContent="Checking account access…";
+     check.disabled=true;update.disabled=true;button.textContent=action==="check"?"Checking…":"Updating…";status.textContent=action==="check"?"Checking account access…":"Updating Full mix duration in Cal.com…";
      try {
        if(!await requireOwner())return;
-       const result=await sb.functions.invoke("studio-cal-connection",{body:{}});
+       const result=await sb.functions.invoke("studio-cal-connection",{body:{action}});
        if(view!=="calendar"||!status.isConnected)return;
        let data=result.data;
        if(result.error){try{data=await result.error.context.json();}catch(_){}throw new Error(data?.error||"Could not verify the connection. Check your sign-in and server secret.");}
        if(data?.error)throw new Error(data.error);
-       status.textContent=data?.verified===true?"Connected to bookleprokahn. Account verified; automatic booking synchronization is still off.":data?.message||"Connection is not configured.";
+       status.textContent=data?.message||"Connection is not configured.";
      }catch(error){if(view==="calendar"&&status.isConnected)status.textContent=error.message||"Connection check failed.";}
-     finally{button.disabled=false;button.textContent="Check Cal.com connection";}
+     finally{check.disabled=false;update.disabled=false;check.textContent="Check Cal.com connection";update.textContent="Set Full mix to 2 hours";}
    };
  }
  function renderInvite(){

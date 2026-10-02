@@ -23,6 +23,23 @@ Deno.serve(async (req) => {
  if(!response.ok) return reply({configured:true,verified:false,syncEnabled:false,error:response.status===401||response.status===403?"Cal.com rejected the key or its permissions.":"Cal.com is unavailable; try again later."},502);
  const profile=await response.json();
  if(profile.status!=="success"||profile.data?.username!=="bookleprokahn"||profile.data?.id!==2390745) return reply({configured:true,verified:false,syncEnabled:false,error:"Key does not match the configured Lions Rock Cal.com account."},409);
+ let body;try{body=await req.json();}catch{return reply({error:"Invalid request"},400);}
+ const action=body.action||"check";
+ if(!["check","full-mix-duration"].includes(action))return reply({error:"Unknown action"},400);
+ if(action==="full-mix-duration"){
+   const url="https://api.cal.com/v2/event-types/5500456";
+   const h={Authorization:"Bearer "+key,"cal-api-version":"2026-06-12","Content-Type":"application/json"};
+   const read=async()=>{const r=await fetch(url,{headers:h,redirect:"error",signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error("read");const p=await r.json();if(p.status!=="success"||p.data?.id!==5500456||p.data?.slug!=="full-mix")throw Error("event");return p.data;};
+   const before=await read();
+   if(before.lengthInMinutes!==120){
+     // Only the duration changes; all payment and booking settings are omitted.
+     const changed=await fetch(url,{method:"PATCH",headers:h,body:JSON.stringify({lengthInMinutes:120}),redirect:"error",signal:AbortSignal.timeout(10000)});
+     if(!changed.ok)return reply({error:"Cal.com could not update Full mix. Check event permissions; no automatic retry was made."},502);
+   }
+   const after=await read();
+   if(after.lengthInMinutes!==120)return reply({error:"Duration could not be verified. Check Cal.com before retrying."},502);
+   return reply({verified:true,syncEnabled:false,message:"Full mix is verified at 2 hours in Cal.com. Existing bookings and pricing were not changed."});
+ }
  return reply({configured:true,verified:true,syncEnabled:false,username:"bookleprokahn",message:"Account access verified. Booking synchronization remains disabled."});
  } catch { return reply({error:"Connection check failed; try again later."},502); }
 });
