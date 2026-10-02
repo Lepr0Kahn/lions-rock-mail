@@ -12,3 +12,9 @@ Remaining limitations: no automatic service booking/calendar conflict detection 
 
 
 Scheduling/cancellation/email update: Owner can schedule future experiences with Barbados date/time, duration and location. Cancellation retains the record, requires a reason, frees capacity and allows a fresh request; fulfilled claims cannot be cancelled. Notice payload uses current artist/guardian contact and keeps manual review/send in existing Mail. Rollback schedule, notice, cancellation retry and re-claim checks passed. Reward email checks passed recipient, scheduled subject/time/newlines and missing contact rejection; page scripts parse. Live handoff, real email send, calendar availability and phone input checks remain final-phase tests.
+
+
+## Reward exposure planning — 2026-10-02
+Owner reward planning now records an estimated studio-hours cost and estimated BBD value per reward. A 90-day reward-hours budget can be set without changing any service price, invoice or payment. The Owner view reports live commitments, fulfilled cost, remaining active capacity and theoretical worst-case exposure, with an over-budget warning when a planning budget is configured.
+
+The exposure RPC is Owner-gated, unavailable to anonymous callers, and uses the existing atomic claim/capacity workflow. Rollback verification passed. All seeded rewards remain inactive until the Owner configures and activates them.
