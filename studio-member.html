@@ -315,7 +315,16 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      const artists=await sb.from("app_memberships").select("user_id,business_name,email,role,access_status,artist_member_enabled,is_minor").eq("access_status","active");
      if(version!==generation)return;
      if(artists.error)return deny("Could not load artists. Refresh to retry.");
-     (artists.data||[]).filter(a=>a.role==="owner"||a.artist_member_enabled).forEach(a=>{const name=a.business_name||a.email;artistNames.set(a.user_id,name);if(a.is_minor)artistMinorIds.add(a.user_id);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
+     const activeArtists=(artists.data||[]).filter(a=>a.role==="owner"||a.artist_member_enabled);
+     const artistIds=activeArtists.map(a=>a.user_id);
+     const [profiles,invites]=await Promise.all([
+       artistIds.length?sb.from("artist_career_profiles").select("user_id,artist_name").in("user_id",artistIds):Promise.resolve({data:[],error:null}),
+       artistIds.length?sb.from("studio_invites").select("user_id,full_name,invited_at").in("user_id",artistIds).not("full_name","is",null).order("invited_at",{ascending:false}):Promise.resolve({data:[],error:null})
+     ]);
+     if(version!==generation)return;
+     const profileNames=new Map((profiles.data||[]).filter(p=>p.artist_name?.trim()).map(p=>[p.user_id,p.artist_name.trim()]));
+     const inviteNames=new Map();(invites.data||[]).forEach(i=>{if(!inviteNames.has(i.user_id)&&i.full_name?.trim())inviteNames.set(i.user_id,i.full_name.trim());});
+     activeArtists.forEach(a=>{const name=profileNames.get(a.user_id)||inviteNames.get(a.user_id)||a.business_name||"Artist Member";artistNames.set(a.user_id,name);if(a.is_minor)artistMinorIds.add(a.user_id);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
      artistSelect.value=uid;
    }
    el("project-artist-field").classList.toggle("hidden",!isOwner);
