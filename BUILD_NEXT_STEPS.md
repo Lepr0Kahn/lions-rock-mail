@@ -97,3 +97,17 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Added the same 20 MB total guard to Studio-generated PDF attachments so document handoff cannot bypass the manual attachment limit.
 - Source-level regression check: no duplicate named functions introduced; MIME attachment construction and Studio document handoff remain present.
 - Live Gmail-send acceptance still requires the Owner's interactive Google OAuth session; no real outbound message was sent automatically during this implementation pass.
+
+
+## Access / security acceptance — 2 October 2026
+- Verified workspace helpers under live account types: Artist-only => Artist access true / Business false; Business-only => Business true / Artist false; pending account => neither.
+- RLS impersonation checks showed Artist-only cannot see Business clients/documents; Business-only cannot see Artist projects/files/bookings; pending account sees neither workspace.
+- Membership visibility is isolated for non-Owners: Artist and Business members can only see their own membership row; Owner can see the full access list.
+- Rollback-only suspension test: changing the active Artist to suspended immediately made both Artist and Business access helpers false; transaction rolled back.
+- Rollback-only soft-removal test: deleted/suspended Business member lost both workspace helpers and could see zero clients/documents; transaction rolled back.
+- Reviewed Owner MFA RLS policies: they are RESTRICTIVE, so they narrow access rather than widening it.
+- Reviewed invite creation/claim Edge Functions: create requires active Owner + MFA; claim requires the authenticated invited user, matching pending invite/access type, rejects expiry and suspended accounts, and activates only the invited workspace.
+- Reviewed password recovery: recovery link returns to Studio reset mode, password update preserves membership/workspace state, then local session is signed out and reauthentication is required.
+- Added timeout protection to sign-in, reset request, password update, invite password setup, invite claim, and post-claim session refresh.
+- Owner MFA enforcement is currently NOT enabled because `private.owner_mfa_settings` has no Owner row. Do not enable automatically without confirming an authenticator is enrolled, to avoid lockout.
+- Supabase security advisor still reports leaked-password protection disabled; this is an account-level Auth hardening setting.
