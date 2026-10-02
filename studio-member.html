@@ -613,7 +613,9 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        el("billing-status").textContent="PayPal will charge "+created.chargeCurrency+" "+Number(created.chargeAmount).toFixed(2)+" for "+created.invoiceCurrency+" "+Number(created.amount).toFixed(2)+". Review the amount in PayPal before approving.";
        return {orderId:created.orderId};
      })();
-     const modes=["payment-handler","popup","modal"];
+     window.scrollTo({top:0,behavior:"instant"});
+     try{window.parent?.scrollTo?.({top:0,behavior:"instant"});}catch{}
+     const modes=["popup","payment-handler","modal"];
      let lastError=null;
      for(const presentationMode of modes){
        try{await session.start({presentationMode},createOrderPromise);lastError=null;break;}
