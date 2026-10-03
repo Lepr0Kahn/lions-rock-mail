@@ -152,3 +152,11 @@ Synchronization is activated. Actual server-role access, live account/events/web
 - [ ] Final security/MFA/session/suspension/isolation acceptance remains in the final test pass.
 
 Independent database booking/invoice lifecycle and shared numbering passed on 2 October 2026. Live external Cal.com reschedule/cancel acceptance passed on 3 October 2026. Remaining calendar items above are only the narrower failure/recovery/device/security edge checks not already marked complete. Deferred Owner steps are saved in BUILD_NEXT_STEPS.md.
+
+## Final deployed UI/device readiness — 3 October 2026
+- [x] Production and main were aligned before the final MFA gate fix; the MFA display fix deployed READY and the Owner confirmed the live challenge works.
+- [x] Source/device audit completed across Studio shell, Member, Bookings, Documents, Mail, Admin, Hub, Rewards and Guardian: responsive breakpoints, mobile touch targets, iframe resizing, modal reachability, sticky-preview behavior and narrow-header layout reviewed.
+- [x] No remaining source-level horizontal-overflow defect found. Remaining fixed-width elements are bounded by responsive max-width rules or contained in explicit horizontal-scroll wrappers.
+- [x] Mail preview is non-sticky below desktop width; Studio header has a dedicated ≤520px layout; Rewards and Guardian have explicit mobile breakpoints.
+- [x] Production runtime check after successful MFA login showed no new runtime error cluster.
+- [ ] Final visual-only confirmation on the Owner's actual Mac/Safari and iPhone: no clipped controls, unreadable text, or awkward scrolling. This is presentation acceptance only; functional workflows have already been tested separately.
