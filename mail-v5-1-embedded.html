@@ -1165,7 +1165,9 @@ async function setConnectedGoogleAccount(){
     button.textContent="✓ "+email;
     button.title="Connected Google account: "+email+". Click to change account.";
     button.dataset.connectedEmail=email;
-    gmailNote("✓ Connected to "+email+". Ready to send.");
+    const testEmail=$("test-email");
+    if(testEmail&&!testEmail.value.trim()){testEmail.value=email;try{localStorage.setItem("lrm_test_email",email);}catch(_){}}
+    gmailNote("✓ Connected to "+email+". Ready to send. Test recipient: "+(testEmail?.value.trim()||email)+".");
     toastMsg("Gmail connected",email);
   }catch(_){
     button.textContent="✓ Google connected";
@@ -1422,15 +1424,19 @@ document.addEventListener("DOMContentLoaded",()=>{
   const accentEl=$("accent-color");if(accentEl)accentEl.addEventListener("input",()=>{try{localStorage.setItem("lrm_accent",accentEl.value);}catch(_){}});
   const sendTest=$("send-test");if(sendTest)sendTest.onclick=async()=>{
     const address=$("test-email")?.value.trim()||"";
-    if(!address){toastMsg("Test address required","Enter the email address you want to receive tests at.",true);return;}
-    if(!accessToken){toastMsg("Sign in first","Connect Google before sending a test.",true);return;}
-    sendTest.disabled=true;const old=sendTest.textContent;sendTest.textContent="Sending test…";
+    if(!address){gmailNote("Test not sent: enter a test email address.",true);toastMsg("Test address required","Enter the email address you want to receive tests at.",true);return;}
+    if(!accessToken){gmailNote("Test not sent: connect Google first.",true);toastMsg("Sign in first","Connect Google before sending a test.",true);return;}
+    sendTest.disabled=true;const old=sendTest.textContent;sendTest.textContent="Sending test…";gmailNote("Sending test email to "+address+"…");
     try{
       const s=getState();
-      if(attachmentBytes()>ATTACHMENT_LIMIT_BYTES)throw new Error("Keep total attachments under 20 MB.");const r=await fetchWithTimeout(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+s.subject})})},20000);
-      if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}throw new Error(d);}
+      if(attachmentBytes()>ATTACHMENT_LIMIT_BYTES)throw new Error("Keep total attachments under 20 MB.");
+      const r=await fetchWithTimeout(GMAIL_SEND_URL,{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({raw:buildRaw({to:address,cc:"",bcc:"",subject:"[TEST] "+(s.subject||"Lions Rock Gmail test")})})},20000);
+      if(!r.ok){let d="Gmail returned "+r.status;try{const j=await r.json();d=j?.error?.message||d;}catch(_){}if(r.status===401)accessToken="";throw new Error(d);}
+      const sent=await r.json().catch(()=>({}));
+      gmailNote("✓ Test sent successfully to "+address+(sent.id?" · Gmail message "+sent.id:"")+". Check Sent and Inbox.");
+      const done=$("send-success");if(done){done.style.display="block";done.textContent="✓ TEST SENT — "+address+". Check Gmail Sent and the recipient inbox.";}
       toastMsg("Test sent",address);
-    }catch(e){toastMsg("Test failed",e.message,true);}finally{sendTest.disabled=false;sendTest.textContent=old;}
+    }catch(e){gmailNote("Test failed: "+(e.message||"Unknown Gmail error"),true);toastMsg("Test failed",e.message||"Unknown Gmail error",true);}finally{sendTest.disabled=false;sendTest.textContent=old;}
   };
   const newEmail=$("new-email");if(newEmail)newEmail.onclick=resetNewEmail;
   const installBtn=$("install-app");if(installBtn)installBtn.onclick=async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice;}catch(_){}deferredInstallPrompt=null;installBtn.style.display="none";};
