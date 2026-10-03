@@ -232,3 +232,18 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - pg_net remains installed in the public schema and is still reported by the Advisor. It was not moved during this pass because extension relocation can affect dependent functions and should be handled as a separate compatibility change.
 - No functional database grants were broadened during this security review.
 - Remaining final-security actions: Owner TOTP enrollment + MFA enforcement acceptance; deliberate Auth password-policy/leaked-password rollout; optional pg_net relocation compatibility review.
+
+
+
+## Personalised Direction Engine — 3 October 2026
+- Added a cost-free, deterministic Direction Engine update. No paid AI service, API key or subscription is connected.
+- Artist profiles now include optional Current focus and Obstacle choices. Free-written goals are displayed as written; the engine does not claim to interpret arbitrary text.
+- Five evidence-backed next moves adapt to songwriting, recording, release preparation, audience, collaboration and business goals, and to consistency, finishing work, confidence, time, budget and collaborator obstacles.
+- Foundation steps retain priority. Missing evidence remains explicit and cannot be replaced by a selected preference.
+- Artist home shows a compact direction summary linking to all five next steps; Owner overview shows the same Artist recommendation and choices. Refresh guidance reloads current secure records.
+- Existing profile editor closes after saving. Optional choices do not change completion, XP, badges, track scores or stage rules.
+- Applied career_direction_preferences: two constrained columns on the existing RLS-protected profile table; no new grants, policies, endpoints or AI providers.
+- Passed rule/renderer regressions including all 49 focus/obstacle combinations, incomplete evidence, minor-safe advice, retained stages, text-safe rendering and stale Artist navigation guards.
+- Passed profile save/reload/error/editor tests. Passed rollback-only live database acceptance: own save/read, invalid-choice rejection, unchanged track scores/events, Artist isolation, Business denial and Owner review.
+- Security Advisor reports no finding for artist_career_profiles; existing unrelated findings remain as previously documented.
+- Inline scripts parse successfully. Live visual/device acceptance is not claimed by the source and rollback checks.
