@@ -47,6 +47,11 @@ nav > *{flex:0 0 auto!important;}
 <div class="card"><h3>4. Delivery watch</h3><p class="muted">Masters and deliveries nearing expiry.</p><button type="button" id="shortcut-projects">Open projects</button><div id="ops-deliveries"></div></div>
 </div><p class="muted">Showing up to five items in each area. Session times use Barbados time.</p>
 </section>
+<section id="owner-relationship" class="hidden owner-zone" aria-label="Artist relationship snapshot">
+<div class="zone-head"><div><div class="eyebrow">Artist relationship</div><h2 class="zone-title">Artist snapshot</h2><p class="zone-copy">Choose an Artist to see the current studio relationship in one place.</p></div></div>
+<div class="field" style="max-width:420px"><label for="relationship-artist">Artist</label><select id="relationship-artist"></select></div>
+<p id="relationship-status" class="muted" role="status"></p><div id="relationship-content"></div>
+</section>
 <details id="artist-development-zone" class="dashboard-fold" open><summary id="artist-development-summary">Artist development & career progress</summary><div class="fold-body"><p class="muted">Profile, stage, XP, badges, tracks and direction guidance are grouped here so they stay separate from day-to-day studio operations.</p><form id="career-profile-form" class="card" style="margin:20px 0"><h2>Your artist identity &amp; direction</h2><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><button id="save-career-profile" class="primary">Save career profile</button><p id="career-profile-status" class="muted" role="status"></p></form>
 <section class="card" style="margin:20px 0"><h2 id="milestones-title">Career milestones</h2><div class="field hidden" id="milestone-artist-field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><p id="milestones-summary" class="muted" role="status"></p><p id="selected-career-profile" class="muted"></p><div id="career-stage" class="card" aria-live="polite"></div><div id="career-recognition" class="card" aria-live="polite"></div><div id="career-tracks" aria-live="polite"></div><div id="career-direction" class="card" aria-live="polite"></div><div id="career-history" aria-live="polite"></div><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores follow recorded evidence, with missing signals shown explicitly.</p></section>
 </div></details>
@@ -76,7 +81,7 @@ nav > *{flex:0 0 auto!important;}
  const el=id=>document.getElementById(id);
 async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let milestoneGeneration=0;
- let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),fileGeneration=0,projectAudioUrls=[];
+ let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,fileGeneration=0,projectAudioUrls=[];
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";if(name==="billing"&&(isOwner||isMinor))name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("billing-tab").classList.toggle("active",name==="billing");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=20";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","billing","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  function landAtTop(){requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
@@ -146,6 +151,43 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    queue("ops-deliveries",data.expiring_deliveries||[],"No studio deliveries expire in the next seven days.",f=>[f.filename,f.project_title+" · Expires "+date(f.expires_at)],f=>open(f.project_id));
  }
 
+
+ async function loadArtistRelationship(target){
+   if(!isOwner||!uid)return;
+   const box=el("relationship-content"),status=el("relationship-status"),version=++relationshipGeneration,workspaceVersion=generation;
+   if(!target){box.replaceChildren();status.textContent="No active Artist Members are available.";return;}
+   const contact=artistContacts.get(target)||{},name=artistNames.get(target)||"Artist Member";
+   status.textContent="Loading "+name+"…";box.replaceChildren();
+   try{
+     const now=new Date().toISOString();
+     const projects=items.filter(p=>p.user_id===target),active=projects.filter(p=>p.status==="active").length,released=projects.filter(p=>p.status==="released").length;
+     const [booking,deliveries,vault,recognition,progress]=await Promise.all([
+       sb.from("studio_bookings").select("id,service_name,starts_at,status").eq("user_id",target).in("status",["requested","confirmed"]).gte("starts_at",now).order("starts_at",{ascending:true}).limit(1),
+       sb.from("artist_project_files").select("id",{count:"exact",head:true}).eq("user_id",target).in("kind",["master","mp3_delivery"]).gt("expires_at",now),
+       sb.from("studio_instrumental_requests").select("id,status",{count:"exact"}).eq("user_id",target).in("status",["requested","approved"]),
+       sb.rpc("artist_recognition",{artist_id:target}),
+       sb.rpc("artist_career_progress",{artist_id:target})
+     ]);
+     if(version!==relationshipGeneration||workspaceVersion!==generation||!isOwner)return;
+     const next=booking.error?null:(booking.data||[])[0],deliveryCount=deliveries.error?null:deliveries.count,vaultCount=vault.error?null:vault.count;
+     const xp=recognition.error?null:recognition.data?.xp,level=recognition.error?null:recognition.data?.level,stage=progress.error?null:progress.data?.stage;
+     const stat=(label,value,sub)=>'<div class="card"><div class="eyebrow">'+label+'</div><div class="stat-value">'+value+'</div><p class="muted">'+sub+'</p></div>';
+     box.innerHTML='<div class="stats">'+stat("Active projects",active,"Current projects in progress")+stat("Released",released,"Projects marked released")+stat("Current deliveries",deliveryCount==null?"—":deliveryCount,"Master / MP3 access not expired")+stat("XP",xp==null?"—":xp,(level==null?"Recognition unavailable":"Level "+level))+'</div>'+
+       '<div class="card" style="margin-top:12px"><h3>'+name+'</h3><p class="muted">'+(contact.email||"No email on file")+(contact.is_minor?" · Minor — guardian financial workflow applies":"")+'</p>'+
+       '<div class="row"><strong>Next studio session</strong><span>'+(next?(next.service_name+" · "+new Date(next.starts_at).toLocaleString("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"})):"None scheduled")+'</span></div>'+
+       '<div class="row"><strong>Career stage</strong><span>'+(stage?stage.charAt(0).toUpperCase()+stage.slice(1):"Unavailable")+'</span></div>'+
+       '<div class="row"><strong>Open Vault requests</strong><span>'+(vaultCount==null?"—":vaultCount)+'</span></div>'+
+       '<div class="actions" style="margin-top:14px"><button type="button" id="relationship-progress">Open career progress</button><button type="button" id="relationship-bookings">Open bookings</button><button type="button" id="relationship-projects">Open projects</button><button type="button" id="relationship-email"'+((contact.is_minor||!contact.email)?' disabled':'')+'>Email Artist</button></div>'+
+       (contact.is_minor?'<p class="muted">For a minor, guardian approval and financial communication remain in the guardian workflow.</p>':'')+'</div>';
+     status.textContent="Current relationship snapshot for "+name+".";
+     el("relationship-progress").onclick=()=>{const select=el("milestone-artist");select.value=target;loadMilestones(target);el("artist-development-zone").open=true;requestAnimationFrame(()=>el("artist-development-zone").scrollIntoView({block:"start"}));};
+     el("relationship-bookings").onclick=()=>shortcut("bookings");
+     el("relationship-projects").onclick=()=>shortcut("projects");
+     if(!contact.is_minor&&contact.email)el("relationship-email").onclick=()=>window.parent.postMessage({type:"lions-rock-artist-email",name:name,email:contact.email},location.origin);
+   }catch(error){
+     if(version===relationshipGeneration&&workspaceVersion===generation&&isOwner){status.textContent=error.message||"Could not load Artist snapshot.";box.replaceChildren();}
+   }
+ }
 
  async function loadRecognition(target,version,workspaceVersion){
    const box=el("career-recognition");box.textContent="Loading XP and badges…";
@@ -360,7 +402,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(version!==generation)return;
    if(result.error)return deny("Could not load your projects. Refresh to retry.");
    items=result.data||[];
-   artistNames=new Map();artistProfileNames=new Map();artistMinorIds=new Set();
+   artistNames=new Map();artistProfileNames=new Map();artistMinorIds=new Set();artistContacts=new Map();
    const artistSelect=el("project-artist");artistSelect.replaceChildren();
    if(isOwner){
      const artists=await sb.from("app_memberships").select("user_id,business_name,email,role,access_status,artist_member_enabled,is_minor").eq("access_status","active");
@@ -375,7 +417,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      if(version!==generation)return;
      const profileNames=new Map((profiles.data||[]).filter(p=>p.artist_name?.trim()).map(p=>[p.user_id,p.artist_name.trim()]));artistProfileNames=profileNames;
      const inviteNames=new Map();(invites.data||[]).forEach(i=>{if(!inviteNames.has(i.user_id)&&i.full_name?.trim())inviteNames.set(i.user_id,i.full_name.trim());});
-     activeArtists.forEach(a=>{const name=profileNames.get(a.user_id)||inviteNames.get(a.user_id)||a.business_name||"Artist Member";artistNames.set(a.user_id,name);if(a.is_minor)artistMinorIds.add(a.user_id);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
+     activeArtists.forEach(a=>{const name=profileNames.get(a.user_id)||inviteNames.get(a.user_id)||a.business_name||"Artist Member";artistNames.set(a.user_id,name);artistContacts.set(a.user_id,{email:a.email||"",is_minor:!!a.is_minor,role:a.role});if(a.is_minor)artistMinorIds.add(a.user_id);const option=document.createElement("option");option.value=a.user_id;option.textContent=name;artistSelect.append(option);});
      artistSelect.value=uid;
    }
    el("project-artist-field").classList.toggle("hidden",!isOwner);
@@ -394,8 +436,13 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(version!==generation)return;
    await loadMilestones(uid);
    if(version!==generation)return;
-   el("owner-operations").classList.toggle("hidden",!isOwner);
+   el("owner-operations").classList.toggle("hidden",!isOwner);el("owner-relationship").classList.toggle("hidden",!isOwner);
    if(isOwner){
+     const relationshipSelect=el("relationship-artist");relationshipSelect.replaceChildren();
+     artistNames.forEach((name,id)=>{if(artistContacts.get(id)?.role==="owner")return;const option=document.createElement("option");option.value=id;option.textContent=name;relationshipSelect.append(option);});
+     relationshipSelect.onchange=()=>loadArtistRelationship(relationshipSelect.value);
+     const firstRelationship=relationshipSelect.options[0]?.value||"";
+     if(firstRelationship){relationshipSelect.value=firstRelationship;loadArtistRelationship(firstRelationship);}else{el("relationship-status").textContent="No active Artist Members are available.";el("relationship-content").replaceChildren();}
      el("operations-summary").textContent="Loading current studio operations…";
      const operations=await sb.rpc("studio_management_overview");
      if(version!==generation||!isOwner)return;
