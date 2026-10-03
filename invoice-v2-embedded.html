@@ -277,7 +277,20 @@
   @media (max-width:600px){ .payment-grid{grid-template-columns:1fr;} .service-edit-row{grid-template-columns:1fr;} }
 
 
-  .cloud-panel {
+  .settings-scope-note{font-size:.68rem;color:var(--muted);line-height:1.5;margin:6px 0 12px;padding:9px 10px;border-left:3px solid var(--red);background:#101010}
+.artist-settings-panel{grid-column:1/-1}
+.artist-service-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.artist-service-toolbar .btn,.artist-service-toolbar .btn-primary{margin:0}
+.artist-service-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.artist-service-form .field{margin:0}.artist-service-form .span-all{grid-column:1/-1}
+.artist-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.artist-service-card{border:1px solid var(--border);background:#101010;padding:13px}
+.artist-service-card .title{font-weight:800;font-size:.86rem}
+.artist-service-card .meta,.artist-service-card .desc{font-size:.68rem;color:var(--muted);line-height:1.5;margin-top:5px}
+.artist-service-card .actions{justify-content:flex-start;margin-top:8px}
+.artist-settings-status{font-size:.7rem;color:var(--muted);margin-top:8px}
+@media(max-width:800px){.artist-service-form{grid-template-columns:1fr}.artist-service-grid{grid-template-columns:1fr}.artist-service-form .span-all{grid-column:auto}}
+.cloud-panel {
     max-width: 920px; margin: 0 auto 18px; background: linear-gradient(135deg, rgba(225,6,0,.08), rgba(20,20,20,.98));
     border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 6px; padding: 14px 16px;
   }
@@ -511,7 +524,8 @@
   <div id="view-settings" class="hidden">
     <div class="settings-grid">
       <div class="panel">
-        <div class="panel-title">Business Settings</div>
+        <div class="panel-title">Invoice &amp; Business Settings</div>
+         <div class="settings-scope-note"><strong>Invoice / Business Tools:</strong> controls document branding, contact details, invoice defaults and the client-facing PDF/email experience.</div>
         <div class="field"><label>Business Name</label><input id="set-business-name"></div>
         <div class="field"><label>Tagline</label><input id="set-tagline"></div>
         <div class="field-row">
@@ -541,12 +555,35 @@
         <div class="mini" style="margin-top:10px;">These settings, your logo and your service catalogue sync to your account and are included in V2 backups.</div>
       </div>
       <div class="panel">
-        <div class="panel-title">Services &amp; Prices</div>
+        <div class="panel-title">Invoice Services &amp; Prices</div>
+         <div class="settings-scope-note"><strong>Invoice catalogue:</strong> these items appear in the invoice generator. They do not automatically change what Artists can book in Studio.</div>
         <div id="service-settings-list"></div>
         <div class="actions" style="justify-content:flex-start;">
           <button class="btn" id="add-service-btn">+ Add Service</button>
           <button class="btn" id="reset-services-btn">Reset Default Catalogue</button>
         </div>
+      </div>
+      <div class="panel artist-settings-panel hidden" id="artist-booking-settings">
+        <div class="panel-title">Artist Booking Services</div>
+        <div class="settings-scope-note"><strong>Artist / Studio view:</strong> controls the services and offerings Artists see under Studio → Services &amp; bookings, including duration, price and booking deposit. Owner only.</div>
+        <div class="artist-service-toolbar">
+          <button class="btn" id="artist-import-services" type="button">Refresh from Invoice Catalogue</button>
+          <button class="btn" id="artist-new-service" type="button">New Artist Service</button>
+        </div>
+        <form id="artist-service-form" class="artist-service-form" onsubmit="return false;">
+          <div class="field"><label>Service Name</label><input id="artist-service-name" maxlength="200" required></div>
+          <div class="field"><label>Offering Name</label><input id="artist-offering-name" maxlength="200" required></div>
+          <div class="field"><label>Duration (minutes)</label><input id="artist-duration" type="number" min="15" max="720" value="60" required></div>
+          <div class="field"><label>Price</label><input id="artist-price" type="number" min="0" step="0.01" required></div>
+          <div class="field"><label>Currency</label><select id="artist-currency"><option>BBD</option><option>USD</option></select></div>
+          <div class="field"><label>Booking Deposit (%)</label><input id="artist-deposit" type="number" min="0" max="100" value="50" required></div>
+          <div class="actions span-all" style="justify-content:flex-start">
+            <button class="btn-primary" id="artist-save-service" type="submit">Add Artist Service</button>
+            <button class="btn hidden" id="artist-cancel-edit" type="button">Cancel Edit</button>
+          </div>
+        </form>
+        <div class="artist-settings-status" id="artist-settings-status"></div>
+        <div class="artist-service-grid" id="artist-service-list"></div>
       </div>
     </div>
   </div>
@@ -978,8 +1015,57 @@ function renderServiceSettings(){
 function addService(){var sec=SERVICES.find(function(s){return s.section==='Custom Services';});if(!sec){sec={section:'Custom Services',items:[]};SERVICES.push(sec);}sec.items.push({id:'custom-'+uuid().slice(0,8),name:'New Service',desc:'',price:0});STORE.services=SERVICES;saveStore();renderServiceSettings();buildServicesList();}
 function resetServices(){if(!confirm('Restore the default service catalogue and prices?'))return;SERVICES=clone(DEFAULT_SERVICES);STORE.services=SERVICES;saveStore();renderServiceSettings();buildServicesList();renderPreview();toast('Default catalogue restored');}
 
+
+var ARTIST_SB=null,artistOwner=false,artistServices=[],artistVariants=[],artistEditingService=null,artistEditingVariant=null;
+function artistEl(id){return document.getElementById(id);}
+function artistStatus(msg,bad){var n=artistEl('artist-settings-status');if(n){n.textContent=msg||'';n.style.color=bad?'#ff6b66':'';}}
+function artistResetForm(){artistEditingService=null;artistEditingVariant=null;var f=artistEl('artist-service-form');if(f)f.reset();if(artistEl('artist-duration'))artistEl('artist-duration').value=60;if(artistEl('artist-deposit'))artistEl('artist-deposit').value=50;if(artistEl('artist-service-name'))artistEl('artist-service-name').readOnly=false;if(artistEl('artist-save-service'))artistEl('artist-save-service').textContent='Add Artist Service';artistEl('artist-cancel-edit')?.classList.add('hidden');}
+async function initArtistBookingSettings(){
+ try{
+  if(!window.supabase)return;
+  ARTIST_SB=ARTIST_SB||supabase.createClient('https://xsvczfqvscnvmngwcmtp.supabase.co','sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40',{auth:{detectSessionInUrl:false,persistSession:true}});
+  var sr=await ARTIST_SB.auth.getSession(),session=sr.data&&sr.data.session;if(!session)return;
+  var mr=await ARTIST_SB.from('app_memberships').select('role,business_tools_enabled,access_status,payment_status,expires_at').eq('user_id',session.user.id).maybeSingle(),m=mr.data;
+  artistOwner=!!(m&&m.role==='owner'&&m.business_tools_enabled&&m.access_status==='active'&&['paid','comped'].includes(m.payment_status)&&(!m.expires_at||Date.parse(m.expires_at)>Date.now()));
+  var panel=artistEl('artist-booking-settings');if(panel)panel.classList.toggle('hidden',!artistOwner);
+  if(artistOwner)await loadArtistBookingServices();
+ }catch(e){artistStatus('Could not load Artist booking settings.',true);}
+}
+async function loadArtistBookingServices(){
+ if(!artistOwner||!ARTIST_SB)return;
+ artistStatus('Loading Artist booking services…');
+ var out=await Promise.all([ARTIST_SB.from('studio_services').select('*').order('name'),ARTIST_SB.from('studio_service_variants').select('*').order('name')]);
+ if(out[0].error||out[1].error){artistStatus('Could not load Artist booking services.',true);return;}
+ artistServices=out[0].data||[];artistVariants=out[1].data||[];renderArtistBookingServices();artistStatus('Artist booking services are separate from the invoice catalogue.');
+}
+function renderArtistBookingServices(){
+ var root=artistEl('artist-service-list');if(!root)return;root.replaceChildren();
+ artistServices.forEach(function(s){
+  var card=document.createElement('div');card.className='artist-service-card';
+  var title=document.createElement('div');title.className='title';title.textContent=s.name+' · '+(s.active?'Active':'Inactive');card.append(title);
+  if(s.description){var desc=document.createElement('div');desc.className='desc';desc.textContent=s.description;card.append(desc);}
+  var ovs=artistVariants.filter(function(v){return v.service_id===s.id;});
+  if(!ovs.length){var empty=document.createElement('div');empty.className='meta';empty.textContent='No Artist booking offering configured.';card.append(empty);}
+  ovs.forEach(function(v){
+   var meta=document.createElement('div');meta.className='meta';meta.textContent=v.name+' · '+v.duration_minutes+' min · '+v.currency+' '+Number(v.price).toFixed(2)+' · '+v.deposit_percent+'% deposit';card.append(meta);
+   var edit=document.createElement('button');edit.className='btn';edit.type='button';edit.textContent='Edit offering';edit.onclick=function(){artistEditingService=s.id;artistEditingVariant=v.id;artistEl('artist-service-name').value=s.name;artistEl('artist-service-name').readOnly=true;artistEl('artist-offering-name').value=v.name;artistEl('artist-duration').value=v.duration_minutes;artistEl('artist-price').value=v.price;artistEl('artist-currency').value=v.currency;artistEl('artist-deposit').value=v.deposit_percent;artistEl('artist-save-service').textContent='Save Artist Offering';artistEl('artist-cancel-edit').classList.remove('hidden');artistEl('artist-service-form').scrollIntoView({block:'start'});};card.append(edit);
+  });
+  var add=document.createElement('button');add.className='btn';add.type='button';add.textContent='Add booking offering';add.onclick=function(){artistResetForm();artistEditingService=s.id;artistEl('artist-service-name').value=s.name;artistEl('artist-service-name').readOnly=true;artistEl('artist-price').value=s.catalogue_price||0;artistEl('artist-currency').value=s.catalogue_currency||'BBD';artistEl('artist-save-service').textContent='Save Artist Offering';artistEl('artist-cancel-edit').classList.remove('hidden');artistEl('artist-service-form').scrollIntoView({block:'start'});};card.append(add);
+  var toggle=document.createElement('button');toggle.className='btn';toggle.type='button';toggle.textContent=s.active?'Deactivate':'Activate';toggle.disabled=!s.active&&!ovs.length;toggle.onclick=async function(){toggle.disabled=true;var r=await ARTIST_SB.from('studio_services').update({active:!s.active}).eq('id',s.id);if(r.error)artistStatus(r.error.message,true);else await loadArtistBookingServices();};card.append(toggle);
+  root.append(card);
+ });
+}
+async function saveArtistBookingService(){
+ if(!artistOwner||!ARTIST_SB)return;
+ var args={offering_name:artistEl('artist-offering-name').value.trim(),minutes:Number(artistEl('artist-duration').value),offering_price:Number(artistEl('artist-price').value),offering_currency:artistEl('artist-currency').value,deposit:Number(artistEl('artist-deposit').value)};
+ var r;
+ if(artistEditingVariant)r=await ARTIST_SB.from('studio_service_variants').update({name:args.offering_name,duration_minutes:args.minutes,price:args.offering_price,currency:args.offering_currency,deposit_percent:args.deposit}).eq('id',artistEditingVariant).select('id').single();
+ else if(artistEditingService)r=await ARTIST_SB.rpc('add_studio_service_offering',Object.assign({},args,{service_id:artistEditingService}));
+ else r=await ARTIST_SB.rpc('create_studio_service',Object.assign({},args,{service_name:artistEl('artist-service-name').value.trim()}));
+ if(r.error){artistStatus(r.error.message,true);return;}artistResetForm();await loadArtistBookingServices();artistStatus('Artist booking service saved.');
+}
 function switchView(v){
-  state.view=v;['generator','history','clients','dashboard','settings'].forEach(function(name){$('view-'+name).classList.toggle('hidden',name!==v);});document.querySelectorAll('#main-nav button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});if(v==='history')renderHistory();if(v==='clients')renderClients();if(v==='dashboard')renderDashboard();if(v==='settings')renderSettings();
+  state.view=v;['generator','history','clients','dashboard','settings'].forEach(function(name){$('view-'+name).classList.toggle('hidden',name!==v);});document.querySelectorAll('#main-nav button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});if(v==='history')renderHistory();if(v==='clients')renderClients();if(v==='dashboard')renderDashboard();if(v==='settings'){renderSettings();initArtistBookingSettings();}
 }
 
 function exportData(){
@@ -1004,6 +1090,10 @@ function init(){
   $('history-search').addEventListener('input',renderHistory);$('filter-type').addEventListener('change',renderHistory);$('filter-status').addEventListener('change',renderHistory);$('new-doc-btn').addEventListener('click',function(){resetGenerator();switchView('generator');});
   $('client-form').addEventListener('submit',function(e){e.preventDefault();submitClientForm();});$('cf-submit').addEventListener('click',function(e){e.preventDefault();submitClientForm();});$('cf-cancel').addEventListener('click',function(){state.editingClientId=null;$('client-form-title').textContent='New Client';$('cf-name').value='';$('cf-email').value='';$('cf-phone').value='';$('cf-address').value='';$('cf-cancel').style.display='none';$('cf-submit').textContent='Add Client';});
   $('save-settings-btn').addEventListener('click',saveSettingsFromForm);$('add-service-btn').addEventListener('click',addService);$('reset-services-btn').addEventListener('click',resetServices);
+   if(artistEl('artist-service-form'))artistEl('artist-service-form').addEventListener('submit',function(e){e.preventDefault();saveArtistBookingService();});
+   if(artistEl('artist-cancel-edit'))artistEl('artist-cancel-edit').addEventListener('click',artistResetForm);
+   if(artistEl('artist-new-service'))artistEl('artist-new-service').addEventListener('click',function(){artistResetForm();artistEl('artist-service-form').scrollIntoView({block:'start'});});
+   if(artistEl('artist-import-services'))artistEl('artist-import-services').addEventListener('click',async function(){var b=artistEl('artist-import-services');b.disabled=true;artistStatus('Refreshing Artist services from invoice catalogue…');var r=await ARTIST_SB.rpc('import_invoice_studio_services');b.disabled=false;if(r.error)artistStatus(r.error.message,true);else{await loadArtistBookingServices();artistStatus(String(r.data)+' invoice catalogue items refreshed for Artist service setup. Existing booking offerings keep their own prices.');}});
   ['set-business-name','set-tagline','set-email','set-phone','set-instagram','set-currency','set-deposit','set-quote-days','set-invoice-days'].forEach(function(id){var el=$(id);if(el)el.addEventListener('input',markSettingsDirty);});
   if($('set-logo-file'))$('set-logo-file').addEventListener('change',function(e){if(e.target.files&&e.target.files[0])setLogoFromFile(e.target.files[0]);e.target.value='';});
   if($('remove-logo-btn'))$('remove-logo-btn').addEventListener('click',function(){settingsDraftLogo='';markSettingsDirty();});
