@@ -543,7 +543,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      artistSelect.value=uid;
    }
    el("project-artist-field").classList.toggle("hidden",!isOwner);
-   el("workspace-label").textContent=isOwner?"Studio management":"Career operating system";document.body.classList.toggle("owner-mode",isOwner);el("management-dashboard-nav").classList.toggle("hidden",!isOwner);el("artist-development-summary").textContent=isOwner?"Artist development & career progress":"Your development & career progress";el("artist-development-zone").open=!isOwner;showManagementPanel(ownerDashboardPanel);
+   el("workspace-label").textContent=isOwner?"Studio management":"Career operating system";el("dashboard-tab").textContent=isOwner?"Management Dashboard":"Career Dashboard";document.body.classList.toggle("owner-mode",isOwner);el("management-dashboard-nav").classList.toggle("hidden",!isOwner);el("artist-development-summary").textContent=isOwner?"Artist development & career progress":"Your development & career progress";el("artist-development-zone").open=!isOwner;showManagementPanel(ownerDashboardPanel);
    el("dashboard-tab").textContent=isOwner?"Management Dashboard":"Career Dashboard";
    el("artist-name").textContent=isOwner?"Lions Rock Studio Management":m.business_name||"Your career workspace";
    const kindSelect=el("upload-kind");kindSelect.replaceChildren();
