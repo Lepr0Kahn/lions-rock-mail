@@ -17,6 +17,10 @@
 - The numbering function uses a per-account transaction advisory lock and the database also enforces unique `(user_id, doc_number)`, unique reservation-number and unique booking-invoice constraints.
 - Vercel production routes are currently reachable and showed no runtime-error cluster or production 4xx route failures in the checked 24-hour window.
 - **Deployment blocker:** Vercel is currently rate-limiting new builds. GitHub reports: `Deployment rate limited — retry in 24 hours.` Newest UI commits are therefore source-ready but not all live yet.
+- Guardian approval presentation polished in source: Lions Rock styling, clearer hierarchy, accessible status messaging and explicit Barbados-time link expiry.
+- Admin Security now completes the safe Owner MFA sequence in source: primary authenticator enrollment, backup authenticator enrollment, session verification, then explicit enable/disable enforcement controls. Backend still requires two verified TOTP factors and aal2 before enabling.
+- Rollback security guard test confirmed enforcement is rejected with zero verified factors. Current Owner state remains 0 factors / enforcement OFF.
+- Supabase Security Advisor rechecked: leaked-password protection remains disabled; the available connected Supabase toolset exposes no hosted Auth-setting mutation, so this remains a deliberate Dashboard-level rollout rather than an unsafe workaround.
 
 ### Remaining acceptance / rollout
 1. Deploy the accumulated UI batch once the Vercel build-rate limit clears, then perform the final Mac + iPhone walkthrough against production.
