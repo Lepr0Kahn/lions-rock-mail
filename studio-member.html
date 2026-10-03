@@ -30,6 +30,11 @@ nav > *{flex:0 0 auto!important;}
 <div id="notice" role="status" aria-live="polite"></div>
 <section id="dashboard">
 <div class="stats"><div class="card"><div class="eyebrow">Projects</div><div id="count-all" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Active</div><div id="count-active" class="stat-value">0</div></div><div class="card"><div class="eyebrow">Released</div><div id="count-released" class="stat-value">0</div></div></div>
+<section id="artist-actions" class="zone priority" aria-label="Artist next actions">
+<div class="zone-head"><div><div class="eyebrow">Right now</div><h2 class="zone-title">Your next actions</h2><p class="zone-copy">The most important things waiting for you across the Studio.</p></div></div>
+<p id="artist-actions-status" class="muted" role="status"></p>
+<div id="artist-actions-list" class="ops-lists"></div>
+</section>
 <section id="owner-operations" class="hidden owner-zone priority" aria-label="Studio action center">
 <div class="zone-head"><div><div class="eyebrow">Today at a glance</div><h2 class="zone-title">Studio action center</h2><p class="zone-copy">Start here. These are the items that may need your attention now.</p></div></div>
 <p id="operations-summary" class="muted ops-summary" role="status"></p>
@@ -81,7 +86,7 @@ nav > *{flex:0 0 auto!important;}
  const el=id=>document.getElementById(id);
 async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let milestoneGeneration=0;
- let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,fileGeneration=0,projectAudioUrls=[];
+ let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,artistActionGeneration=0,fileGeneration=0,projectAudioUrls=[];
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";if(name==="billing"&&(isOwner||isMinor))name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("billing-tab").classList.toggle("active",name==="billing");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=20";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","billing","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  function landAtTop(){requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
@@ -109,7 +114,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
  el("quick-analytics").onclick=()=>{if(isOwner){shortcut("analytics");loadAnalytics();}};
  el("quick-notifications").onclick=()=>{shortcut("notifications");loadNotifications();};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&(e.source===el("booking-frame").contentWindow||e.source===el("rewards-frame").contentWindow)&&["lions-rock-booking-invoice","lions-rock-notice-email"].includes(e.data?.type)&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height)){el("booking-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);return;}if(e.origin===location.origin&&e.source===el("rewards-frame").contentWindow&&e.data?.type==="lions-rock-rewards-height"&&Number.isFinite(e.data.height)){el("rewards-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);}});
- function deny(text){el("artist-onboarding").classList.add("hidden");clearBilling();clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;projectAudioUrls.forEach(url=>URL.revokeObjectURL(url));projectAudioUrls=[];el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("artist-onboarding").classList.add("hidden");++artistActionGeneration;el("artist-actions-list").replaceChildren();el("artist-actions-status").textContent="";el("artist-actions").classList.add("hidden");clearBilling();clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;projectAudioUrls.forEach(url=>URL.revokeObjectURL(url));projectAudioUrls=[];el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -151,6 +156,71 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    queue("ops-deliveries",data.expiring_deliveries||[],"No studio deliveries expire in the next seven days.",f=>[f.filename,f.project_title+" · Expires "+date(f.expires_at)],f=>open(f.project_id));
  }
 
+
+ async function loadArtistActions(){
+   if(!uid||isOwner)return;
+   const account=uid,version=++artistActionGeneration,root=el("artist-actions-list"),status=el("artist-actions-status");
+   root.replaceChildren();status.textContent="Checking your Studio activity…";
+   const safe=async promise=>{try{const r=await promise;return r?.error?null:r?.data??r;}catch(_){return null;}};
+   try{
+     const now=new Date().toISOString();
+     const [bookings,deliveries,vault,notifications,rewards,billing]=await Promise.all([
+       safe(sb.from("studio_bookings").select("id,service_name,starts_at,status,hold_expires_at").eq("user_id",account).in("status",["requested","confirmed"]).gte("starts_at",now).order("starts_at",{ascending:true}).limit(5)),
+       safe(sb.from("artist_project_files").select("id,project_id,filename,kind,expires_at").eq("user_id",account).in("kind",["master","mp3_delivery"]).gt("expires_at",now).order("created_at",{ascending:false}).limit(5)),
+       safe(sb.from("studio_instrumental_requests").select("id,title_snapshot,status,invoice_id").eq("user_id",account).in("status",["requested","approved","released"]).order("created_at",{ascending:false}).limit(5)),
+       isMinor?safe(sb.rpc("minor_workspace_data",{section:"notifications"})):safe(sb.from("studio_notifications").select("id",{count:"exact",head:true}).eq("user_id",account).is("read_at",null)),
+       safe(sb.rpc("studio_reward_workspace",{operation:"view",payload:{}})),
+       (!isMinor?safe(paypalCall({action:"list"})):Promise.resolve(null))
+     ]);
+     if(version!==artistActionGeneration||uid!==account||isOwner)return;
+     const actions=[];
+     const add=(priority,title,detail,label,go)=>actions.push({priority,title,detail,label,go});
+
+     const payable=Array.isArray(billing?.invoices)?billing.invoices.filter(x=>Number(x.balance_due)>0):[];
+     if(payable.length){
+       const totalByCurrency={};payable.forEach(x=>{totalByCurrency[x.currency]=(totalByCurrency[x.currency]||0)+Number(x.balance_due||0);});
+       const amount=Object.entries(totalByCurrency).map(([cur,n])=>cur+" "+n.toFixed(2)).join(" · ");
+       add(10,"Payment due",payable.length+" invoice"+(payable.length===1?"":"s")+" waiting · "+amount,"Pay invoices",async()=>{shortcut("billing");await loadBilling();});
+     }
+
+     const delivery=(deliveries||[])[0];
+     if(delivery){
+       const project=items.find(p=>p.id===delivery.project_id);
+       add(20,"Studio delivery ready",(delivery.kind==="master"?"Master":"MP3")+" · "+delivery.filename+(delivery.expires_at?" · access until "+new Date(delivery.expires_at).toLocaleDateString("en-BB",{timeZone:"America/Barbados"}):""),"Open delivery",()=>project?open(project.id):shortcut("projects"));
+     }
+
+     const approved=(vault||[]).find(x=>x.status==="approved");
+     const released=(vault||[]).find(x=>x.status==="released");
+     if(released)add(25,"Licensed master released",released.title_snapshot+" is ready in the Instrumental Vault.","Open Vault",async()=>{shortcut("vault");await loadVault();});
+     else if(approved)add(30,isMinor?"Guardian action pending":"Vault invoice ready",approved.title_snapshot+(isMinor?" · guardian approval/payment is handled separately.":" · complete payment before studio release."),isMinor?"Open Vault":"Review payment",async()=>{if(isMinor){shortcut("vault");await loadVault();}else{shortcut("billing");await loadBilling();}});
+
+     const claims=Array.isArray(rewards?.claims)?rewards.claims:[];
+     const scheduled=claims.find(x=>x.status==="approved"&&x.scheduled_at);
+     const rewardApproved=claims.find(x=>x.status==="approved"&&!x.scheduled_at);
+     if(scheduled)add(35,"Reward experience scheduled",scheduled.title_snapshot+" · "+new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(scheduled.scheduled_at)),"Open Rewards",()=>shortcut("rewards"));
+     else if(rewardApproved)add(45,"Reward approved",rewardApproved.title_snapshot+" · the studio will arrange scheduling.","Open Rewards",()=>shortcut("rewards"));
+
+     const confirmed=(bookings||[]).find(x=>x.status==="confirmed");
+     const requested=(bookings||[]).find(x=>x.status==="requested");
+     if(confirmed)add(40,"Upcoming studio session",confirmed.service_name+" · "+new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(confirmed.starts_at)),"Open booking",()=>shortcut("bookings"));
+     else if(requested)add(50,"Session request awaiting confirmation",requested.service_name+" · requested for "+new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(requested.starts_at)),"Open bookings",()=>shortcut("bookings"));
+
+     const unread=isMinor?Number(notifications?.unread||0):Number(notifications?.count||0);
+     if(unread)add(60,"Studio updates to review",unread+" unread notification"+(unread===1?"":"s")+".","Open notifications",async()=>{shortcut("notifications");await loadNotifications();});
+
+     actions.sort((a,b)=>a.priority-b.priority);
+     if(!actions.length){
+       const card=document.createElement("div");card.className="card";const h=document.createElement("h3");h.textContent="You’re caught up";const p=document.createElement("p");p.className="muted";p.textContent=isMinor?"No immediate Studio actions are waiting for you. Guardian financial steps remain separate.":"No payment, delivery, booking, Vault, reward or notification action is waiting right now.";card.append(h,p);root.append(card);status.textContent="Nothing urgent right now.";return;
+     }
+     actions.slice(0,6).forEach(a=>{
+       const card=document.createElement("div");card.className="card";
+       const h=document.createElement("h3");h.textContent=a.title;const p=document.createElement("p");p.className="muted";p.textContent=a.detail;const b=document.createElement("button");b.textContent=a.label;b.onclick=async()=>{b.disabled=true;try{await a.go();}finally{b.disabled=false;}};card.append(h,p,b);root.append(card);
+     });
+     status.textContent=actions.length+" item"+(actions.length===1?"":"s")+" currently worth your attention.";
+   }catch(error){
+     if(version===artistActionGeneration&&uid===account&&!isOwner){root.replaceChildren();status.textContent="Could not load your next actions. Refresh to retry.";}
+   }
+ }
 
  async function loadArtistRelationship(target){
    if(!isOwner||!uid)return;
@@ -436,7 +506,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(version!==generation)return;
    await loadMilestones(uid);
    if(version!==generation)return;
-   el("owner-operations").classList.toggle("hidden",!isOwner);el("owner-relationship").classList.toggle("hidden",!isOwner);
+   el("artist-actions").classList.toggle("hidden",isOwner);el("owner-operations").classList.toggle("hidden",!isOwner);el("owner-relationship").classList.toggle("hidden",!isOwner);if(!isOwner)loadArtistActions();
    if(isOwner){
      const relationshipSelect=el("relationship-artist");relationshipSelect.replaceChildren();
      artistNames.forEach((name,id)=>{if(artistContacts.get(id)?.role==="owner")return;const option=document.createElement("option");option.value=id;option.textContent=name;relationshipSelect.append(option);});
