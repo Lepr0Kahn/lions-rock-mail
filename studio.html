@@ -204,7 +204,7 @@ body.studio-authenticated .login-gate{display:none!important}
  }
  function toast(s,kind="info"){let t=document.createElement("div");t.className="toast";t.textContent=s;t.setAttribute("role",kind==="error"?"alert":"status");t.style.position="fixed";t.style.top="18px";t.style.left="50%";t.style.transform="translateX(-50%)";t.style.zIndex="999999";t.style.maxWidth="min(92vw,680px)";t.style.padding="14px 18px";t.style.borderRadius="10px";t.style.boxShadow="0 10px 35px rgba(0,0,0,.28)";t.style.fontWeight="700";t.style.textAlign="center";t.style.background=kind==="error"?"#8b1e1e":kind==="success"?"#173d2b":"#1d1d1d";t.style.color="#fff";document.body.appendChild(t);setTimeout(()=>t.remove(),6000)}
  function showGateSection(id){
-   ["signin-view","apply-view","invite-view","reset-view","magic-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
+   ["signin-view","mfa-view","apply-view","invite-view","reset-view","magic-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
  function setLoginMode(mode){
    loginMode=mode==="artist_member"?"artist_member":"business_tools";
