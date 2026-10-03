@@ -191,3 +191,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Existing email options remain paired with the major Owner actions: booking confirmation, delivery, Vault approval/release, reward state, payment receipt/refund/correction and guardian approval.
 - Security advisor was rerun after the DDL change. No new public/exposed notification function was added; the new trigger function is in private schema with execute revoked from anon/authenticated. Existing advisor items remain for the final security pass, including leaked-password protection and previously known SECURITY DEFINER/public-function findings.
 - Studio member inline scripts parse successfully after adding the Rewards notification route.
+
+## Final security hardening review — 2 October 2026
+- Re-ran the Supabase Security Advisor after the communication-loop migrations.
+- Verified all currently flagged public SECURITY DEFINER RPCs are not executable by anon. They are executable by authenticated users because the Studio UI requires them, and each reviewed function performs its own Owner / Artist / active-membership authorization before privileged work.
+- Verified the flagged private tables (career state, reward, guardian, calendar and Owner MFA tables sampled in this pass) have no anon/authenticated table privileges. Their “RLS enabled, no policy” findings are therefore informational rather than browser exposure.
+- Verified public PayPal event/intent/settings tables have no anon/authenticated select or write privileges despite the Advisor's no-policy informational finding.
+- Owner application MFA remains not enforced. The current Owner account has no verified MFA factor, and private.owner_mfa_settings has no enforcement row. Do not enable enforcement until the Owner enrolls and verifies a TOTP factor through the existing MFA UI; otherwise Owner lockout is possible.
+- Supabase Auth leaked-password protection remains disabled. Current Supabase documentation notes that enabling stronger password/leaked-password rules can surface weak-password errors for existing credentials. Treat this as an explicit Auth-setting rollout, not a silent database migration.
+- pg_net remains installed in the public schema and is still reported by the Advisor. It was not moved during this pass because extension relocation can affect dependent functions and should be handled as a separate compatibility change.
+- No functional database grants were broadened during this security review.
+- Remaining final-security actions: Owner TOTP enrollment + MFA enforcement acceptance; deliberate Auth password-policy/leaked-password rollout; optional pg_net relocation compatibility review.
