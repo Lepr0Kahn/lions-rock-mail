@@ -257,12 +257,14 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    try{
      const now=new Date().toISOString();
      const projects=items.filter(p=>p.user_id===target),active=projects.filter(p=>p.status==="active").length,released=projects.filter(p=>p.status==="released").length;
-     const [booking,deliveries,vault,recognition,progress]=await Promise.all([
+     const [booking,deliveries,vault,recognition,progress,history,relationshipNotices]=await Promise.all([
        sb.from("studio_bookings").select("id,service_name,starts_at,status").eq("user_id",target).in("status",["requested","confirmed"]).gte("starts_at",now).order("starts_at",{ascending:true}).limit(1),
        sb.from("artist_project_files").select("id",{count:"exact",head:true}).eq("user_id",target).in("kind",["master","mp3_delivery"]).gt("expires_at",now),
        sb.from("studio_instrumental_requests").select("id,status",{count:"exact"}).eq("user_id",target).in("status",["requested","approved"]),
        sb.rpc("artist_recognition",{artist_id:target}),
-       sb.rpc("artist_career_progress",{artist_id:target})
+       sb.rpc("artist_career_progress",{artist_id:target}),
+       sb.rpc("artist_career_history",{artist_id:target}),
+       sb.from("studio_notifications").select("id,title,created_at,read_at").eq("user_id",target).order("created_at",{ascending:false}).limit(12)
      ]);
      if(version!==relationshipGeneration||workspaceVersion!==generation||!isOwner)return;
      const next=booking.error?null:(booking.data||[])[0],deliveryCount=deliveries.error?null:deliveries.count,vaultCount=vault.error?null:vault.count;
@@ -274,7 +276,16 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        '<div class="row"><strong>Career stage</strong><span>'+(stage?stage.charAt(0).toUpperCase()+stage.slice(1):"Unavailable")+'</span></div>'+
        '<div class="row"><strong>Open Vault requests</strong><span>'+(vaultCount==null?"—":vaultCount)+'</span></div>'+
        '<div class="actions" style="margin-top:14px"><button type="button" id="relationship-progress">Open career progress</button><button type="button" id="relationship-bookings">Open bookings</button><button type="button" id="relationship-projects">Open projects</button><button type="button" id="relationship-email"'+((contact.is_minor||!contact.email)?' disabled':'')+'>Email Artist</button></div>'+
-       (contact.is_minor?'<p class="muted">For a minor, guardian approval and financial communication remain in the guardian workflow.</p>':'')+'</div>';
+       (contact.is_minor?'<p class="muted">For a minor, guardian approval and financial communication remain in the guardian workflow.</p>':'')+'</div>'+
+       '<div class="card" style="margin-top:12px"><h3>Relationship history</h3><p class="muted">Authoritative Studio events and account notifications. Email drafts are not shown as sent unless separately verified.</p><div id="relationship-history"></div></div>';
+     const timeline=[];
+     if(!history.error)(history.data?.events||[]).filter(e=>!e.reversed_at).slice(0,24).forEach(e=>timeline.push({at:e.occurred_at,title:activityLabel(e.event_key),detail:e.backfilled?"Imported history":"Career / studio evidence"}));
+     if(!relationshipNotices.error)(relationshipNotices.data||[]).forEach(n=>timeline.push({at:n.created_at,title:n.title,detail:n.read_at?"Artist viewed / notification read":"Notification issued"}));
+     timeline.sort((a,b)=>new Date(b.at)-new Date(a.at));
+     const seen=new Set(),recent=timeline.filter(e=>{const k=e.title+"|"+new Date(e.at).toISOString().slice(0,16);if(seen.has(k))return false;seen.add(k);return true;}).slice(0,10);
+     const historyRoot=el("relationship-history");
+     if(!recent.length){const p=document.createElement("p");p.className="muted";p.textContent="No relationship history is recorded yet.";historyRoot.append(p);}
+     recent.forEach(e=>{const row=document.createElement("div");row.className="row";const main=document.createElement("div"),title=document.createElement("strong"),meta=document.createElement("p");title.textContent=e.title;meta.className="muted";meta.textContent=new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(e.at))+" · "+e.detail;main.append(title,meta);row.append(main);historyRoot.append(row);});
      status.textContent="Current relationship snapshot for "+name+".";
      el("relationship-progress").onclick=()=>{const select=el("milestone-artist");select.value=target;loadMilestones(target);el("artist-development-zone").open=true;requestAnimationFrame(()=>el("artist-development-zone").scrollIntoView({block:"start"}));};
      el("relationship-bookings").onclick=()=>shortcut("bookings");
