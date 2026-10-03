@@ -18,6 +18,7 @@
   var syncInterval = null;
   var hadLocalAtLoad = false;
   var originalSaveStore = null;
+  window.STUDIO_IS_OWNER = false;
 
   function byId(id) { return document.getElementById(id); }
   function nowIso() { return new Date().toISOString(); }
@@ -707,6 +708,7 @@
     if (!nextUser) {
       persistCurrentUserStore();
       cloudUser = null;
+      window.STUDIO_IS_OWNER = false;
       setAuthUi(session);
       if (syncInterval) clearInterval(syncInterval);
       syncInterval = null;
@@ -714,6 +716,10 @@
     }
 
     cloudUser = nextUser;
+    try {
+      var membership = await sb.from("app_memberships").select("role").eq("user_id", cloudUser.id).maybeSingle();
+      window.STUDIO_IS_OWNER = !membership.error && membership.data && membership.data.role === "owner";
+    } catch (_) { window.STUDIO_IS_OWNER = false; }
     switchLocalStoreForUser(cloudUser.id);
     setAuthUi(session);
     setCloudStatus(navigator.onLine ? "Signed in · preparing sync…" : "Signed in · offline", navigator.onLine ? "syncing" : "offline");
