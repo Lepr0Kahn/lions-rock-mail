@@ -252,6 +252,20 @@
   .mini { font-size:.68rem; color:var(--muted); line-height:1.5; }
   .preview-business { display:flex; align-items:flex-start; gap:12px; }
   .preview-business-text { min-width:0; }
+  .preview-column { align-self:start; }
+  @media (min-width:1001px){ .preview-column { position:sticky; top:10px; } }
+  .preview-heading { font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px; }
+  .settings-save-status { display:inline-block;margin-left:10px;font-size:.72rem;font-weight:700;color:var(--muted); }
+  .settings-save-status.saved { color:var(--green); }
+  .settings-save-status.dirty { color:#f1b535; }
+  .business-preview-card { margin-top:16px;padding:16px;border:1px solid var(--border);background:#101010;display:flex;gap:14px;align-items:center;min-height:96px; }
+  .business-preview-card img { width:72px;height:72px;object-fit:contain;background:#fff;border-radius:4px;padding:4px; }
+  .business-preview-logo-empty { width:72px;height:72px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--dim);font-size:.62rem;line-height:1.3;padding:6px; }
+  .business-preview-name { font-family:Georgia,serif;font-size:1.15rem;font-weight:700; }
+  .business-preview-tag { font-size:.68rem;color:var(--muted);margin-top:3px; }
+  .business-preview-contact { font-size:.7rem;color:#aaa;margin-top:8px;line-height:1.55; }
+  .delivery-panel .delivery-recipient { font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5; }
+
   .balance-row { display:flex; justify-content:space-between; padding:5px 0; font-weight:700; }
   .balance-row.received { color:var(--green); }
   .balance-row.due { color:#b34a00; }
@@ -418,16 +432,25 @@
           </div>
           <div class="field"><label>Notes / Terms</label><textarea id="notes" rows="3"></textarea></div>
         </div>
+
+        <div class="panel delivery-panel">
+          <div class="panel-title">Email &amp; Delivery</div>
+          <div class="delivery-recipient" id="email-recipient-hint">Add the client email above to send this document as a PDF.</div>
+          <div class="actions" style="justify-content:flex-start;">
+            <button class="btn-primary" id="email-client-btn" type="button">Save &amp; Email PDF</button>
+            <button class="btn" id="jump-preview-btn" type="button">Preview Document</button>
+          </div>
+        </div>
       </div>
 
-      <div>
+      <div class="preview-column" id="preview-column">
+        <div class="preview-heading"><span>Live Document Preview</span><span id="preview-kind">Quotation</span></div>
         <div class="preview" id="preview"></div>
         <div class="actions no-print">
           <button class="btn" id="reset-btn">Reset</button>
           <button class="btn" id="convert-btn" style="display:none;">Convert to Invoice</button>
           <button class="btn-paid" id="paid-btn" style="display:none;">Mark as Paid</button>
           <button class="btn" id="save-btn">Save</button>
-          <button class="btn" id="email-client-btn" type="button">Email Client</button>
           <button class="btn" id="print-preview-btn">Print Preview</button>
           <button class="btn-primary" id="print-btn">Save &amp; PDF</button>
         </div>
@@ -496,6 +519,12 @@
           <div class="field"><label>Phone</label><input id="set-phone"></div>
         </div>
         <div class="field"><label>Instagram / Web</label><input id="set-instagram"></div>
+        <div class="field">
+          <label>Business Logo (Optional)</label>
+          <input id="set-logo-file" type="file" accept="image/png,image/jpeg,image/webp">
+          <div class="actions" style="justify-content:flex-start;margin-top:7px;"><button class="btn" id="remove-logo-btn" type="button">Remove Logo</button></div>
+          <div class="mini" style="margin-top:6px;">No Lions Rock logo is added to member invoices. Upload your own logo, or leave this blank.</div>
+        </div>
         <div class="field-row">
           <div class="field"><label>Currency</label><select id="set-currency"><option value="BBD">BBD — Barbados Dollar</option><option value="USD">USD — US Dollar</option></select></div>
           <div class="field"><label>Default Deposit (%)</label><input id="set-deposit" type="number" min="0" max="100"></div>
@@ -504,8 +533,12 @@
           <div class="field"><label>Quote Validity (Days)</label><input id="set-quote-days" type="number" min="0"></div>
           <div class="field"><label>Invoice Due (Days)</label><input id="set-invoice-days" type="number" min="0"></div>
         </div>
-        <button class="btn-primary" id="save-settings-btn">Save Settings</button>
-        <div class="mini" style="margin-top:10px;">These settings and your service catalogue are included in V2 backups.</div>
+        <div>
+          <button class="btn-primary" id="save-settings-btn">Save Settings</button>
+          <span class="settings-save-status" id="settings-save-status">Saved</span>
+        </div>
+        <div class="business-preview-card" id="settings-business-preview"></div>
+        <div class="mini" style="margin-top:10px;">These settings, your logo and your service catalogue sync to your account and are included in V2 backups.</div>
       </div>
       <div class="panel">
         <div class="panel-title">Services &amp; Prices</div>
@@ -537,6 +570,7 @@ var DEFAULT_SETTINGS = {
   email: '',
   phone: '',
   instagram: '',
+  logo_data: '',
   currency: 'BBD',
   default_deposit_pct: 50,
   quote_validity_days: 14,
@@ -612,6 +646,9 @@ function loadStore() {
 function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); }
 var STORE = loadStore();
 var SERVICES = STORE.services;
+var settingsDraftLogo = (STORE.settings && STORE.settings.logo_data) || '';
+var settingsFormDirty = false;
+window.STUDIO_SETTINGS_DIRTY = false;
 
 var state = {
   view:'generator', docType:'quote', paid:false, editingId:null,
@@ -740,7 +777,8 @@ function renderPreview(){
   var settings=STORE.settings;
   var html='';
   if(state.paid&&isInv)html+='<div class="paid-stamp">PAID</div>';
-  html+='<div class="preview-header"><div class="preview-business"><img class="preview-logo" src="'+LOGO_DATA+'"><div class="preview-business-text"><div class="preview-brand">'+escapeHtml(settings.business_name)+'</div><div class="preview-tagline">'+escapeHtml(settings.tagline)+'</div><div class="currency-note">Currency: '+escapeHtml(settings.currency)+'</div></div></div>';
+  var businessLogo=(settings.logo_data||'').trim();
+  html+='<div class="preview-header"><div class="preview-business">'+(businessLogo?'<img class="preview-logo" src="'+escapeHtml(businessLogo)+'" alt="Business logo">':'')+'<div class="preview-business-text"><div class="preview-brand">'+escapeHtml(settings.business_name)+'</div><div class="preview-tagline">'+escapeHtml(settings.tagline)+'</div><div class="currency-note">Currency: '+escapeHtml(settings.currency)+'</div></div></div>';
   html+='<div><div class="doc-type">'+title+'</div><div class="doc-num">'+escapeHtml($('doc-number').value)+'</div></div></div>';
   html+='<div class="preview-meta"><div><div class="meta-label">Bill To</div><div class="meta-text"><div class="name">'+escapeHtml($('client-name').value||'—')+'</div>';
   if($('client-email').value)html+='<div>'+escapeHtml($('client-email').value)+'</div>'; if($('client-phone').value)html+='<div>'+escapeHtml($('client-phone').value)+'</div>'; if($('client-address').value)html+='<div style="white-space:pre-wrap;">'+escapeHtml($('client-address').value)+'</div>';
@@ -761,6 +799,8 @@ function renderPreview(){
   if($('notes').value)html+='<div class="terms">'+escapeHtml($('notes').value)+'</div>';
   html+='<div class="preview-contact"><span>'+escapeHtml(settings.email)+'</span><span>'+escapeHtml(settings.phone)+'</span><span>'+escapeHtml(settings.instagram)+'</span></div>';
   $('preview').innerHTML=html;
+  if($('preview-kind'))$('preview-kind').textContent=title.charAt(0)+title.slice(1).toLowerCase();
+  var hint=$('email-recipient-hint');if(hint){var ce=($('client-email').value||'').trim();hint.textContent=ce?'PDF will be prepared for '+ce+'.':'Add the client email above to send this document as a PDF.';}
   updatePaymentStrip(x);
 }
 function updatePaymentStrip(x){
@@ -878,12 +918,57 @@ function renderDashboard(){
   recent.forEach(function(r){var st=documentStatus(r);html+='<tr><td>'+escapeHtml(r.type==='quote'?'Quote':'Invoice')+'</td><td style="font-family:monospace;">'+escapeHtml(r.doc_number)+'</td><td>'+escapeHtml(r.client_name||'—')+'</td><td>'+escapeHtml(st.toUpperCase())+'</td><td style="text-align:right;font-weight:700;">'+fmtMoney(r.total)+'</td><td><button class="btn" data-id="'+r.id+'">Open</button></td></tr>';});html+='</tbody></table>';el.innerHTML=html;el.querySelectorAll('button[data-id]').forEach(function(b){b.addEventListener('click',function(e){var d=STORE.documents.find(function(x){return x.id===e.currentTarget.getAttribute('data-id');});if(d)loadDocIntoGenerator(d);});});
 }
 
-function renderSettings(){
-  var s=STORE.settings;$('set-business-name').value=s.business_name;$('set-tagline').value=s.tagline;$('set-email').value=s.email;$('set-phone').value=s.phone;$('set-instagram').value=s.instagram;$('set-currency').value=s.currency;$('set-deposit').value=s.default_deposit_pct;$('set-quote-days').value=s.quote_validity_days;$('set-invoice-days').value=s.invoice_due_days;renderServiceSettings();
+function setSettingsStatus(text,kind){
+  var el=$('settings-save-status');if(!el)return;
+  el.textContent=text||'';el.className='settings-save-status '+(kind||'');
+}
+function renderSettingsPreview(){
+  var box=$('settings-business-preview');if(!box)return;
+  var name=($('set-business-name').value||'').trim()||'Your Business';
+  var tagline=($('set-tagline').value||'').trim();
+  var email=($('set-email').value||'').trim();
+  var phone=($('set-phone').value||'').trim();
+  var web=($('set-instagram').value||'').trim();
+  var logo=settingsDraftLogo||'';
+  box.innerHTML=(logo?'<img src="'+escapeHtml(logo)+'" alt="Business logo">':'<div class="business-preview-logo-empty">No logo</div>')+
+    '<div><div class="business-preview-name">'+escapeHtml(name)+'</div>'+
+    (tagline?'<div class="business-preview-tag">'+escapeHtml(tagline)+'</div>':'')+
+    '<div class="business-preview-contact">'+[email,phone,web].filter(Boolean).map(escapeHtml).join('<br>')+'</div></div>';
+}
+function markSettingsDirty(){
+  settingsFormDirty=true;window.STUDIO_SETTINGS_DIRTY=true;setSettingsStatus('Unsaved changes','dirty');renderSettingsPreview();
+}
+function renderSettings(force){
+  if(settingsFormDirty&&!force)return;
+  var s=STORE.settings;
+  settingsDraftLogo=s.logo_data||'';
+  $('set-business-name').value=s.business_name;$('set-tagline').value=s.tagline;$('set-email').value=s.email;$('set-phone').value=s.phone;$('set-instagram').value=s.instagram;$('set-currency').value=s.currency;$('set-deposit').value=s.default_deposit_pct;$('set-quote-days').value=s.quote_validity_days;$('set-invoice-days').value=s.invoice_due_days;
+  settingsFormDirty=false;window.STUDIO_SETTINGS_DIRTY=false;setSettingsStatus('Saved','saved');renderSettingsPreview();renderServiceSettings();
 }
 function saveSettingsFromForm(){
-  STORE.settings={business_name:$('set-business-name').value.trim()||DEFAULT_SETTINGS.business_name,tagline:$('set-tagline').value.trim()||DEFAULT_SETTINGS.tagline,email:$('set-email').value.trim(),phone:$('set-phone').value.trim(),instagram:$('set-instagram').value.trim(),currency:$('set-currency').value,default_deposit_pct:Math.min(100,Math.max(0,parseFloat($('set-deposit').value)||0)),quote_validity_days:Math.max(0,parseInt($('set-quote-days').value,10)||0),invoice_due_days:Math.max(0,parseInt($('set-invoice-days').value,10)||0)};
-  saveStore();$('currency-display').value=STORE.settings.currency;buildServicesList();renderPreview();renderDashboard();toast('Settings saved');
+  STORE.settings={business_name:$('set-business-name').value.trim()||DEFAULT_SETTINGS.business_name,tagline:$('set-tagline').value.trim()||DEFAULT_SETTINGS.tagline,email:$('set-email').value.trim(),phone:$('set-phone').value.trim(),instagram:$('set-instagram').value.trim(),logo_data:settingsDraftLogo||'',currency:$('set-currency').value,default_deposit_pct:Math.min(100,Math.max(0,parseFloat($('set-deposit').value)||0)),quote_validity_days:Math.max(0,parseInt($('set-quote-days').value,10)||0),invoice_due_days:Math.max(0,parseInt($('set-invoice-days').value,10)||0)};
+  saveStore();settingsFormDirty=false;window.STUDIO_SETTINGS_DIRTY=false;$('currency-display').value=STORE.settings.currency;buildServicesList();renderPreview();renderDashboard();renderSettingsPreview();setSettingsStatus('Saved ✓ · syncing to cloud','saved');
+  var b=$('save-settings-btn');if(b){var old=b.textContent;b.textContent='Saved ✓';b.disabled=true;setTimeout(function(){b.textContent=old;b.disabled=false;},1300);}
+  toast('Business settings saved');
+}
+function setLogoFromFile(file){
+  if(!file)return;
+  if(!/^image\/(png|jpeg|webp)$/i.test(file.type||'')){toast('Use a PNG, JPG or WebP logo.',true);return;}
+  if(file.size>4*1024*1024){toast('Logo file is too large. Keep it under 4 MB.',true);return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var max=420,scale=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+      var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      var ctx=canvas.getContext('2d');ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+      settingsDraftLogo=canvas.toDataURL('image/png');
+      markSettingsDirty();
+    };
+    img.onerror=function(){toast('Could not read that logo image.',true);};
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 function renderServiceSettings(){
   var html='';SERVICES.forEach(function(sec,si){html+='<div class="service-edit-section">'+escapeHtml(sec.section)+'</div>';sec.items.forEach(function(it,ii){html+='<div class="service-edit-row"><input data-si="'+si+'" data-ii="'+ii+'" data-f="name" value="'+escapeHtml(it.name)+'"><input data-si="'+si+'" data-ii="'+ii+'" data-f="desc" value="'+escapeHtml(it.desc||'')+'"><input type="number" min="0" step="0.01" data-si="'+si+'" data-ii="'+ii+'" data-f="price" value="'+Number(it.price||0)+'"><button class="btn-remove" data-si="'+si+'" data-ii="'+ii+'">×</button></div>';});});$('service-settings-list').innerHTML=html;
@@ -919,6 +1004,10 @@ function init(){
   $('history-search').addEventListener('input',renderHistory);$('filter-type').addEventListener('change',renderHistory);$('filter-status').addEventListener('change',renderHistory);$('new-doc-btn').addEventListener('click',function(){resetGenerator();switchView('generator');});
   $('client-form').addEventListener('submit',function(e){e.preventDefault();submitClientForm();});$('cf-submit').addEventListener('click',function(e){e.preventDefault();submitClientForm();});$('cf-cancel').addEventListener('click',function(){state.editingClientId=null;$('client-form-title').textContent='New Client';$('cf-name').value='';$('cf-email').value='';$('cf-phone').value='';$('cf-address').value='';$('cf-cancel').style.display='none';$('cf-submit').textContent='Add Client';});
   $('save-settings-btn').addEventListener('click',saveSettingsFromForm);$('add-service-btn').addEventListener('click',addService);$('reset-services-btn').addEventListener('click',resetServices);
+  ['set-business-name','set-tagline','set-email','set-phone','set-instagram','set-currency','set-deposit','set-quote-days','set-invoice-days'].forEach(function(id){var el=$(id);if(el)el.addEventListener('input',markSettingsDirty);});
+  if($('set-logo-file'))$('set-logo-file').addEventListener('change',function(e){if(e.target.files&&e.target.files[0])setLogoFromFile(e.target.files[0]);e.target.value='';});
+  if($('remove-logo-btn'))$('remove-logo-btn').addEventListener('click',function(){settingsDraftLogo='';markSettingsDirty();});
+  if($('jump-preview-btn'))$('jump-preview-btn').addEventListener('click',function(){renderPreview();$('preview-column').scrollIntoView({behavior:'smooth',block:'start'});});
   $('export-btn').addEventListener('click',exportData);$('import-btn').addEventListener('click',function(){$('import-file').click();});$('import-file').addEventListener('change',function(e){if(e.target.files&&e.target.files[0])importData(e.target.files[0]);e.target.value='';});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
@@ -1028,11 +1117,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function emailCopy(doc){
     var kind=doc.type==="quote"?"quotation":((doc.paid||doc.payment_status==="paid")?"receipt":"invoice");
     var cap=kind.charAt(0).toUpperCase()+kind.slice(1);
+    var business=(window.STORE&&STORE.settings&&STORE.settings.business_name||"").trim()||"Your Studio";
     return {
-      subject:"Lion's Rock "+cap+" "+(doc.doc_number||""),
+      subject:business+" "+cap+" "+(doc.doc_number||""),
       greeting:"Hi {{First Name}},",
       body:"Please find your "+kind+" "+(doc.doc_number||"")+" attached.\n\nIf you have any questions, just reply to this email.",
-      signoff:"With gratitude,"
+      signoff:business
     };
   }
 
