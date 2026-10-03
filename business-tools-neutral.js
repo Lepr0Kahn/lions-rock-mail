@@ -186,7 +186,7 @@ function installMail(frame){
     const last=empty.lastElementChild;if(last)last.textContent="Attach PDFs, images, documents, or other files · up to 20 MB total";
   }
   const logoBtn=doc.getElementById("logo-replace-btn");const logoPanel=logoBtn?.closest(".panel");if(logoPanel){const title=logoPanel.querySelector(".panel-title");if(title)title.textContent="Business Email Logo";const hint=logoPanel.querySelector(".panel-hint");if(hint)hint.textContent="Managed in Business Settings. This logo appears at the top of Business emails.";if(logoBtn)logoBtn.classList.add("business-neutral-hidden");doc.getElementById("logo-reset-btn")?.classList.add("business-neutral-hidden");const thumb=doc.getElementById("logo-thumb");if(thumb&&settings?.logo_data)thumb.src=settings.logo_data;}
-  const sigBtn=doc.getElementById("sig-replace-btn");const sigPanel=sigBtn?.closest(".panel");if(sigPanel)sigPanel.classList.add("business-neutral-hidden");
+  const sigBtn=doc.getElementById("sig-replace-btn");const sigBlock=sigBtn?.closest(".logo-cell")?.parentElement;if(sigBlock)sigBlock.classList.add("business-neutral-hidden");
   const sender=doc.getElementById("senderName"),title=doc.getElementById("senderTitle");
   if(sender)sender.value=settings?.business_name||"";
   if(title)title.value="";
