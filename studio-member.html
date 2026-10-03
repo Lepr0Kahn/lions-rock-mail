@@ -636,6 +636,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    try{const result=isMinor?await sb.rpc("minor_project_write",{project_id:selected,project_values:{status:el("detail-status").value}}):await sb.from("artist_projects").update({status:el("detail-status").value}).eq("id",selected).select("id").single();if(result.error)throw result.error;await load();notice("Project status saved.");}catch(error){notice(error.message||"Could not save status.",true);}finally{button.disabled=false;}
  };
  ["projects-tab","all-projects","next-project","back-projects"].forEach(id=>el(id).onclick=()=>shortcut("projects"));
+ el("management-dashboard-nav").querySelectorAll("[data-management-panel]").forEach(button=>button.onclick=()=>showManagementPanel(button.dataset.managementPanel));
  el("dashboard-tab").onclick=()=>shortcut("dashboard");
 
  let analyticsGeneration=0;
