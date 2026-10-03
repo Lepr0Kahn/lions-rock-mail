@@ -34,6 +34,7 @@ nav > *{flex:0 0 auto!important;}
 <div class="zone-head"><div><div class="eyebrow">Right now</div><h2 class="zone-title">Your next actions</h2><p class="zone-copy">The most important things waiting for you across the Studio.</p></div></div>
 <p id="artist-actions-status" class="muted" role="status"></p>
 <div id="artist-actions-list" class="ops-lists"></div>
+<div class="card" style="margin-top:14px"><h3>Recent Studio Activity</h3><p id="artist-activity-status" class="muted" role="status"></p><div id="artist-activity-list"></div></div>
 </section>
 <section id="owner-operations" class="hidden owner-zone priority" aria-label="Studio action center">
 <div class="zone-head"><div><div class="eyebrow">Today at a glance</div><h2 class="zone-title">Studio action center</h2><p class="zone-copy">Start here. These are the items that may need your attention now.</p></div></div>
@@ -86,7 +87,7 @@ nav > *{flex:0 0 auto!important;}
  const el=id=>document.getElementById(id);
 async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
  let milestoneGeneration=0;
- let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,artistActionGeneration=0,fileGeneration=0,projectAudioUrls=[];
+ let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,artistActionGeneration=0,artistActivityGeneration=0,fileGeneration=0,projectAudioUrls=[];
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
  function show(name){el("rewards-tab").classList.toggle("active",name==="rewards");if(name==="payments"&&!isOwner)name="dashboard";if(name==="billing"&&(isOwner||isMinor))name="dashboard";el("payments-tab").classList.toggle("active",name==="payments");el("billing-tab").classList.toggle("active",name==="billing");el("vault-tab").classList.toggle("active",name==="vault");if(name==="analytics"&&!isOwner)name="dashboard";el("analytics-tab").classList.toggle("active",name==="analytics");el("notifications-tab").classList.toggle("active",name==="notifications");if(name==="bookings"&&el("booking-frame").getAttribute("src")==="about:blank")el("booking-frame").src="/studio-bookings.html?v=20";view=name;["dashboard","projects","detail","bookings","notifications","analytics","vault","payments","billing","rewards"].forEach(id=>el(id).classList.toggle("hidden",id!==name));el("dashboard-tab").classList.toggle("active",name==="dashboard");el("projects-tab").classList.toggle("active",["projects","detail"].includes(name));el("bookings-tab").classList.toggle("active",name==="bookings");}
  function landAtTop(){requestAnimationFrame(()=>{try{window.scrollTo({top:0,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,0);}window.parent.postMessage({type:"lions-rock-member-scroll-top"},location.origin);});}
@@ -114,7 +115,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
  el("quick-analytics").onclick=()=>{if(isOwner){shortcut("analytics");loadAnalytics();}};
  el("quick-notifications").onclick=()=>{shortcut("notifications");loadNotifications();};
  window.addEventListener("message",e=>{if(e.origin===location.origin&&(e.source===el("booking-frame").contentWindow||e.source===el("rewards-frame").contentWindow)&&["lions-rock-booking-invoice","lions-rock-notice-email"].includes(e.data?.type)&&isOwner){window.parent.postMessage(e.data,location.origin);return;}if(e.origin===location.origin&&e.source===el("booking-frame").contentWindow&&e.data?.type==="lions-rock-booking-height"&&Number.isFinite(e.data.height)){el("booking-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);return;}if(e.origin===location.origin&&e.source===el("rewards-frame").contentWindow&&e.data?.type==="lions-rock-rewards-height"&&Number.isFinite(e.data.height)){el("rewards-frame").style.height=Math.min(50000,Math.max(700,e.data.height+40))+"px";window.parent.postMessage({type:"lions-rock-member-height"},location.origin);}});
- function deny(text){el("artist-onboarding").classList.add("hidden");++artistActionGeneration;el("artist-actions-list").replaceChildren();el("artist-actions-status").textContent="";el("artist-actions").classList.add("hidden");clearBilling();clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;projectAudioUrls.forEach(url=>URL.revokeObjectURL(url));projectAudioUrls=[];el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
+ function deny(text){el("artist-onboarding").classList.add("hidden");++artistActionGeneration;++artistActivityGeneration;el("artist-actions-list").replaceChildren();el("artist-actions-status").textContent="";el("artist-activity-list").replaceChildren();el("artist-activity-status").textContent="";el("artist-actions").classList.add("hidden");clearBilling();clearPayments();clearVault();el("career-recognition").replaceChildren();clearAnalytics();clearNotifications();el("career-history").replaceChildren();el("career-history").replaceChildren();el("career-direction").replaceChildren();el("career-tracks").replaceChildren();el("career-stage").replaceChildren();el("selected-career-profile").textContent="";el("career-profile-form").reset();el("career-profile-status").textContent="";++milestoneGeneration;el("milestones-list").replaceChildren();el("milestones-summary").textContent="";++generation;el("booking-frame").src="about:blank";el("owner-operations").classList.add("hidden");["ops-requests","ops-sessions","ops-invoices","ops-deliveries"].forEach(id=>el(id).replaceChildren());el("operations-summary").textContent="";el("career-direction").replaceChildren();uid=null;items=[];selected=null;isOwner=false;isMinor=false;++fileGeneration;projectAudioUrls.forEach(url=>URL.revokeObjectURL(url));projectAudioUrls=[];el("file-list").replaceChildren();el("workspace").classList.add("hidden");el("gate").textContent=text;}
  function projectRow(p){
    const button=document.createElement("button");button.className="row";button.type="button";
    const title=document.createElement("strong");title.textContent=p.title;
@@ -157,6 +158,31 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
  }
 
 
+ function activityLabel(key){
+   const labels={membership_granted:"Artist membership activated",profile_complete:"Career profile completed",project_created:"Project created",material_uploaded:"File uploaded",session_booked:"Studio session confirmed",session_completed:"Studio session completed",master_delivered:"Studio delivery ready",master_collected:"Delivery accessed",invoice_settled:"Invoice paid in full",release_published:"Project released",cycle_completed:"Release cycle completed"};
+   return labels[key]||String(key||"Studio activity").replaceAll("_"," ");
+ }
+ async function loadArtistActivity(){
+   if(!uid||isOwner)return;
+   const account=uid,version=++artistActivityGeneration,root=el("artist-activity-list"),status=el("artist-activity-status");
+   root.replaceChildren();status.textContent="Loading recent activity…";
+   try{
+     const [history,noticeData]=await Promise.all([
+       sb.rpc("artist_career_history",{artist_id:account}),
+       isMinor?sb.rpc("minor_workspace_data",{section:"notifications"}):sb.from("studio_notifications").select("id,title,created_at,read_at,action_kind").eq("user_id",account).order("created_at",{ascending:false}).limit(12)
+     ]);
+     if(version!==artistActivityGeneration||uid!==account||isOwner)return;
+     const events=[];
+     if(!history.error)(history.data?.events||[]).filter(e=>!e.reversed_at).slice(0,20).forEach(e=>events.push({at:e.occurred_at,title:activityLabel(e.event_key),detail:e.backfilled?"Imported history":"Recorded by Lions Rock"}));
+     const notices=isMinor?(noticeData.error?[]:noticeData.data?.rows||[]):(noticeData.error?[]:noticeData.data||[]);
+     notices.slice(0,12).forEach(n=>events.push({at:n.created_at,title:n.title,detail:n.read_at?"Studio update":"Unread studio update"}));
+     events.sort((a,b)=>new Date(b.at)-new Date(a.at));
+     const seen=new Set(),rows=events.filter(e=>{const k=e.title+"|"+new Date(e.at).toISOString().slice(0,16);if(seen.has(k))return false;seen.add(k);return true;}).slice(0,8);
+     if(!rows.length){status.textContent="No recent Studio activity yet.";return;}
+     rows.forEach(e=>{const row=document.createElement("div");row.className="row";const main=document.createElement("div"),title=document.createElement("strong"),meta=document.createElement("p");title.textContent=e.title;meta.className="muted";meta.textContent=new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(e.at))+" · "+e.detail;main.append(title,meta);row.append(main);root.append(row);});
+     status.textContent="Latest recorded Studio activity.";
+   }catch(_){if(version===artistActivityGeneration&&uid===account&&!isOwner){root.replaceChildren();status.textContent="Could not load recent activity. Refresh to retry.";}}
+ }
  async function loadArtistActions(){
    if(!uid||isOwner)return;
    const account=uid,version=++artistActionGeneration,root=el("artist-actions-list"),status=el("artist-actions-status");
@@ -506,7 +532,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(version!==generation)return;
    await loadMilestones(uid);
    if(version!==generation)return;
-   el("artist-actions").classList.toggle("hidden",isOwner);el("owner-operations").classList.toggle("hidden",!isOwner);el("owner-relationship").classList.toggle("hidden",!isOwner);if(!isOwner)loadArtistActions();
+   el("artist-actions").classList.toggle("hidden",isOwner);el("owner-operations").classList.toggle("hidden",!isOwner);el("owner-relationship").classList.toggle("hidden",!isOwner);if(!isOwner){loadArtistActions();loadArtistActivity();}
    if(isOwner){
      const relationshipSelect=el("relationship-artist");relationshipSelect.replaceChildren();
      artistNames.forEach((name,id)=>{if(artistContacts.get(id)?.role==="owner")return;const option=document.createElement("option");option.value=id;option.textContent=name;relationshipSelect.append(option);});
