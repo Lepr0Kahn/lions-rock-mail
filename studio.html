@@ -189,7 +189,7 @@ body.studio-authenticated .login-gate{display:none!important}
    setTimeout(()=>fitFrame(frame),350);
    setTimeout(()=>fitFrame(frame),900);
  }
- function toast(s){let t=document.createElement("div");t.className="toast";t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+ function toast(s,kind="info"){let t=document.createElement("div");t.className="toast";t.textContent=s;t.style.position="fixed";t.style.top="18px";t.style.left="50%";t.style.transform="translateX(-50%)";t.style.zIndex="999999";t.style.maxWidth="min(92vw,680px)";t.style.padding="14px 18px";t.style.borderRadius="10px";t.style.boxShadow="0 10px 35px rgba(0,0,0,.28)";t.style.fontWeight="700";t.style.textAlign="center";t.style.background=kind==="error"?"#8b1e1e":kind==="success"?"#173d2b":"#1d1d1d";t.style.color="#fff";document.body.appendChild(t);setTimeout(()=>t.remove(),6000)}
  function showGateSection(id){
    ["signin-view","apply-view","invite-view","reset-view","magic-view"].forEach(x=>document.getElementById(x).classList.toggle("active",x===id));
  }
@@ -560,6 +560,7 @@ body.studio-authenticated .login-gate{display:none!important}
  });
  let receiptEmailGeneration=0;
  window.addEventListener("message",async e=>{
+    if(e.origin===location.origin&&e.data?.type==="lions-rock-toast"){toast(String(e.data.message||""),e.data.kind||"info");return;}
    if(e.origin!==location.origin||!e.data)return;
    if(e.data.type==="lions-rock-member-height"){if(e.source===member.contentWindow)fitSoon(member);return;}
    if(e.data.type==="lions-rock-member-scroll-top"){if(e.source===member.contentWindow){fitSoon(member);requestAnimationFrame(()=>{const y=Math.max(0,member.getBoundingClientRect().top+window.scrollY-118);try{window.scrollTo({top:y,left:0,behavior:"instant"});}catch(_){window.scrollTo(0,y);}});}return;}
