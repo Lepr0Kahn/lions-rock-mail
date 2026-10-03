@@ -145,3 +145,13 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Repeated collection remained idempotent: exactly one artist_delivery_collections row.
 - Disposable acceptance project archived after testing.
 - Temporary server-copy endpoint was disabled immediately after the one-time copy and left JWT-protected/inert.
+
+
+## Owner ↔ Artist relationship snapshot — 2 October 2026
+- Added an Owner-only Artist Snapshot to the Management Dashboard.
+- Owner can select an active Artist Member and see active/released projects, current unexpired master/MP3 delivery count, next requested/confirmed studio session, open Vault request count, XP/level and current career stage.
+- Snapshot links directly to Artist career progress, studio bookings and projects.
+- Adult Artist contact can open the existing Lions Rock Mail composer from the snapshot; no separate mail system was created.
+- Minor Artist email action is disabled in the snapshot so guardian/financial communication continues through the guardian workflow.
+- Artist permissions/RLS were not broadened by this UI change.
+- Modified inline scripts parse successfully. Live browser acceptance remains in the final testing phase.
