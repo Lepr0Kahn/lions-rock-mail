@@ -45,10 +45,15 @@ Deno.serve(async (req) => {
     return json({ error: "Owner access required" }, 403, h);
   }
 
-  // Caller-scoped RPC evaluates the signed JWT assurance level; service role must not bypass it.
-  const callerClient = createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_ANON_KEY")!,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
+  const callerClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false, autoRefreshToken: false } }
+  );
   const security = await callerClient.rpc("owner_mfa_status");
-  if (security.error || security.data?.allowed !== true) return json({error:"Verify your authenticator before creating invitations."},403,h);
+  if (security.error || security.data?.allowed !== true) {
+    return json({ error: "Verify your authenticator before creating invitations." }, 403, h);
+  }
 
   let body: Record<string, unknown>;
   try { body = await req.json(); }
@@ -76,27 +81,15 @@ Deno.serve(async (req) => {
   const redirectTo = APP_ORIGIN + "/studio.html?invite=1&access=" +
     encodeURIComponent(accessType) + "&existing=" + (existingUser ? "1" : "0");
 
-  let linkRes: any;
-  if (existingUser) {
-    linkRes = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: { redirectTo }
+  if (!existingUser) {
+    const invited = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo,
+      data: { full_name: fullName, business_name: businessName, invite_type: accessType }
     });
-  } else {
-    linkRes = await admin.auth.admin.generateLink({
-      type: "invite",
-      email,
-      options: {
-        redirectTo,
-        data: { full_name: fullName, business_name: businessName, invite_type: accessType }
-      }
-    });
-    target = linkRes.data?.user || null;
-  }
-
-  if (linkRes.error || !target) {
-    return json({ error: linkRes.error?.message || "Could not create invite link." }, 400, h);
+    if (invited.error || !invited.data?.user) {
+      return json({ error: invited.error?.message || "Could not email the invitation." }, 400, h);
+    }
+    target = invited.data.user;
   }
 
   const membershipRes = await admin.from("app_memberships")
@@ -104,7 +97,10 @@ Deno.serve(async (req) => {
     .eq("user_id", target.id)
     .maybeSingle();
 
-  if (membershipRes.error) return json({ error: membershipRes.error.message }, 400, h);
+  if (membershipRes.error) {
+    if (!existingUser) await admin.auth.admin.deleteUser(target.id);
+    return json({ error: membershipRes.error.message }, 400, h);
+  }
 
   const now = new Date();
   const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -124,7 +120,10 @@ Deno.serve(async (req) => {
       invited_at: now.toISOString(),
       updated_at: now.toISOString()
     });
-    if (m.error) return json({ error: m.error.message }, 500, h);
+    if (m.error) {
+      if (!existingUser) await admin.auth.admin.deleteUser(target.id);
+      return json({ error: m.error.message }, 500, h);
+    }
   }
 
   await admin.from("studio_invites")
@@ -147,10 +146,25 @@ Deno.serve(async (req) => {
     updated_at: now.toISOString()
   }).select("id").single();
 
-  if (inv.error) return json({ error: inv.error.message }, 500, h);
+  if (inv.error) {
+    if (!existingUser) await admin.auth.admin.deleteUser(target.id);
+    return json({ error: inv.error.message }, 500, h);
+  }
 
-  const actionLink = linkRes.data?.properties?.action_link;
-  if (!actionLink) return json({ error: "Invite was created, but no shareable link was returned." }, 500, h);
+  if (existingUser) {
+    const mailer = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const sent = await mailer.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false, emailRedirectTo: redirectTo }
+    });
+    if (sent.error) {
+      return json({ error: "Invite record was created, but the email could not be sent: " + sent.error.message }, 502, h);
+    }
+  }
 
   return json({
     ok: true,
@@ -159,6 +173,6 @@ Deno.serve(async (req) => {
     access_type: accessType,
     existing_user: existingUser,
     expires_at: expires.toISOString(),
-    invite_link: actionLink
+    email_sent: true
   }, 200, h);
 });
