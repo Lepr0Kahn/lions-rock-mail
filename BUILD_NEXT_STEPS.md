@@ -24,6 +24,7 @@
 - Final live access matrix passed after deployment: Owner Artist=true / Business=true; Artist-only Artist=true / Business=false; Business-only Artist=false / Business=true; pending account false / false.
 
 ### Remaining acceptance / rollout
+- Live Owner MFA sign-in acceptance passed after fixing the MFA gate display bug. Two authenticators were enrolled by the Owner, the fresh sign-in challenge displayed correctly after deployment, and the Owner confirmed successful verification.
 1. Deploy the accumulated UI batch once the Vercel build-rate limit clears, then perform the final Mac + iPhone walkthrough against production.
 2. Run one live guardian-page/email walkthrough after deployment to confirm presentation and handoff, not backend logic (backend guardian workflow already passed).
 3. Owner security rollout remains deliberate and interactive: enroll/verify Owner TOTP before MFA enforcement; separately decide whether to enable leaked-password protection / stronger Auth password policy.
