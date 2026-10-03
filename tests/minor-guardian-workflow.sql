@@ -48,6 +48,9 @@ perform public.guardian_invoice_portal(current_setting('test.guardian_token'),'c
 perform public.guardian_invoice_portal(current_setting('test.guardian_token'),'cash');
 end $test$;
 reset role;
+insert into private.studio_calendar_tickets(actor_id,booking_id,variant_id,starts_at,ends_at)
+values('8da3fa1f-10ef-4fac-8294-279e6a9e61b1'::uuid,null,'196c7505-e8e8-4638-b0bb-83b6b2adf4c6'::uuid,'2032-11-01 16:00:00+00'::timestamptz,'2032-11-01 18:00:00+00'::timestamptz);
+select set_config('test.minor_calendar_ticket',(select id::text from private.studio_calendar_tickets where actor_id='8da3fa1f-10ef-4fac-8294-279e6a9e61b1'::uuid and starts_at='2032-11-01 16:00:00+00'::timestamptz order by expires_at desc limit 1),true);
 select set_config('request.jwt.claim.sub','8da3fa1f-10ef-4fac-8294-279e6a9e61b1',true);
 set local role authenticated;
 do $test$ declare j jsonb;p jsonb;begin
@@ -56,7 +59,7 @@ j:=public.minor_workspace_data('vault');
 if j::text like '%lease_price%' or j::text like '%licence_terms%' then raise exception 'Minor catalogue money leak';end if;
 j:=public.minor_workspace_data('requests');if j::text like '%price_snapshot%' or j::text like '%terms_snapshot%' then raise exception 'Minor request money leak';end if;
 j:=public.minor_workspace_data('notifications');if j::text like '%BBD 150%' then raise exception 'Minor notification money leak';end if;
-perform public.create_studio_booking('196c7505-e8e8-4638-b0bb-83b6b2adf4c6','2032-11-01 12:00:00-04','Minor fixture');
+perform public.create_calendar_studio_booking(current_setting('test.minor_calendar_ticket')::uuid,'196c7505-e8e8-4638-b0bb-83b6b2adf4c6','2032-11-01 12:00:00-04','Minor fixture');
 if public.minor_workspace_data('bookings')::text like '%"price"%' or public.minor_workspace_data('variants')::text like '%"price"%' or public.minor_workspace_data('services')::text like '%catalogue_price%' then raise exception 'Minor booking money leak';end if;
 p:=public.minor_project_write(null,'{"title":"Minor project fixture","kind":"single","brief":"Disposable"}');
 perform public.minor_project_write((p->>'id')::uuid,'{"status":"released"}');
