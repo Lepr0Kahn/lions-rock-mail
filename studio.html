@@ -639,6 +639,13 @@ body.studio-authenticated .login-gate{display:none!important}
      setTimeout(()=>{if(currentSession?.user?.id!==account||currentMembership?.role!=="owner"||!canBusiness(currentMembership)||pendingClient!==draft)return;mail.contentWindow.postMessage({type:"lions-rock-mail-client",...draft},location.origin);},60);
      return;
    }
+   if(e.data.type==="lions-rock-artist-email"){
+     if(e.source!==member.contentWindow||currentMembership?.role!=="owner"||!canBusiness(currentMembership))return;
+     pendingClient={name:e.data.name||"Artist",email:e.data.email||"",attachment:null,subject:"",greeting:e.data.name?"Hello "+e.data.name+",":"",body:"",signoff:"Lions Rock Studio",documentNumber:"",documentType:"artist message"};
+     activate("mail");
+     setTimeout(()=>mail.contentWindow.postMessage({type:"lions-rock-mail-client",...pendingClient},location.origin),60);
+     return;
+   }
    if(e.data.type==="lions-rock-email-client"){
      if(e.source!==docs.contentWindow||!canBusiness(currentMembership))return;
      pendingClient={
