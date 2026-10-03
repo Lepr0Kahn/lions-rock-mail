@@ -16,11 +16,12 @@
 - Shared document numbering acceptance is green: rollback numbering regression passed; zero duplicate document numbers, zero duplicate booking invoices, zero duplicate number reservations; Owner counter is aligned with the highest invoice number at 6 / INV-0006.
 - The numbering function uses a per-account transaction advisory lock and the database also enforces unique `(user_id, doc_number)`, unique reservation-number and unique booking-invoice constraints.
 - Vercel production routes are currently reachable and showed no runtime-error cluster or production 4xx route failures in the checked 24-hour window.
-- **Deployment blocker:** Vercel is currently rate-limiting new builds. GitHub reports: `Deployment rate limited — retry in 24 hours.` Newest UI commits are therefore source-ready but not all live yet.
+- Production deployment has now caught up to `main` at commit `b0ac7ebf…`; the accumulated UI batch, guardian presentation and MFA controls are live.
 - Guardian approval presentation polished in source: Lions Rock styling, clearer hierarchy, accessible status messaging and explicit Barbados-time link expiry.
 - Admin Security now completes the safe Owner MFA sequence in source: primary authenticator enrollment, backup authenticator enrollment, session verification, then explicit enable/disable enforcement controls. Backend still requires two verified TOTP factors and aal2 before enabling.
 - Rollback security guard test confirmed enforcement is rejected with zero verified factors. Current Owner state remains 0 factors / enforcement OFF.
 - Supabase Security Advisor rechecked: leaked-password protection remains disabled; the available connected Supabase toolset exposes no hosted Auth-setting mutation, so this remains a deliberate Dashboard-level rollout rather than an unsafe workaround.
+- Final live access matrix passed after deployment: Owner Artist=true / Business=true; Artist-only Artist=true / Business=false; Business-only Artist=false / Business=true; pending account false / false.
 
 ### Remaining acceptance / rollout
 1. Deploy the accumulated UI batch once the Vercel build-rate limit clears, then perform the final Mac + iPhone walkthrough against production.
