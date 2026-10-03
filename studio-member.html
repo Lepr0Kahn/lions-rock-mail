@@ -188,13 +188,14 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    const account=uid,version=++artistActionGeneration,root=el("artist-actions-list"),status=el("artist-actions-status");
    root.replaceChildren();status.textContent="Checking your Studio activity…";
    const safe=async promise=>{try{const r=await promise;return r?.error?null:r?.data??r;}catch(_){return null;}};
+   const safeCount=async promise=>{try{const r=await promise;return r?.error?0:Number(r?.count||0);}catch(_){return 0;}};
    try{
      const now=new Date().toISOString();
      const [bookings,deliveries,vault,notifications,rewards,billing]=await Promise.all([
        safe(sb.from("studio_bookings").select("id,service_name,starts_at,status,hold_expires_at").eq("user_id",account).in("status",["requested","confirmed"]).gte("starts_at",now).order("starts_at",{ascending:true}).limit(5)),
        safe(sb.from("artist_project_files").select("id,project_id,filename,kind,expires_at").eq("user_id",account).in("kind",["master","mp3_delivery"]).gt("expires_at",now).order("created_at",{ascending:false}).limit(5)),
        safe(sb.from("studio_instrumental_requests").select("id,title_snapshot,status,invoice_id").eq("user_id",account).in("status",["requested","approved","released"]).order("created_at",{ascending:false}).limit(5)),
-       isMinor?safe(sb.rpc("minor_workspace_data",{section:"notifications"})):safe(sb.from("studio_notifications").select("id",{count:"exact",head:true}).eq("user_id",account).is("read_at",null)),
+       isMinor?safe(sb.rpc("minor_workspace_data",{section:"notifications"})):safeCount(sb.from("studio_notifications").select("id",{count:"exact",head:true}).eq("user_id",account).is("read_at",null)),
        safe(sb.rpc("studio_reward_workspace",{operation:"view",payload:{}})),
        (!isMinor?safe(paypalCall({action:"list"})):Promise.resolve(null))
      ]);
