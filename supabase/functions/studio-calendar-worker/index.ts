@@ -160,10 +160,11 @@ Deno.serve(async req=>{
    const raw=await req.text();if(raw.length>131072)return reply({error:"Payload too large"},413);
    if(!await verifySignature(await webhookSecret(key),raw,signature))return reply({error:"Invalid signature"},401);
    const data=JSON.parse(raw),uid=data.payload?.uid;if(typeof uid!=="string")return reply({ignored:true});
-   const hash=await digest(raw),known=await backend("lookup",{providerUid:uid,digest:hash});
-   if(known.seen||!known.bookingId)return reply({ignored:true});
-   const ctx=await backend("context",{bookingId:known.bookingId});if(!ctx.enabled)return reply({ignored:true});
+   const hash=await digest(raw);let known=await backend("lookup",{providerUid:uid,digest:hash});
+   if(known.seen)return reply({ignored:true});
    const fetched=(await cal("/bookings/"+encodeURIComponent(uid))).data;
+   if(!known.bookingId){const metadataBookingId=fetched?.metadata?.osBookingId;if(typeof metadataBookingId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(metadataBookingId))return reply({ignored:true});known={...known,bookingId:metadataBookingId};}
+   const ctx=await backend("context",{bookingId:known.bookingId});if(!ctx.enabled)return reply({ignored:true});
    const current=await currentBooking(cal,uid,known.bookingId,fetched.eventTypeId);
    if(!ctx.link?.provider_uid)return reply({ignored:true});
    const canonical=await currentBooking(cal,ctx.link.provider_uid,known.bookingId,ctx.link.event_type_id);
