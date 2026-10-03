@@ -177,3 +177,17 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Email drafts are deliberately not represented as sent mail unless separate delivery evidence exists.
 - Minor Artist access continues to use the existing restricted notification path.
 - Modified Studio member scripts parse successfully. Live browser/device acceptance remains in the final testing phase.
+
+
+## Communication loop hardening — 2 October 2026
+- Audited Owner actions against in-app notifications and existing email-draft actions.
+- Existing database notifications already cover booking changes, master/MP3 delivery/reissue, Vault request state changes and payment ledger entries.
+- Added database-triggered Reward notifications for request, approval, scheduling/rescheduling, fulfilment, decline and cancellation.
+- Reward notifications go to the Artist and Owner and use deterministic event IDs so the same trigger event cannot duplicate.
+- Added Rewards as a first-class notification destination in the Artist workspace.
+- Extended payment notifications so booking invoice payments/refunds/corrections also notify the linked Artist in Bookings, while the Owner retains the Payments notification. Vault-linked invoice notifications remain routed to Vault.
+- Rollback verification: reward request → approve → schedule produced six notifications total (Artist + Owner for each state change); booking payment verification produced exactly two notifications (Owner Payments + Artist Bookings).
+- All rollback test rows and notifications were confirmed absent afterward.
+- Existing email options remain paired with the major Owner actions: booking confirmation, delivery, Vault approval/release, reward state, payment receipt/refund/correction and guardian approval.
+- Security advisor was rerun after the DDL change. No new public/exposed notification function was added; the new trigger function is in private schema with execute revoked from anon/authenticated. Existing advisor items remain for the final security pass, including leaked-password protection and previously known SECURITY DEFINER/public-function findings.
+- Studio member inline scripts parse successfully after adding the Rewards notification route.
