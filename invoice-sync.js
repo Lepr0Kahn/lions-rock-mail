@@ -198,7 +198,7 @@
       if (window.state && window.state.view === "history" && typeof window.renderHistory === "function") window.renderHistory();
       if (window.state && window.state.view === "clients" && typeof window.renderClients === "function") window.renderClients();
       if (window.state && window.state.view === "dashboard" && typeof window.renderDashboard === "function") window.renderDashboard();
-      if (window.state && window.state.view === "settings" && typeof window.renderSettings === "function") window.renderSettings();
+      if (window.state && window.state.view === "settings" && typeof window.renderSettings === "function" && !window.STUDIO_SETTINGS_DIRTY) window.renderSettings();
     } catch (_) {}
   }
 
@@ -328,6 +328,7 @@
         email: s.business_email || "",
         phone: s.business_phone || "",
         instagram: s.instagram || s.instagram_personal || "",
+        logo_data: s.logo_data || "",
         currency: s.currency || "BBD",
         default_deposit_pct: Number(s.default_deposit_pct == null ? 50 : s.default_deposit_pct),
         quote_validity_days: Number(s.quote_valid_days == null ? 14 : s.quote_valid_days),
@@ -383,7 +384,8 @@
       business_email: s.email || "",
       business_phone: s.phone || "",
       instagram: s.instagram || "",
-      instagram_personal: s.instagram || "@yofavengineer",
+      instagram_personal: s.instagram || "",
+      logo_data: s.logo_data || "",
       currency: s.currency || "BBD",
       default_deposit_pct: Number(s.default_deposit_pct == null ? 50 : s.default_deposit_pct),
       quote_valid_days: Number(s.quote_validity_days == null ? 14 : s.quote_validity_days),
