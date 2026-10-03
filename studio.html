@@ -44,6 +44,17 @@ body:not(.studio-authenticated) .top,body:not(.studio-authenticated) .stage{disp
 body.studio-authenticated .login-gate{display:none!important}
 @media(max-width:720px){.global-search{width:150px}.global-search input{font-size:11px;padding:8px}.search-results{position:fixed;top:72px;left:8px;right:8px}.top{height:128px}.stage{min-height:calc(100vh - 128px);height:auto}.frame{height:calc(100vh - 128px)}.head{height:72px;padding:8px 10px}.head img{width:38px;height:38px}.brand .name{font-size:12px;letter-spacing:.14em}.brand .sub{font-size:8px}.account .label{display:none}.authbox input{width:112px}.pill{padding:7px 8px}.nav{height:56px;padding-left:6px}.nav button{padding:9px 11px;font-size:9px}}
 
+@media(max-width:520px){
+ .top{height:166px}
+ .head{height:110px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:48px 42px;gap:6px 8px;padding:7px 9px}
+ .head img{grid-column:1;grid-row:1;width:38px;height:38px}
+ .brand{grid-column:2;grid-row:1}.brand .sub{display:none}.brand .name{font-size:11px;letter-spacing:.11em}
+ .account{grid-column:3;grid-row:1;justify-self:end}.account .dot,.account .label{display:none}.account .pill{padding:7px 8px;font-size:10px}
+ .global-search{grid-column:1/-1;grid-row:2;width:100%}.global-search input{height:38px;font-size:12px;padding:9px 10px}
+ .search-results{top:108px}
+ .nav{height:56px}
+ .stage{min-height:calc(100vh - 166px)}.frame{min-height:calc(100vh - 166px);height:auto}
+}
 /* mac-horizontal-nav-fix */
 .nav{max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-gutter:stable;}
 .nav > *{flex:0 0 auto!important;}
