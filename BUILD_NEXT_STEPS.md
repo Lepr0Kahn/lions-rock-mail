@@ -1,5 +1,29 @@
 # Next steps and deferred Owner work
 
+## 3 October 2026 — final acceptance progress
+
+- External Cal.com reschedule/cancel acceptance is now complete. Cal.com replacement UIDs are reconciled back to the same Lions Rock Studio booking, and external cancellation correctly marks the same booking cancelled.
+- Fixed the Cal.com replacement-UID webhook path so a replacement booking can recover its Lions Rock booking from preserved `osBookingId` metadata.
+- Guardian/minor rollback-only acceptance passed: minor financial masking, guardian invoice routing, consent, payment/release gating, forged/expired link rejection, cash-request semantics and automatic link invalidation all verified.
+- Updated the guardian regression fixture to use the current calendar-ticket guard.
+- Fixed the Artist "Your next actions" unread notification count so exact Supabase count metadata is preserved.
+- Services & Bookings UI cleanup completed in source: Bookings now focuses on Booking Queue and Book Session. Service administration moved to Settings.
+- Settings now separates **Invoice & Business Settings**, **Invoice Services & Prices**, and Owner-only **Artist Booking Services** so invoice catalogue controls and Artist-facing booking controls are visibly distinct.
+- Artist Booking Services create/edit/import permissions were exercised against the live database in a rollback-only acceptance test; no disposable data remained.
+- UI source acceptance completed across Studio shell, Member, Bookings, Documents, Mail, Admin, Hub, Rewards and Guardian surfaces. All current inline scripts parse cleanly.
+- Mobile polish added: narrow Studio header, larger touch targets, Rewards breakpoint, non-sticky Mail preview below desktop width, Hub in-app notifications, Escape-to-close modal behavior and improved status announcements.
+- Embedded cache versions were bumped for Documents, Hub, Member, Bookings and Rewards so the next deployment does not serve stale UI.
+- Shared document numbering acceptance is green: rollback numbering regression passed; zero duplicate document numbers, zero duplicate booking invoices, zero duplicate number reservations; Owner counter is aligned with the highest invoice number at 6 / INV-0006.
+- The numbering function uses a per-account transaction advisory lock and the database also enforces unique `(user_id, doc_number)`, unique reservation-number and unique booking-invoice constraints.
+- Vercel production routes are currently reachable and showed no runtime-error cluster or production 4xx route failures in the checked 24-hour window.
+- **Deployment blocker:** Vercel is currently rate-limiting new builds. GitHub reports: `Deployment rate limited — retry in 24 hours.` Newest UI commits are therefore source-ready but not all live yet.
+
+### Remaining acceptance / rollout
+1. Deploy the accumulated UI batch once the Vercel build-rate limit clears, then perform the final Mac + iPhone walkthrough against production.
+2. Run one live guardian-page/email walkthrough after deployment to confirm presentation and handoff, not backend logic (backend guardian workflow already passed).
+3. Owner security rollout remains deliberate and interactive: enroll/verify Owner TOTP before MFA enforcement; separately decide whether to enable leaked-password protection / stronger Auth password policy.
+4. Final documentation closeout after production UI verification.
+
 Updated 2 October 2026, following the user's instruction to continue independent work and save approval/sign-in steps until they are available.
 
 ## Current work order — user decision, 2 October 2026
