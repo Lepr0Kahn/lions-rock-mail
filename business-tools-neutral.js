@@ -31,6 +31,17 @@ async function saveColors(accent,header){
     settings=Object.assign({},settings||{},{invoice_accent_color:accent,invoice_header_color:header});
   }catch(e){console.warn("Save business colors:",e);}
 }
+async function saveEmailBranding(footer,logo){
+  try{
+    const sb=ensureClient();if(!sb)return;
+    const s=await sb.auth.getSession();const uid=s.data?.session?.user?.id;if(!uid)return;
+    const payload={email_footer:String(footer||"").trim(),updated_at:new Date().toISOString()};
+    if(typeof logo==="string")payload.logo_data=logo;
+    const r=await sb.from("business_settings").update(payload).eq("user_id",uid);
+    if(r.error)throw r.error;
+    settings=Object.assign({},settings||{},payload);
+  }catch(e){console.warn("Save business email branding:",e);throw e;}
+}
 function addStyle(doc,id,css){
   if(!doc||doc.getElementById(id))return;
   const s=doc.createElement("style");s.id=id;s.textContent=css;doc.head.appendChild(s);
@@ -63,6 +74,24 @@ function installDocs(frame){
     serviceList.parentNode.insertBefore(h,serviceList);
     const note=doc.createElement("div");note.className="mini";note.style.marginBottom="8px";note.textContent="Name each service, add an optional description, then set the price.";
     h.parentNode.insertBefore(note,h);
+  }
+  const logoInput=doc.getElementById("set-logo-file"),logoField=logoInput?.closest(".field");
+  if(logoField&&!doc.getElementById("business-email-footer")){
+    const logoHint=logoField.querySelector(".mini");if(logoHint)logoHint.textContent="Your logo is used on both invoices and Business emails. Leave blank for no logo.";
+    const field=doc.createElement("div");field.className="field";field.innerHTML='<label for="business-email-footer">Email Footer (Optional)</label><textarea id="business-email-footer" rows="3" maxlength="1200" placeholder="e.g. Thank you for your business · phone · website"></textarea><div class="mini" style="margin-top:6px;">Appears at the bottom of Business emails. Leave blank for no footer.</div>';
+    logoField.parentNode.insertBefore(field,logoField.nextSibling);
+    const footer=doc.getElementById("business-email-footer");footer.value=settings?.email_footer||"";
+    footer.addEventListener("input",()=>{const st=doc.getElementById("settings-save-status");if(st){st.textContent="Unsaved changes";st.className="settings-save-status dirty";}});
+    doc.getElementById("save-settings-btn")?.addEventListener("click",()=>setTimeout(async()=>{
+      try{
+        const logo=win.STORE?.settings?.logo_data||"";
+        await saveEmailBranding(footer.value,logo);
+        const st=doc.getElementById("settings-save-status");if(st){st.textContent="Saved ✓";st.className="settings-save-status saved";}
+        const mail=document.getElementById("mail-frame");if(mail?.contentWindow&&enabled){try{mail.contentWindow.renderPreview?.();}catch(_){}}
+      }catch(_){
+        const st=doc.getElementById("settings-save-status");if(st){st.textContent="Could not save email branding";st.className="settings-save-status dirty";}
+      }
+    },70));
   }
   const currency=doc.getElementById("set-currency");
   if(currency&&!doc.getElementById("business-color-row")){
@@ -105,12 +134,14 @@ function neutralEmailHtml(win){
   const subject=val("subject"),greeting=val("greeting"),body=val("body"),signoff=val("signoff");
   const sender=val("senderName"),title=val("senderTitle");
   const business=(settings?.business_name||sender||"").trim();
+  const logo=String(settings?.logo_data||"").trim(),footer=String(settings?.email_footer||"").trim();
   const paragraphs=esc(body).split(/\n{2,}/).map(x=>'<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#222">'+x.replace(/\n/g,"<br>")+"</p>").join("");
   return '<!doctype html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;color:#222">'+
     '<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:28px 12px">'+
     '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#fff;border:1px solid #e7e7e7">'+
     '<tr><td style="height:5px;background:'+accent+'"></td></tr>'+
     '<tr><td style="padding:32px">'+
+    (logo?'<div style="margin-bottom:18px"><img src="'+esc(logo)+'" alt="'+esc(business||"Business")+' logo" style="display:block;max-width:120px;max-height:72px;width:auto;height:auto"></div>':'')+
     (business?'<div style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:22px">'+esc(business)+'</div>':'')+
     (subject?'<div style="font-family:Georgia,serif;font-size:28px;line-height:1.2;margin-bottom:20px;color:#111">'+esc(subject)+'</div>':'')+
     (greeting?'<div style="font-size:16px;line-height:1.6;margin-bottom:16px">'+esc(greeting)+'</div>':'')+
@@ -118,18 +149,21 @@ function neutralEmailHtml(win){
     (signoff?'<div style="font-size:16px;line-height:1.6;margin-top:20px">'+esc(signoff)+'</div>':'')+
     (sender?'<div style="font-weight:700;margin-top:14px">'+esc(sender)+'</div>':'')+
     (title?'<div style="font-size:13px;color:#777;margin-top:3px">'+esc(title)+'</div>':'')+
+    (footer?'<div style="margin-top:28px;padding-top:16px;border-top:1px solid #e7e7e7;font-size:11px;line-height:1.55;color:#777">'+esc(footer).replace(/\n/g,"<br>")+'</div>':'')+
     '</td></tr></table></td></tr></table></body></html>';
 }
 function neutralMailPreview(win){
   const d=win.document,root=d.getElementById("preview-root");if(!root)return;
   const val=id=>d.getElementById(id)?.value||"";
   const accent=validColor(val("accent-color")||settings?.invoice_accent_color,"#C24D2C");
-  const business=(settings?.business_name||val("senderName")||"").trim();
+  const business=(settings?.business_name||val("senderName")||"").trim(),logo=String(settings?.logo_data||"").trim(),footer=String(settings?.email_footer||"").trim();
   root.innerHTML='<div class="ep"><div class="ep-box"><div class="ep-accent" style="background:'+accent+'"></div>'+
+    (logo?'<div style="padding:18px 22px 4px"><img src="'+esc(logo)+'" alt="'+esc(business||"Business")+' logo" style="max-width:92px;max-height:58px;width:auto;height:auto"></div>':'')+
     '<div style="padding:22px 22px 8px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#666">'+esc(business)+'</div>'+
     '<div class="ep-subject">'+esc(val("subject"))+'</div><div class="ep-greet">'+esc(val("greeting"))+'</div>'+
     '<div class="ep-body"><p>'+esc(val("body")).replace(/\n/g,"<br>")+'</p></div>'+
     '<div class="ep-sign"><p>'+esc(val("signoff"))+'</p><div class="ep-sign-name">'+esc(val("senderName"))+'</div><div class="ep-sign-title">'+esc(val("senderTitle"))+'</div></div>'+
+    (footer?'<div style="margin:0 22px 22px;padding-top:12px;border-top:1px solid #ddd;font-size:10px;line-height:1.5;color:#777">'+esc(footer).replace(/\n/g,"<br>")+'</div>':'')+
     '</div></div>';
 }
 function installMail(frame){
@@ -151,7 +185,8 @@ function installMail(frame){
   const empty=q(doc,"#tracks-empty");if(empty){
     const last=empty.lastElementChild;if(last)last.textContent="Attach PDFs, images, documents, or other files · up to 20 MB total";
   }
-  const logoBtn=doc.getElementById("logo-replace-btn");const logoPanel=logoBtn?.closest(".panel");if(logoPanel)logoPanel.classList.add("business-neutral-hidden");
+  const logoBtn=doc.getElementById("logo-replace-btn");const logoPanel=logoBtn?.closest(".panel");if(logoPanel){const title=logoPanel.querySelector(".panel-title");if(title)title.textContent="Business Email Logo";const hint=logoPanel.querySelector(".panel-hint");if(hint)hint.textContent="Managed in Business Settings. This logo appears at the top of Business emails.";if(logoBtn)logoBtn.classList.add("business-neutral-hidden");doc.getElementById("logo-reset-btn")?.classList.add("business-neutral-hidden");const thumb=doc.getElementById("logo-thumb");if(thumb&&settings?.logo_data)thumb.src=settings.logo_data;}
+  const sigBtn=doc.getElementById("sig-replace-btn");const sigPanel=sigBtn?.closest(".panel");if(sigPanel)sigPanel.classList.add("business-neutral-hidden");
   const sender=doc.getElementById("senderName"),title=doc.getElementById("senderTitle");
   if(sender)sender.value=settings?.business_name||"";
   if(title)title.value="";
