@@ -91,7 +91,7 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
  let session=null,clients=[],projects=[],documents=[];
  let view="clients",selectedClient=null,selectedProject=null,formMode=null,editId=null,filter="";
 
- function toast(msg,bad=false){const n=document.createElement("div");n.className="toast"+(bad?" bad":"");n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),5000);}
+ function toast(msg,bad=false){const n=document.createElement("div");n.className="toast"+(bad?" bad":"");n.textContent=msg;n.setAttribute("role",bad?"alert":"status");document.body.appendChild(n);setTimeout(()=>n.remove(),5000);}
  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
  function money(n,cur){return (cur==="USD"?"US $":"BBD $")+Number(n||0).toFixed(2);}
  function statusLabel(s){return ({lead:"Lead",active:"Active",on_hold:"On Hold",completed:"Completed",archived:"Archived"})[s]||s||"Active";}
@@ -353,6 +353,7 @@ body{padding:18px}.wrap{max-width:1260px;margin:0 auto}.bar{display:flex;gap:10p
  document.getElementById("cancel").onclick=closeModal;
  document.getElementById("save").onclick=saveForm;
  document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("modal").classList.contains("open"))closeModal();});
  document.getElementById("relink-cancel").onclick=closeRelink;
  document.getElementById("relink-save").onclick=saveRelink;
  document.getElementById("relink-modal").onclick=e=>{if(e.target.id==="relink-modal")closeRelink()};
