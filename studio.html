@@ -153,7 +153,7 @@ body.studio-authenticated .login-gate{display:none!important}
 </div>
 <div class="stage">
   <iframe class="frame active" id="mail-frame" src="/mail-v5-1-embedded.html?v=12" title="Lions Rock Mail"></iframe>
-  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=12" title="Lions Rock Documents"></iframe>
+  <iframe class="frame" id="docs-frame" src="/invoice-v2-embedded.html?v=13" title="Lions Rock Documents"></iframe>
   <iframe class="frame" id="hub-frame" src="/studio-hub.html?v=7" title="Lions Rock Clients and Projects"></iframe>
   <iframe class="frame" id="member-frame" src="/studio-member.html?v=53" title="Lions Rock Artist Member"></iframe>
   <iframe class="frame" id="admin-frame" src="/studio-admin.html?v=19" title="Lions Rock Access Administration"></iframe>
@@ -351,7 +351,7 @@ body.studio-authenticated .login-gate{display:none!important}
    document.getElementById("authbox").style.display="none";
    document.getElementById("studio-signout").style.display="inline-block";
    document.getElementById("admin-nav").style.display=m.data.role==="owner"?"block":"none";
-   document.getElementById("mail-nav").style.display=m.data.role==="owner"?"":"none";
+   document.getElementById("mail-nav").style.display=businessOK?"":"none";
    document.getElementById("member-nav").style.display=artistOK?"":"none";
    document.getElementById("member-nav").textContent=m.data.role==="owner"?"Studio OS":"Member";
    document.querySelectorAll('[data-scope="business"]').forEach(x=>x.style.display=businessOK?"":"none");
@@ -532,7 +532,7 @@ body.studio-authenticated .login-gate{display:none!important}
  function activate(appName,viewName,payload){
    if(appName==="member"&&!canArtist(currentMembership))return;
    if((appName==="documents"||appName==="hub")&&!canBusiness(currentMembership))return;
-   if(appName==="mail"&&currentMembership?.role!=="owner")return;
+   if(appName==="mail"&&!canBusiness(currentMembership))return;
    document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.app===appName && (!viewName||x.dataset.view===viewName)));
    mail.classList.toggle("active",appName==="mail");
    docs.classList.toggle("active",appName==="documents");
