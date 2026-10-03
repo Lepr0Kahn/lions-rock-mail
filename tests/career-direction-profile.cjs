@@ -1,4 +1,5 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
+require("../career-direction.js");
 const source=fs.readFileSync("studio-member.html","utf8");
 const start=source.indexOf(" function setProfileEditing("),end=source.indexOf(" let notificationGeneration=",start);
 assert(start>=0&&end>start);
@@ -9,10 +10,10 @@ function node(){
   append(...v){this.children.push(...v);},replaceChildren(){this.children=[];},focus(){},addEventListener(){}};
 }
 const els=new Map(),el=id=>{if(!els.has(id))els.set(id,node());return els.get(id);};
-let stored={artist_name:"Sample Artist",genres:"Soca",goal_12_months:"Finish one song",direction_focus:"recording",direction_obstacle:"time"},fail=false,refreshes=0;
+let stored={username:"sample_artist",goal_key:"record_single",artist_name:"Sample Artist",genres:"Soca",goal_12_months:"Finish one song",direction_focus:"recording",direction_obstacle:"time"},fail=false,refreshes=0;
 const sb={from:()=>({select(){return this},eq(){return this},maybeSingle:async()=>({data:{...stored},error:null}),
  upsert:async values=>{if(fail)return {error:{message:"Save failed"}};stored={...values};return {error:null};}})};
-const sandbox={el,sb,isOwner:false,uid:"artist",generation:1,document:{createElement:node},requestAnimationFrame:f=>f(),
+const sandbox={el,sb,usernameValue:id=>el(id).value.trim().toLowerCase(),window:{LionsRockDirection:globalThis.LionsRockDirection},isOwner:false,uid:"artist",generation:1,document:{createElement:node},requestAnimationFrame:f=>f(),
  withLoadTimeout:p=>p,loadMilestones:async()=>{refreshes++;},load:async()=>{},render:()=>{}};
 vm.createContext(sandbox);vm.runInContext(source.slice(start,end),sandbox);
 (async()=>{

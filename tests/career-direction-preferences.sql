@@ -11,6 +11,9 @@ do $$ begin if (select count(*) from direction_fixture)<>1 then raise exception 
 select set_config('test.direction_artist',(select artist::text from direction_fixture),true),
  set_config('test.direction_owner',(select owner_id::text from direction_fixture),true),
  set_config('test.direction_business',(select business_id::text from direction_fixture),true);
+-- Prepare the existing Artist fixture for the required first-entry setup inside this rollback.
+update public.artist_career_profiles set username='test_'||substr(replace(user_id::text,'-',''),1,20),goal_key='custom',artist_name=coalesce(nullif(btrim(artist_name),''),'Test Artist'),genres=coalesce(nullif(btrim(genres),''),'Soca'),goal_12_months=coalesce(nullif(btrim(goal_12_months),''),'My goal') where user_id=(select artist from direction_fixture);
+update direction_fixture set event_count=(select count(*) from public.artist_career_events);
 select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.direction_artist'),'role','authenticated','aal','aal1')::text,true);
 set local role authenticated;
 select set_config('test.direction_tracks',(public.artist_career_tracks()-'computed_at')::text,true);

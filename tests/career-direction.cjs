@@ -11,7 +11,7 @@ assert.throws(()=>build({}),/required/);
 const source=fs.readFileSync(process.argv[3]||"studio-member.html","utf8"),start=source.indexOf("function renderDirection("),end=source.indexOf("async function loadMilestones(target)",start);assert(start>=0&&end>start);const renderer=source.slice(start,end);
 function node(){return {children:[],textContent:"",append(...v){this.children.push(...v);},replaceChildren(){this.children=[];},scrollIntoView(){this.scrolled=true;}};}
 const elements=new Map();const el=id=>{if(!elements.has(id))elements.set(id,node());return elements.get(id);};let calls=[];
-const sandbox={el,document:{createElement:()=>node()},window:{LionsRockDirection:globalThis.LionsRockDirection},uid:"artist",isOwner:false,isMinor:true,artistMinorIds:new Set(),milestoneGeneration:1,generation:1,shortcut:name=>calls.push(name)};vm.createContext(sandbox);vm.runInContext(renderer,sandbox);
+const sandbox={el,document:{createElement:()=>node()},window:{LionsRockDirection:globalThis.LionsRockDirection},uid:"artist",isOwner:false,isMinor:true,artistMinorIds:new Set(),milestoneGeneration:1,generation:1,shortcut:name=>calls.push(name)};sandbox.document.createElement=()=>({...node(),open:false});vm.createContext(sandbox);vm.runInContext(renderer,sandbox);
 c=context();sandbox.renderDirection({data:c.progress},{data:c.tracks},"artist",1,1);
 let root=el("career-direction");assert(root.children.length>5);let rows=root.children.filter(n=>n.className==="row");assert.equal(rows.length,5);const business=rows.find(r=>r.children[0].textContent.startsWith("Business"));assert(business.children[0].textContent.includes("guardian"));business.children.at(-1).onclick();assert.equal(calls[0],"projects");
 sandbox.generation=2;business.children.at(-1).onclick();assert.equal(calls.length,1,"Stale navigation allowed");
@@ -40,5 +40,12 @@ assert(source.includes('direction_focus:el("career-focus").value'));assert(sourc
 // Untrusted profile strings are rendered as text, never HTML.
 sandbox.isOwner=false;c.profile={goal_12_months:"<img src=x onerror=alert(1)>"};sandbox.renderDirection({data:c.progress},{data:c.tracks},"artist",1,1,c.profile);
 assert(el("career-direction").children.some(n=>n.textContent.includes("<img src=x")));assert(!renderer.includes("innerHTML"));
+for(const key of Object.keys(globalThis.LionsRockDirection.goalOptions)){
+ c=context();c.profile={username:"artist_one",artist_name:"Artist",genres:"Soca",goal_key:key,goal_12_months:"My personal target"};
+ assert(globalThis.LionsRockDirection.onboardingComplete(c.profile));d=build(c);assert.equal(d.personalisation.goalKey,key);assert.equal(d.roadmap.length,4);assert(d.roadmap.every(s=>s.title&&s.evidence));
+}
+c=context();c.profile={username:"artist_one",artist_name:"Artist",genres:"Soca",goal_key:"release_ep",goal_12_months:"My EP"};d=build(c);assert(d.roadmap[0].title.includes("EP"));assert(d.nextActions.some(a=>a.evidence.includes("12-month goal")));
+for(const bad of ["ab","Bad_Name","bad name","","<script>"]){assert(!globalThis.LionsRockDirection.onboardingComplete({...c.profile,username:bad}));}
+assert(!globalThis.LionsRockDirection.onboardingComplete({...c.profile,goal_key:"unknown"}));
 console.log("PASS Direction Engine: evidence-backed five-track actions, incomplete evidence, retained stage, minor-safe guidance, input preservation, current-source rendering/error clear and stale navigation guard");
 

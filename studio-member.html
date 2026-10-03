@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lions Rock Career OS</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/vault-audio-preview.js?v=1"></script><script src="/career-direction.js?v=2"></script>
+<title>Lions Rock Career OS</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/vault-audio-preview.js?v=1"></script><script src="/career-direction.js?v=3"></script>
 <style>
 :root{color-scheme:dark;--bg:#0d0c0c;--panel:#171616;--line:#34302b;--text:#f4f1ea;--muted:#a6a099;--gold:#d2ad68}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1150px;margin:auto;padding:28px}h1,h2{font-family:Georgia,serif;font-weight:400}h1{font-size:36px;margin:8px 0 20px}h2{font-size:24px}.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.16em;text-transform:uppercase}.muted{color:var(--muted);line-height:1.6}nav{display:flex;gap:8px;margin:20px 0;overflow-x:auto}nav button{flex:0 0 auto}button{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text);padding:11px 16px;font:inherit}nav button.active{background:#b91c1c;color:#fff;border-color:#b91c1c}button.primary{background:var(--gold);color:#16120c;border-color:var(--gold)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);padding:24px}.stat-value{font-size:32px;margin-top:10px}.layout{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;margin-top:24px}.row{display:block;width:100%;text-align:left;padding:18px 4px;border-width:0 0 1px}.row strong{display:block;font-size:17px;margin-bottom:8px}.tag{color:var(--gold);font-size:11px;text-transform:uppercase}.field{margin:16px 0}label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}input,select,textarea{width:100%;font:inherit;background:#0d0c0c;border:1px solid var(--line);color:var(--text);padding:12px}textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:1px solid var(--gold)}#notice{min-height:24px;line-height:1.5;margin:16px 0;color:var(--gold)}#notice.error{color:#ffaaa1}.actions{display:flex;gap:10px;flex-wrap:wrap}.brief{white-space:pre-wrap;overflow-wrap:anywhere}.ops-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}.ops-lists{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}.ops-summary{margin-top:16px;overflow-wrap:anywhere}.ops-meta{display:block;line-height:1.5}
 .zone{margin-top:24px}.zone-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}.zone-title{margin:0;font-size:22px}.zone-copy{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.55}
@@ -17,16 +17,22 @@ nav > *{flex:0 0 auto!important;}
 
 @media(max-width:700px){button,input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}}
 .direction-preview{margin-top:16px;border-radius:14px;overflow-wrap:anywhere}.direction-preview:empty{display:none}.direction-preview h3{margin-top:0}#career-direction{overflow-wrap:anywhere}#career-direction .direction-context{border-left:2px solid var(--gold);padding-left:12px;white-space:pre-wrap}.artist-profile-card select{border-radius:10px}.owner-progress-note{overflow-wrap:anywhere}
+.direction-plan-step{padding:12px 0;border-bottom:1px solid var(--line)}#artist-onboarding{overflow-wrap:anywhere}#artist-onboarding input,#artist-onboarding select,#artist-onboarding textarea{min-width:0;max-width:100%}
 </style></head><body><main class="wrap">
 <div class="eyebrow" id="workspace-label">Career operating system</div><h1 id="artist-name">Lions Rock Artist</h1>
 <div id="gate" class="muted">Checking artist access…</div>
 <section id="artist-onboarding" class="hidden card" style="max-width:560px;margin:28px auto">
   <div class="eyebrow">First step</div>
-  <h2>Choose your Artist Name</h2>
-  <p class="muted">This is the name Lions Rock will use across your projects, bookings, lease requests and studio records. You can update it later from your career profile.</p>
+  <h2>Set up your artist journey</h2>
+  <p class="muted">Choose your identity and the main result you want to work towards over the next 12 months. Your answers shape your starting plan.</p>
   <form id="artist-onboarding-form">
+    <div class="field"><label for="artist-onboarding-username">Username</label><input id="artist-onboarding-username" minlength="3" maxlength="30" pattern="[a-zA-Z0-9][a-zA-Z0-9_]{2,29}" required autocomplete="off" autocapitalize="none" spellcheck="false"><p class="muted">3–30 letters, numbers or underscores. This is your artist handle; use your email to sign in.</p></div>
     <div class="field"><label for="artist-onboarding-name">Artist Name</label><input id="artist-onboarding-name" maxlength="200" required autocomplete="off"></div>
-    <button id="artist-onboarding-save" class="primary" type="submit">Save Artist Name & Open Studio</button>
+    <div class="field"><label for="artist-onboarding-genres">Genres</label><input id="artist-onboarding-genres" maxlength="500" required placeholder="e.g. Soca, R&amp;B"></div>
+    <div class="field"><label for="artist-onboarding-goal-key">Main goal for the next 12 months</label><select id="artist-onboarding-goal-key" required></select></div>
+    <div class="field"><label for="artist-onboarding-goal">Your goal / personal details</label><textarea id="artist-onboarding-goal" maxlength="3000" rows="3" required></textarea><p class="muted">Keep the suggested goal or add your own details. A custom goal needs a description.</p></div>
+    <div class="field"><label for="artist-onboarding-obstacle">What is getting in the way? (optional)</label><select id="artist-onboarding-obstacle"></select></div>
+    <button id="artist-onboarding-save" class="primary" type="submit">Save My Plan &amp; Open Studio</button>
     <p id="artist-onboarding-status" class="muted" role="status"></p>
   </form>
 </section>
@@ -65,7 +71,7 @@ nav > *{flex:0 0 auto!important;}
 <div class="field" style="max-width:420px"><label for="relationship-artist">Artist</label><select id="relationship-artist"></select></div>
 <p id="relationship-status" class="muted" role="status"></p><div id="relationship-content"></div>
 </section>
-<details id="artist-development-zone" data-management-panel-content="development" data-artist-panel-content="development" class="dashboard-fold management-panel artist-panel" open><summary id="artist-development-summary">Artist development & career progress</summary><div class="fold-body"><div id="owner-development-head" class="management-panel-head hidden"><div class="eyebrow">Artist growth</div><h2>Development & career progress</h2><p class="muted">Review an Artist’s stage, XP, recognition, direction and recorded career progress.</p></div><p class="muted">Profile, stage, XP, badges, tracks and direction guidance are grouped here so they stay separate from day-to-day studio operations.</p><div id="career-profile-owner-mount"><form id="career-profile-form" class="card artist-profile-card"><div class="profile-hero"><div id="profile-avatar" class="profile-avatar">A</div><div class="profile-hero-copy"><div class="profile-kicker">Artist Identity</div><div id="profile-display-name" class="profile-display-name">Your Artist Name</div><div id="profile-completion" class="profile-completion">0% profile complete</div><div class="profile-progress"><span id="profile-progress-fill"></span></div></div></div><div id="genre-preview" class="genre-preview"></div><div id="profile-goal-display" class="profile-goal-display">Add your 12-month goal to complete your profile.</div><div class="profile-display-actions"><button id="edit-career-profile" type="button">Edit Profile</button></div><div id="profile-edit-fields" class="profile-edit-fields hidden"><h2>Edit Artist Profile</h2><p class="profile-note">Update your Artist identity and direction, then save to return to your profile badge.</p><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal">Your goal for the next 12 months</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><div class="field"><label for="career-focus">Current focus (optional)</label><select id="career-focus"></select></div><div class="field"><label for="career-obstacle">What is getting in the way? (optional)</label><select id="career-obstacle"></select></div><p class="profile-note">These choices tailor your next steps. They do not affect profile completion or earned progress.</p><div class="profile-edit-actions"><button id="save-career-profile" class="primary">Save Profile</button><button id="cancel-career-profile" type="button">Cancel</button></div><p id="career-profile-status" class="muted" role="status"></p></div></form></div>
+<details id="artist-development-zone" data-management-panel-content="development" data-artist-panel-content="development" class="dashboard-fold management-panel artist-panel" open><summary id="artist-development-summary">Artist development & career progress</summary><div class="fold-body"><div id="owner-development-head" class="management-panel-head hidden"><div class="eyebrow">Artist growth</div><h2>Development & career progress</h2><p class="muted">Review an Artist’s stage, XP, recognition, direction and recorded career progress.</p></div><p class="muted">Profile, stage, XP, badges, tracks and direction guidance are grouped here so they stay separate from day-to-day studio operations.</p><div id="career-profile-owner-mount"><form id="career-profile-form" class="card artist-profile-card"><div class="profile-hero"><div id="profile-avatar" class="profile-avatar">A</div><div class="profile-hero-copy"><div class="profile-kicker">Artist Identity</div><div id="profile-display-name" class="profile-display-name">Your Artist Name</div><div id="profile-completion" class="profile-completion">0% profile complete</div><div class="profile-progress"><span id="profile-progress-fill"></span></div></div></div><div id="genre-preview" class="genre-preview"></div><div id="profile-goal-display" class="profile-goal-display">Add your 12-month goal to complete your profile.</div><div class="profile-display-actions"><button id="edit-career-profile" type="button">Edit Profile</button></div><div id="profile-edit-fields" class="profile-edit-fields hidden"><h2>Edit Artist Profile</h2><p class="profile-note">Update your Artist identity and direction, then save to return to your profile badge.</p><div class="field"><label for="career-username">Username</label><input id="career-username" minlength="3" maxlength="30" pattern="[a-zA-Z0-9][a-zA-Z0-9_]{2,29}" required autocapitalize="none" spellcheck="false"></div><div class="field"><label for="career-name">Artist name</label><input id="career-name" maxlength="200" required></div><div class="field"><label for="career-genres">Genres</label><input id="career-genres" maxlength="500" required></div><div class="field"><label for="career-goal-key">12-month goal</label><select id="career-goal-key" required></select></div><div class="field"><label for="career-goal">Your goal / personal details</label><textarea id="career-goal" maxlength="3000" rows="3" required></textarea></div><div class="field"><label for="career-focus">Current focus (optional)</label><select id="career-focus"></select></div><div class="field"><label for="career-obstacle">What is getting in the way? (optional)</label><select id="career-obstacle"></select></div><p class="profile-note">These choices tailor your next steps. They do not affect profile completion or earned progress.</p><div class="profile-edit-actions"><button id="save-career-profile" class="primary">Save Profile</button><button id="cancel-career-profile" type="button">Cancel</button></div><p id="career-profile-status" class="muted" role="status"></p></div></form></div>
 <section class="card" style="margin:20px 0"><h2 id="milestones-title">Career development</h2><div class="owner-artist-nav hidden" id="milestone-artist-field"><button id="owner-prev-artist" type="button" aria-label="Previous Artist">‹</button><div class="field"><label for="milestone-artist">Artist progress</label><select id="milestone-artist"></select></div><button id="owner-next-artist" type="button" aria-label="Next Artist">›</button></div><p id="selected-career-profile" class="muted"></p><div id="artist-development-nav" class="dev-sections hidden" aria-label="Development sections"><button type="button" data-dev-panel="overview" class="active">Overview</button><button type="button" data-dev-panel="direction">Direction</button><button type="button" data-dev-panel="milestones">Milestones</button><button type="button" data-dev-panel="history">History</button></div><div data-dev-panel-content="overview" class="dev-panel"><div id="owner-artist-overview" class="hidden"></div><div id="career-stage" class="card" aria-live="polite"></div><div id="career-recognition-mount"></div><div id="career-tracks" aria-live="polite"></div></div><div data-dev-panel-content="direction" class="dev-panel"><div id="career-direction" class="card" aria-live="polite"></div></div><div data-dev-panel-content="milestones" class="dev-panel"><p id="milestones-summary" class="muted" role="status"></p><div id="milestones-list"></div><p class="muted">Based on recorded projects, files and sessions. The eight-stage lifecycle follows recorded evidence. Track scores follow recorded evidence, with missing signals shown explicitly.</p></div><div data-dev-panel-content="history" class="dev-panel"><div id="career-history" aria-live="polite"></div></div></section>
 </div></details>
 <section id="recent-work-zone" data-management-panel-content="work" data-artist-panel-content="work" class="zone management-panel artist-panel"><div class="zone-head"><div><div class="eyebrow">Projects</div><h2 class="zone-title">Recent work & next move</h2><p class="zone-copy">Open a project or jump to the next recommended action.</p></div></div>
@@ -93,9 +99,23 @@ nav > *{flex:0 0 auto!important;}
  const sb=window.supabase.createClient("https://xsvczfqvscnvmngwcmtp.supabase.co","sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  const el=id=>document.getElementById(id);
 async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" took too long. Refresh and try again.")),ms);});try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}}
- [ ["career-focus",window.LionsRockDirection.focusOptions], ["career-obstacle",window.LionsRockDirection.obstacleOptions] ].forEach(([id,options])=>{
+ [ ["career-focus",window.LionsRockDirection.focusOptions], ["career-obstacle",window.LionsRockDirection.obstacleOptions], ["artist-onboarding-obstacle",window.LionsRockDirection.obstacleOptions] ].forEach(([id,options])=>{
   Object.entries(options).forEach(([value,label])=>{const o=document.createElement("option");o.value=value;o.textContent=label;el(id).append(o);});
  });
+ ["career-goal-key","artist-onboarding-goal-key"].forEach(id=>{
+  const empty=document.createElement("option");empty.value="";empty.textContent="Choose your main goal";el(id).append(empty);
+  Object.entries(window.LionsRockDirection.goalOptions).forEach(([key,goal])=>{const o=document.createElement("option");o.value=key;o.textContent=goal.label;el(id).append(o);});
+ });
+ function selectGoal(prefix){
+  const selected=window.LionsRockDirection.goalOptions[el(prefix+"-goal-key").value],text=el(prefix+"-goal");
+  if(!selected)return;
+  const preset=Object.values(window.LionsRockDirection.goalOptions).some(g=>g.label===text.value.trim());
+  if(!text.value.trim()||preset)text.value=el(prefix+"-goal-key").value==="custom"?"":selected.label;
+  if(prefix==="career"){el("career-focus").value=selected.focus;renderArtistProfilePreview();}
+ }
+ el("artist-onboarding-goal-key").onchange=()=>selectGoal("artist-onboarding");
+ el("career-goal-key").onchange=()=>selectGoal("career");
+ function usernameValue(id){return el(id).value.trim().toLowerCase();}
  let milestoneGeneration=0;
  let uid=null,items=[],selected=null,view="dashboard",generation=0,isOwner=false,isMinor=false,ownerDashboardPanel="today",artistDashboardPanel="level",artistDevelopmentPanel="overview",artistNames=new Map(),artistProfileNames=new Map(),artistMinorIds=new Set(),artistContacts=new Map(),relationshipGeneration=0,artistActionGeneration=0,artistActivityGeneration=0,fileGeneration=0,projectAudioUrls=[];
  function notice(text,error=false){el("notice").textContent=text;el("notice").classList.toggle("error",error);}
@@ -413,7 +433,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
     note("Needs attention",focus?(labels[focus.key]||focus.key)+" · "+focus.score+"/100":"Not enough evidence yet"),
     note("Next recorded action",p.next_action||"No next action available."),
     note("Recent progress",recent?("+"+recent.points+" XP · "+activityLabel(recent.key)):"No recent XP evidence yet."),
-    note("12-month goal",goal)
+    note("12-month goal",goal),note("Username",profile?.username?"@"+profile.username:"Setup needed")
   );
   if(!progression?.error&&!tracks?.error){try{
    const direction=window.LionsRockDirection.buildDirection({progress:p,tracks:tracks.data,profile,profileUnavailable,minor:artistMinorIds.has(target)});
@@ -441,9 +461,12 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      context.textContent=personal.profileUnavailable?"Artist profile could not be loaded. Guidance uses recorded progress only; refresh to retry.":
       (personal.goal?(isOwner?"Artist’s 12-month goal: ":"Your 12-month goal: ")+personal.goal+"\n":"")+"Focus: "+personal.focus+" · Obstacle: "+personal.obstacle+(personal.chosen?"":". Choose a focus or obstacle in Edit Profile to tailor these steps.");
      root.append(context);
+     const plan=document.createElement("details"),planTitle=document.createElement("summary");plan.open=true;planTitle.textContent="Your 12-month plan · "+personal.goalLabel;plan.append(planTitle);
+     const planNote=document.createElement("p");planNote.className="muted";planNote.textContent="A suggested sequence for your selected goal. Evidence may come from earlier projects; it does not confirm this goal is finished.";plan.append(planNote);
+     data.roadmap.forEach(step=>{const card=document.createElement("div"),h=document.createElement("strong"),p=document.createElement("p");card.className="direction-plan-step";h.textContent=step.phase+". "+step.title;p.className="muted";p.textContent=step.status+" · "+step.evidence;card.append(h,p);plan.append(card);});root.append(plan);
      if(!isOwner){
       const h=document.createElement("h3"),p=document.createElement("p"),why=document.createElement("p"),open=document.createElement("button");
-      h.textContent="Your direction";p.textContent=data.headline;why.className="muted";why.textContent=data.nextActions[0].why;
+      h.textContent="Your direction · "+personal.goalLabel;p.textContent=data.headline;why.className="muted";why.textContent=data.nextActions[0].why;
       open.type="button";open.textContent="See all five next steps";open.onclick=()=>{if(!current())return;showArtistPanel("development");showArtistDevelopmentPanel("direction");requestAnimationFrame(()=>root.scrollIntoView({block:"start"}));};
       preview.append(h,p,why,open);
      }
@@ -468,7 +491,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      const result=await sb.rpc("artist_career_milestones",{artist_id:target});
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      if(result.error)throw result.error;
-     const profile=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months,direction_focus,direction_obstacle").eq("user_id",target).maybeSingle();
+     const profile=await sb.from("artist_career_profiles").select("artist_name,username,genres,goal_key,goal_12_months,direction_focus,direction_obstacle").eq("user_id",target).maybeSingle();
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      el("selected-career-profile").textContent=profile.error?"Career direction could not be loaded.":profile.data?[profile.data.artist_name,profile.data.genres,profile.data.goal_12_months].filter(Boolean).join(" · "):"Artist identity and career goal are not recorded yet.";
      const [progression,ownerRecognition]=await Promise.all([sb.rpc("artist_career_progress",{artist_id:target}),isOwner?sb.rpc("artist_recognition",{artist_id:target}):Promise.resolve({data:null,error:null})]);
@@ -538,7 +561,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
  }
  function renderArtistProfilePreview(){
   const name=el("career-name").value.trim(),genres=el("career-genres").value.trim(),goal=el("career-goal").value.trim();
-  const complete=[name,genres,goal].filter(Boolean).length,percent=Math.round(complete/3*100);
+  const complete=[name,genres,goal,el("career-username").value.trim(),el("career-goal-key").value].filter(Boolean).length,percent=Math.round(complete/5*100);
   el("profile-display-name").textContent=name||"Your Artist Name";
   el("profile-avatar").textContent=(name||"A").trim().charAt(0).toUpperCase();
   el("profile-completion").textContent=percent+"% profile complete";
@@ -550,42 +573,44 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
   if(!root.children.length){const hint=document.createElement("span");hint.className="genre-chip";hint.textContent="Add your genres";root.append(hint);}
  }
  async function loadCareerProfile(version){
-   const result=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months,direction_focus,direction_obstacle").eq("user_id",uid).maybeSingle();
+   const result=await sb.from("artist_career_profiles").select("artist_name,username,genres,goal_key,goal_12_months,direction_focus,direction_obstacle").eq("user_id",uid).maybeSingle();
    if(version!==generation||!uid)return;
    el("career-profile-form").classList.toggle("hidden",isOwner);
    if(result.error){el("career-profile-status").textContent="Could not load your career profile. Refresh to retry.";el("save-career-profile").disabled=true;return;}
    el("save-career-profile").disabled=false;
-   el("career-name").value=result.data?.artist_name||"";
+   el("career-name").value=result.data?.artist_name||"";el("career-username").value=result.data?.username||"";el("career-goal-key").value=result.data?.goal_key||"";
    el("career-genres").value=result.data?.genres||"";
    el("career-goal").value=result.data?.goal_12_months||"";el("career-focus").value=result.data?.direction_focus||"general";el("career-obstacle").value=result.data?.direction_obstacle||"none";renderArtistProfilePreview();setProfileEditing(false);
    el("career-profile-status").textContent=result.data?"Career direction saved.":"Add your identity and goal to support career progression.";
  }
  el("artist-onboarding-form").onsubmit=async e=>{
-   e.preventDefault();if(!uid||isOwner)return;
-   const button=el("artist-onboarding-save"),status=el("artist-onboarding-status"),artist=uid,name=el("artist-onboarding-name").value.trim();
-   if(!name){status.textContent="Enter your Artist Name.";return;}
-   button.disabled=true;status.textContent="Saving Artist Name…";
+   e.preventDefault();if(!uid||isOwner)return;const version=generation,artist=uid;
+   const button=el("artist-onboarding-save"),status=el("artist-onboarding-status");
+   const goalKey=el("artist-onboarding-goal-key").value,goal=window.LionsRockDirection.goalOptions[goalKey];
+   const profile={user_id:artist,username:usernameValue("artist-onboarding-username"),artist_name:el("artist-onboarding-name").value.trim(),genres:el("artist-onboarding-genres").value.trim(),goal_key:goalKey,goal_12_months:el("artist-onboarding-goal").value.trim(),direction_focus:goal?.focus||"general",direction_obstacle:el("artist-onboarding-obstacle").value};
+   if(!window.LionsRockDirection.onboardingComplete(profile)){status.textContent="Complete your username, Artist Name, genres and 12-month goal. Username needs 3–30 letters, numbers or underscores.";return;}
+   button.disabled=true;status.textContent="Saving your artist plan…";
    try{
-     const result=await withLoadTimeout(sb.from("artist_career_profiles").upsert({user_id:artist,artist_name:name},{onConflict:"user_id"}),"Artist Name save",12000);
+     const result=await withLoadTimeout(sb.from("artist_career_profiles").upsert(profile,{onConflict:"user_id"}),"Artist setup save",12000);
      if(result.error)throw result.error;
-     status.textContent="Artist Name saved. Opening your Studio…";
-     await load();
-   }catch(error){status.textContent=error.message||"Could not save your Artist Name. Try again.";}
+     if(version!==generation||uid!==artist)return;
+     status.textContent="Plan saved. Opening your Studio…";await load();
+   }catch(error){if(version===generation&&uid===artist)status.textContent=error.code==="23505"?"That username is already taken. Choose another.":error.message||"Could not save your plan. Try again.";}
    finally{button.disabled=false;}
  };
  el("edit-career-profile").onclick=()=>setProfileEditing(true);
  el("cancel-career-profile").onclick=async()=>{if(!uid||isOwner)return;await loadCareerProfile(generation);setProfileEditing(false);};
- ["career-name","career-genres","career-goal"].forEach(id=>el(id).addEventListener("input",renderArtistProfilePreview));
+ ["career-name","career-genres","career-goal","career-username"].forEach(id=>el(id).addEventListener("input",renderArtistProfilePreview));
  el("career-profile-form").onsubmit=async e=>{
    e.preventDefault();if(!uid||isOwner)return;const version=generation,artist=uid,button=el("save-career-profile");button.disabled=true;
    try{
-     const profile={user_id:artist,artist_name:el("career-name").value.trim(),genres:el("career-genres").value.trim(),goal_12_months:el("career-goal").value.trim(),direction_focus:el("career-focus").value,direction_obstacle:el("career-obstacle").value};
-     if(!profile.artist_name||!profile.genres||!profile.goal_12_months)throw new Error("Complete your artist name, genres and career goal.");
+     const profile={user_id:artist,username:usernameValue("career-username"),goal_key:el("career-goal-key").value,artist_name:el("career-name").value.trim(),genres:el("career-genres").value.trim(),goal_12_months:el("career-goal").value.trim(),direction_focus:el("career-focus").value,direction_obstacle:el("career-obstacle").value};
+     if(!window.LionsRockDirection.onboardingComplete(profile))throw new Error("Complete your username, Artist Name, genres and 12-month goal.");
      const result=await withLoadTimeout(sb.from("artist_career_profiles").upsert(profile,{onConflict:"user_id"}),"Profile save");if(result.error)throw result.error;
      if(version!==generation||uid!==artist)return;
      el("career-profile-status").textContent="Profile saved.";renderArtistProfilePreview();setProfileEditing(false);
      await loadMilestones(artist);
-   }catch(error){if(version===generation)el("career-profile-status").textContent=error.message||"Could not save career direction.";}
+   }catch(error){if(version===generation)el("career-profile-status").textContent=error.code==="23505"?"That username is already taken. Choose another.":error.message||"Could not save career direction.";}
    finally{if(version===generation)button.disabled=false;}
  };
  let notificationGeneration=0;
@@ -645,15 +670,20 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
    if(!m||m.access_status!=="active"||!["paid","comped"].includes(m.payment_status)||(m.expires_at&&new Date(m.expires_at)<=new Date())||(m.role!=="owner"&&!m.artist_member_enabled))return deny("Active Artist Member access is required.");
    uid=session.user.id;isOwner=m.role==="owner";isMinor=!!m.is_minor;el("payments-tab").classList.toggle("hidden",!isOwner);el("billing-tab").classList.toggle("hidden",isOwner||isMinor);if(!isOwner)clearPayments();el("analytics-tab").classList.toggle("hidden",!isOwner);if(!isOwner)clearAnalytics();
    if(!isOwner){
-     const identity=await withLoadTimeout(sb.from("artist_career_profiles").select("artist_name").eq("user_id",uid).maybeSingle(),"Artist identity check",10000);
+     const identity=await withLoadTimeout(sb.from("artist_career_profiles").select("username,artist_name,genres,goal_key,goal_12_months,direction_obstacle").eq("user_id",uid).maybeSingle(),"Artist identity check",10000);
      if(version!==generation)return;
      if(identity.error)return deny("Could not check your Artist Name. Refresh to retry.");
-     if(!identity.data?.artist_name?.trim()){
+     if(!window.LionsRockDirection.onboardingComplete(identity.data)){
        el("gate").textContent="";
-       el("artist-onboarding-name").value="";
-       el("artist-onboarding-status").textContent="Set your Artist Name to continue.";
+       el("artist-onboarding-username").value=identity.data?.username||"";
+       el("artist-onboarding-name").value=identity.data?.artist_name||"";
+       el("artist-onboarding-genres").value=identity.data?.genres||"";
+       el("artist-onboarding-goal-key").value=identity.data?.goal_key||"";
+       el("artist-onboarding-goal").value=identity.data?.goal_12_months||"";
+       el("artist-onboarding-obstacle").value=identity.data?.direction_obstacle||"none";
+       el("artist-onboarding-status").textContent="Complete your identity and choose a 12-month goal to open your Studio.";
        el("artist-onboarding").classList.remove("hidden");
-       requestAnimationFrame(()=>el("artist-onboarding-name").focus());
+       requestAnimationFrame(()=>el("artist-onboarding-username").focus());
        return;
      }
    }

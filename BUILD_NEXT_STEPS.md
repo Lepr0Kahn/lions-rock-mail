@@ -247,3 +247,15 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Passed profile save/reload/error/editor tests. Passed rollback-only live database acceptance: own save/read, invalid-choice rejection, unchanged track scores/events, Artist isolation, Business denial and Owner review.
 - Security Advisor reports no finding for artist_career_profiles; existing unrelated findings remain as previously documented.
 - Inline scripts parse successfully. Live visual/device acceptance is not claimed by the source and rollback checks.
+
+
+## Required Artist identity and goal setup — 3 October 2026
+- Artist entry now requires a unique username, Artist Name, genres and a selected 12-month goal with saved details. Existing profile wording is retained when returning Artists complete the added fields.
+- Presets: songwriting, record a single, release a single, create/release an EP, audience, creative team, artist business, or custom. Selecting a preset fills suggested wording and maps the initial direction focus; Artists can keep personal details and revise choices later.
+- Each goal produces a distinct four-phase suggested plan alongside the five career-track next moves. Related record evidence is labelled as related evidence, never automatic proof that the selected goal is finished.
+- First-entry setup saves the same profile used by the Artist dashboard and Owner overview. Existing profile editor now also supports username and goal selection. Username is an Artist handle; email sign-in remains the authentication method.
+- Username validation and uniqueness are enforced in Postgres. Goals are constrained to supported keys.
+- Profile RLS uses a restricted setup-membership helper so new Artists can save their own answers. Full Artist access additionally requires completed setup; Owner access is exempt, and Business access is unchanged. No new public RPC is exposed.
+- Rollout order: additive profile fields, frontend deployment, then Artist setup enforcement.
+- Passed engine/renderer, profile round-trip/error, onboarding/preset/custom/duplicate-name checks. Rollback-only live DB acceptance passed: profile-only access before setup, blocked records and career RPC, unlock after save, invalid/duplicate usernames and goals, Artist isolation, Business unchanged, Owner exempt.
+- Existing earned XP and records are preserved. Selecting goals creates no projects, bookings or paid services. Live device visual acceptance is not claimed by these checks.

@@ -9,6 +9,17 @@ const obstacleOptions={
  none:"No specific obstacle",consistency:"Staying consistent",unfinished:"Finishing work",confidence:"Confidence",
  time:"Limited time",budget:"Limited budget",collaborators:"Finding collaborators"
 };
+const goalOptions={
+ songwriting:{label:"Develop my songwriting and finish original songs",focus:"songwriting"},
+ record_single:{label:"Record and finish a single",focus:"recording"},
+ release_single:{label:"Release a finished single",focus:"release"},
+ release_ep:{label:"Create and release an EP or small project",focus:"release"},
+ audience:{label:"Build an audience for my music",focus:"audience"},
+ collaboration:{label:"Build a reliable creative team",focus:"collaboration"},
+ business:{label:"Organise the business side of my music",focus:"business"},
+ custom:{label:"Set my own 12-month goal",focus:"general"}
+};
+function onboardingComplete(p){return !!p&&/^[a-z0-9][a-z0-9_]{2,29}$/.test(p.username||"")&&[p.artist_name,p.genres,p.goal_12_months].every(v=>typeof v==="string"&&v.trim())&&Object.prototype.hasOwnProperty.call(goalOptions,p.goal_key);}
 const clean=(v,max=3000)=>typeof v==="string"?v.trim().slice(0,max):"";
 const option=(options,key,fallback)=>Object.prototype.hasOwnProperty.call(options,key)?key:fallback;
 function buildDirection(context){
@@ -18,7 +29,7 @@ function buildDirection(context){
  const count=k=>known(k)?signals[k]:null;
  const evidence=(k,label)=>known(k)?label+": "+signals[k]+" on record.":label+": evidence unavailable; ask the studio to check the record.";
  const action=(track,title,why,k,label,destination,effort="low")=>({track,title,why,evidence:evidence(k,label),destination,effort,horizon:"This week"});
- const profile=context.profile||{},focus=option(focusOptions,profile.direction_focus,"general"),obstacle=option(obstacleOptions,profile.direction_obstacle,"none");
+ const profile=context.profile||{},goalKey=option(goalOptions,profile.goal_key,""),goalOption=goalOptions[goalKey],focus=option(focusOptions,profile.direction_focus,goalOption?.focus||"general"),obstacle=option(obstacleOptions,profile.direction_obstacle,"none");
  const focusChosen=focus!=="general",obstacleChosen=obstacle!=="none",goal=clean(profile.goal_12_months),artistName=clean(profile.artist_name,200),genres=clean(profile.genres,500);
  const actions=[];
  if(count("profile")===0)actions.push(action("creative","Complete your artist identity and goal","A clear identity and goal help you choose the next project.","profile","Complete career profile","profile"));
@@ -47,7 +58,7 @@ function buildDirection(context){
  const personalise=(track,title,why,source)=>{
   const a=byTrack[track];a.title=title;a.why=why;a.evidence+=" "+source;
  };
- const focusEvidence="Artist-selected focus: "+focusOptions[focus]+".";
+ const focusEvidence="Artist-selected focus: "+focusOptions[focus]+"."+(goalOption?" Selected 12-month goal: "+goalOption.label+".":"");
  // Selected choices are evidence of intent, never evidence that work was completed.
  if(focusChosen&&count("profile")>0){
   if(focus==="songwriting"){
@@ -103,15 +114,28 @@ function buildDirection(context){
  if(trackOrder.some(k=>tracks.tracks[k].partial))risks.push("Some track evidence is incomplete. The studio should check missing records before drawing conclusions.");
  const supported=Object.keys(signals).filter(known).length;
  const nextGate=clean(progress.next_action,500);
+ const roadmapTemplates={
+  songwriting:[["Define the song direction","profile"],["Organise one songwriting project","projects"],["Register a lyric, demo or reference","uploads"],["Review the song and next writing cycle with the studio",null]],
+  record_single:[["Set up the single project","projects"],["Prepare a demo or recording reference","uploads"],["Agree the recording session and preparation","bookings"],["Review the studio delivery","masters"]],
+  release_single:[["Organise the single project","projects"],["Collect and review a studio delivery","masters_collected"],["Check rights, credits, artwork and release readiness",null],["Publish when ready and record the release","releases"]],
+  release_ep:[["Agree the EP scope and song list with the studio","projects"],["Develop and review each song","uploads"],["Collect deliveries and check EP release readiness","masters_collected"],["Publish the EP when ready and plan the next cycle","releases"]],
+  audience:[["Define the listeners and message",null],["Choose music to represent your direction","uploads"],["Plan a sharing activity around published work","releases"],["Review listener feedback with the studio",null]],
+  collaboration:[["Outline the project that needs a team","projects"],["Describe the roles and contributions you need",null],["Agree credits, rights and responsibilities",null],["Record the resulting creative work","uploads"]],
+  business:[["Establish your artist identity and direction","profile"],["Outline a manageable project budget","budget_defined"],["Review rights, credits and responsibilities",null],["Check linked invoice and payment records","invoices_settled"]],
+  custom:[["Agree the goal with the studio","profile"],["Start the project that supports it","projects"],["Record material and completed work","uploads"],["Review the result and next cycle with the studio",null]]
+ };
+ const roadmap=(roadmapTemplates[goalKey]||roadmapTemplates.custom).map(([title,k],i)=>({phase:i+1,title,
+  status:k&&known(k)?count(k)>0?"Related evidence recorded":"Next step":"Studio review needed",
+  evidence:k?evidence(k,k.replaceAll("_"," ")):"Discuss and record this with the studio; no automatic completion evidence is available."}));
  return {
   mode:"rules",headline:focusChosen||obstacleChosen?actions[0].title:nextGate||actions[0].title,
   stageRationale:(progress.held?"Your previously reached "+progress.stage+" stage is retained. Current evidence supports "+progress.evidenced_stage+".":"Your recorded stage is "+progress.stage+".")+(nextGate?" The next evidence step is: "+nextGate:" Review the next evidence gate with the studio."),
   nextActions:actions,trackNotes:notes,risks:risks.slice(0,2),
   evidenceQuality:supported<3||["projects","uploads","masters","releases","masters_collected","profile"].filter(k=>known(k)&&signals[k]>0).length<2?"thin":trackOrder.some(k=>tracks.tracks[k].partial)?"partial":"recorded",
   computedAt:tracks.computed_at||null,
-  personalisation:{artistName,genres,goal,focus:focusOptions[focus],obstacle:obstacleOptions[obstacle],chosen:focusChosen||obstacleChosen,profileUnavailable:!!context.profileUnavailable},
+  roadmap,personalisation:{artistName,username:clean(profile.username,30),genres,goal,goalKey,goalLabel:goalOption?.label||"Personal goal",focus:focusOptions[focus],obstacle:obstacleOptions[obstacle],chosen:focusChosen||obstacleChosen,profileUnavailable:!!context.profileUnavailable},
   notes:["Guidance uses your selected focus, obstacle and recorded progress.","Suggestions do not approve work, change stages or scores, publish music, record payments or award rewards."]
  };
 }
-root.LionsRockDirection={buildDirection,focusOptions,obstacleOptions};
+root.LionsRockDirection={buildDirection,focusOptions,obstacleOptions,goalOptions,onboardingComplete};
 })(typeof window!=="undefined"?window:globalThis);
