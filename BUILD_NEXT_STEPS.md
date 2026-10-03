@@ -166,3 +166,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Owner accounts do not see this Artist action panel.
 - Empty state explicitly tells the Artist when there is nothing urgent.
 - Modified Studio member scripts parse successfully. Live browser/device acceptance remains in the final testing phase.
+
+
+## Owner / Artist relationship activity timeline — 2 October 2026
+- Added Artist-facing **Recent Studio Activity** beneath **Your next actions**.
+- Artist activity is derived from existing career-history evidence and Studio notifications; no duplicate activity ledger or new permissions were introduced.
+- Added Owner-facing **Relationship history** inside the Artist Snapshot.
+- Owner history combines authoritative Artist career/studio events with the Artist's Studio notifications and shows the latest relationship activity in Barbados time.
+- Reversed career events are excluded from both timeline views.
+- Email drafts are deliberately not represented as sent mail unless separate delivery evidence exists.
+- Minor Artist access continues to use the existing restricted notification path.
+- Modified Studio member scripts parse successfully. Live browser/device acceptance remains in the final testing phase.
