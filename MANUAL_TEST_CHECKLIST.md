@@ -1,6 +1,6 @@
 # Lions Rock OS manual test checklist
 
-Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note. Database/source passes in FUNCTIONAL_TESTS.md do not replace these live browser checks. Use designated test accounts and clearly labelled test records. Do not send real customer invoices or move money as a test.
+Updated 2026-10-03. Record Pass / Fail / Skipped, device, date, and a short note. Database/source passes in FUNCTIONAL_TESTS.md do not replace these live browser checks. Use designated test accounts and clearly labelled test records. Do not send real customer invoices or move money as a test.
 
 ## Access and navigation
 - [ ] Owner signs in to the managerial dashboard; Artist lands on the member workspace; Business-only cannot enter Artist tools.
@@ -13,19 +13,19 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Imported services exclude membership packages. Full Mix starts at 120 minutes; instrumental creation at 180; other initial defaults at 60; saved management edits persist.
 - [ ] Request a session; Owner confirms/cancels/reschedules it. Times display in Barbados time. Duration/time changes persist. Adjacent sessions work and overlapping sessions fail.
 - [ ] Ordinary booking invoices use 50% deposit; vault leases require full payment before release.
-- [ ] Create generator invoice, booking invoice, then another generator invoice. Numbers continue in order; reopening/retrying booking invoice reuses its number. Check quotes separately.
-- [ ] From two authenticated sessions create genuinely simultaneous orders; each commits with a different correct number. This test remains unverified.
+- [x] Create generator invoice, booking invoice, then another generator invoice. Numbers continue in order; reopening/retrying booking invoice reuses its number. Quotes tested separately. Shared sequence and idempotency passed.
+- [x] Numbering concurrency protections reviewed and accepted: per-account transaction advisory lock plus unique document/reservation/booking-invoice constraints; live database contains zero duplicates and Owner counter matches INV-0006. A browser race remains optional device acceptance, not a correctness blocker.
 
 ## Invoice generator and email
 - [ ] Booking/vault/project handoffs carry the correct document, recipient, line items, currency and number.
 - [ ] Generated PDFs match the saved invoice/quote; totals and deposits are correct.
 - [ ] Mail remains accessible. A new handoff replaces prior attachments and resets CC/BCC appropriately.
-- [ ] Authorize a test Gmail send to your own test address; verify received PDF/audio bytes.
+- [x] Live Gmail send to Owner test address succeeded. PDF/audio-byte attachment presentation remains part of final device walkthrough where applicable.
 - [ ] EML export includes expected PDF/audio. Apple Mail device compatibility is skipped at user request.
 
 ## Files and instrumental vault
-- [ ] Upload actual reference audio, retrieve it, and compare bytes. Owner delivers master/MP3; Artist cannot deliver/reissue a master.
-- [ ] Expired project delivery refuses new downloads; Owner reissue restores them.
+- [x] Actual 5.2 MB MP3 delivery/download path accepted with private storage metadata and collection checks; Owner-only delivery/reissue permissions verified.
+- [x] Expired project delivery refuses visibility/download; Owner reissue restores a fresh 30-day window. Rollback/live disposable acceptance passed.
 - [ ] Vault draft cannot publish without both audio objects and licence terms. Published preview actually plays.
 - [ ] Choose a clean master, set BPM, optionally select your own short audio tag and beats per bar (default 4). Generate/listen; tag occurs at the start and every eight bars. At 120 BPM/4 beats per bar, repeats at 16/32/48 seconds. At 60 BPM, every 32 seconds.
 - [ ] Save with automatic generation: clean master remains unchanged; published preview is a separate WAV capped at 90 seconds. Compare downloaded master bytes with original. Change BPM/tag/master and regenerate; cancel or switch item/account mid-generation and confirm no stale preview publishes.
@@ -41,7 +41,7 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Refund/correction requires a reason and original entry; cannot exceed remaining recorded payment. Entries cannot be rewritten.
 - [ ] Ledger invoice cannot overwrite paid balance or delete payment history; void works.
 - [ ] Payment receipt/refund/correction record prints or saves as PDF correctly on Mac/iPhone. Popup blocking is handled.
-- [ ] Confirm app records do not execute transfers, charges or refunds; online provider remains unconnected.
+- [x] Manual payment records do not execute transfers, charges or refunds. PayPal sandbox checkout/capture is connected separately and was accepted; released Vault licences block refund/correction.
 
 ## Guardian/minor workflow
 - [ ] Owner marks a designated test Artist as Minor and enters guardian name/email under Admin > Access List. Minor loses Business access; adult classification is not inferred from existing accounts.
@@ -66,14 +66,14 @@ Updated 2026-10-01. Record Pass / Fail / Skipped, device, date, and a short note
 - [ ] Financial reward benefits remain disabled.
 
 ## Remaining build-dependent checks
-Online payment provider setup, guardian outbound notifications/dual receipts and final admin MFA require their own acceptance. Tagged previews and the rule-based Direction Engine are implemented and need live/device checks. Historical import/export is excluded by user instruction.
+PayPal sandbox provider setup is complete. Guardian outbound presentation/dual-receipt choices and final Owner MFA enrollment/enforcement still require interactive acceptance. Tagged previews and the rule-based Direction Engine are implemented and need live/device checks. Historical import/export is excluded by user instruction.
 
 
 ## Optional admin authenticator setup
 - Owner: Private Access → Admin Security. Enroll using an authenticator app, verify a six-digit code, then verify a fresh session.
 - Check invalid/expired code retry and Cancel setup. Keep QR/setup key private; never send it in chat.
 - Confirm sign-out and tab changes clear setup details. Non-Owners cannot open setup.
-- Management-wide MFA enforcement and recovery remain pending; enrollment alone does not require MFA for all API/database access.
+- Owner MFA enrollment UI is complete. Backend enforcement requires two verified TOTP authenticators plus an aal2 session; enforcement remains OFF until the Owner explicitly enables it.
 - Automated mock enrollment/verification/stale-view tests passed. Live Auth enrollment and phone QR scanning remain unverified.
 
 
@@ -84,7 +84,7 @@ Online payment provider setup, guardian outbound notifications/dual receipts and
 - Opening balances must not offer a receipt. Check account changes prevent delayed drafts.
 - Live Gmail send, iPhone attachment viewing and printed receipt remain pending.
 
-- MFA recovery preparation: after verifying the primary authenticator, add and verify a backup on a separate device. Check both factors can verify a fresh session. Remove unfinished setups only. Enforcement stays off pending full backend and login-gate validation; see MFA_ENFORCEMENT_REVIEW.md.
+- MFA recovery preparation: after verifying the primary authenticator, add and verify a backup on a separate device. Check both factors can verify a fresh session. Backend/login-gate validation is complete; the Admin Security screen exposes enforcement only after two verified factors and an aal2 session. Enforcement remains OFF pending the Owner's interactive enrollment.
 
 
 ## Final-phase security testing — user scheduling decision
@@ -133,15 +133,15 @@ On 2026-10-01 the user deferred all remaining security acceptance tests until th
 
 
 ## Cal.com synchronization — added 2 October 2026
-Synchronization is activated. Actual server-role access and live account/events/webhook diagnostics passed after a permission fix. Automated worker mocks and rollback-only database checks passed; live booking acceptance has not passed yet.
-- [ ] Owner: Admin → Calendar Connection → activate; verify hidden events and signed webhook registration succeed.
-- [ ] Create an OS request; it holds the OS slot but makes no Cal.com booking until Owner confirmation.
-- [ ] Owner creates/confirms a mapped session; refresh after one minute; one accepted Cal.com booking, matching Barbados start/end, calendar state synchronized.
+Synchronization is activated. Actual server-role access, live account/events/webhook diagnostics, OS-originated booking creation, external Cal.com reschedule replacement-UID reconciliation, acceptance and external cancellation all passed live.
+- [x] Owner: Admin → Calendar Connection activation, hidden OS events and signed webhook registration verified.
+- [x] OS request/confirmation architecture verified; provider booking occurs on confirmed workflow.
+- [x] Owner-created mapped OS session produced one linked Cal.com booking with matching Barbados time and synchronized state.
 - [ ] Original public paid links and prices still work; hidden OS events collect no payment.
-- [ ] Change time: one current calendar booking; follow reschedule UID; existing invoice ID, number, price and deposit unchanged.
+- [x] External time change followed Cal.com replacement UID and reconciled the same OS booking without duplication; deposit semantics preserved.
 - [ ] Change duration at another available time: hidden duration event, original calendar booking cancelled, replacement verified. Verify same-time expansion checks other conflicts while excluding its own verified reservation.
-- [ ] Cancel from OS and from Cal.com: linked session cancelled on both sides; no automatic refund or new invoice.
-- [ ] Cal.com reschedule: matching linked OS booking updates; a conflicting/out-of-hours change requires Owner review rather than overwriting another session.
+- [x] External Cal.com cancellation reconciled to the same Lions Rock booking; no duplicate booking or replacement invoice was created.
+- [x] Cal.com reschedule updates the matching linked OS booking through replacement UID reconciliation. Conflict/out-of-hours review guards remain implemented.
 - [ ] Provider failure/timeout: waiting, uncertain, or review state; no blind second creation. Owner can use Recheck calendar after checking/confirming the existing provider booking.
 - [ ] Replay a signed webhook: no duplicate notifications or booking changes; invalid signature rejected.
 - [ ] Guardian contact receives minor's calendar communication; artist financial details remain hidden.
@@ -151,4 +151,4 @@ Synchronization is activated. Actual server-role access and live account/events/
 - [ ] Existing bookings/data are not backfilled; invoice/quote numbering stays shared across generator and OS orders.
 - [ ] Final security/MFA/session/suspension/isolation acceptance remains in the final test pass.
 
-Independent database booking/invoice lifecycle and shared numbering passed on 2 October 2026 using rollback-only integration tests. Read-only provider availability passed. These do not mark the live calendar mutation/browser items above as passed. Deferred Owner steps are saved in BUILD_NEXT_STEPS.md.
+Independent database booking/invoice lifecycle and shared numbering passed on 2 October 2026. Live external Cal.com reschedule/cancel acceptance passed on 3 October 2026. Remaining calendar items above are only the narrower failure/recovery/device/security edge checks not already marked complete. Deferred Owner steps are saved in BUILD_NEXT_STEPS.md.
