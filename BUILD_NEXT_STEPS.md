@@ -155,3 +155,14 @@ Historical import/export is out of scope: user explicitly has no old data to bri
 - Minor Artist email action is disabled in the snapshot so guardian/financial communication continues through the guardian workflow.
 - Artist permissions/RLS were not broadened by this UI change.
 - Modified inline scripts parse successfully. Live browser acceptance remains in the final testing phase.
+
+
+## Artist next-actions dashboard — 2 October 2026
+- Added an Artist-only **Your next actions** panel on the Career Dashboard.
+- The panel consolidates existing secure records instead of creating new workflow state.
+- It prioritizes payable invoices, current master/MP3 deliveries, released/approved Vault requests, scheduled/approved rewards, upcoming/requested studio sessions and unread Studio notifications.
+- Each item routes the Artist directly to the existing Billing, Project, Vault, Rewards, Bookings or Notifications surface.
+- Minor Artist accounts do not receive direct payment prompts; guardian financial workflow remains separate.
+- Owner accounts do not see this Artist action panel.
+- Empty state explicitly tells the Artist when there is nothing urgent.
+- Modified Studio member scripts parse successfully. Live browser/device acceptance remains in the final testing phase.
