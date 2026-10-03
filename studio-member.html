@@ -380,6 +380,34 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      try{localStorage.setItem(key,JSON.stringify({xp:xp,level:Number(d.level),seenAt:Date.now()}));}catch(_){}
    }catch(e){if(version===milestoneGeneration&&workspaceVersion===generation&&uid)box.textContent="Could not load XP and badges. Refresh to retry.";}
  }
+ function renderOwnerArtistOverview(target,profile,progression,tracks,recognition){
+  const root=el("owner-artist-overview");root.replaceChildren();root.classList.toggle("hidden",!isOwner);if(!isOwner)return;
+  const name=profile?.artist_name||artistNames.get(target)||"Artist Member";
+  const genres=profile?.genres||"Genres not recorded",goal=profile?.goal_12_months||"12-month goal not recorded";
+  const p=progression?.data||{},r=recognition?.data||{},trackData=tracks?.data?.tracks||{};
+  const entries=Object.entries(trackData).map(([key,t])=>({key,score:Number(t?.score)||0}));
+  const avg=entries.length?Math.round(entries.reduce((sum,x)=>sum+x.score,0)/entries.length):0;
+  const strongest=[...entries].sort((a,b)=>b.score-a.score)[0],focus=[...entries].sort((a,b)=>a.score-b.score)[0];
+  const labels={craft:"Craft",catalogue:"Catalogue",studio:"Studio",business:"Business",momentum:"Momentum"};
+  const stage=String(p.stage||"Unavailable"),stageLabel=stage==="Unavailable"?stage:stage.charAt(0).toUpperCase()+stage.slice(1);
+  const hero=document.createElement("div");hero.className="owner-progress-hero";
+  const top=document.createElement("div");top.className="owner-progress-top";
+  const ring=document.createElement("div");ring.className="owner-progress-ring";ring.style.setProperty("--p",Math.max(0,Math.min(100,avg))+"%");
+  const ringIn=document.createElement("div"),ringStrong=document.createElement("strong"),ringLabel=document.createElement("span");ringStrong.textContent=avg+"%";ringLabel.textContent="Track avg";ringIn.append(ringStrong,ringLabel);ring.append(ringIn);
+  const info=document.createElement("div"),eye=document.createElement("div"),nm=document.createElement("div"),sub=document.createElement("div"),chips=document.createElement("div");
+  eye.className="eyebrow";eye.textContent="Artist overview";nm.className="owner-progress-name";nm.textContent=name;sub.className="muted";sub.textContent=genres;chips.className="owner-progress-meta";
+  [["Stage",stageLabel],["Level",r.level!=null?String(r.level):"—"],["XP",r.xp!=null?Number(r.xp).toLocaleString():"—"],["Tier",r.tier||"—"]].forEach(([k,v])=>{const s=document.createElement("span");s.className="owner-progress-chip";s.textContent=k+" · "+v;chips.append(s);});
+  info.append(eye,nm,sub,chips);top.append(ring,info);hero.append(top);
+  const stats=document.createElement("div");stats.className="owner-progress-grid";
+  const stat=(k,v)=>{const x=document.createElement("div"),a=document.createElement("div"),b=document.createElement("div");x.className="owner-progress-stat";a.className="k";a.textContent=k;b.className="v";b.textContent=v;x.append(a,b);return x;};
+  stats.append(stat("Career stage",(p.stage_index||"—")+" / "+(p.stage_count||8)),stat("Recognition","Level "+(r.level??"—")),stat("Badges",(r.badges||[]).filter(b=>b.earned).length+" / "+(r.badges||[]).length));hero.append(stats);
+  const readout=document.createElement("div");readout.className="owner-progress-readout";
+  const note=(title,text)=>{const x=document.createElement("div"),h=document.createElement("h4"),q=document.createElement("p");x.className="owner-progress-note";h.textContent=title;q.textContent=text;x.append(h,q);return x;};
+  readout.append(note("Strongest area",strongest?(labels[strongest.key]||strongest.key)+" · "+strongest.score+"/100":"Not enough evidence yet"),note("Needs attention",focus?(labels[focus.key]||focus.key)+" · "+focus.score+"/100":"Not enough evidence yet"),note("Next recorded action",p.next_action||"No next action available."),note("12-month goal",goal));hero.append(readout);
+  if(entries.length){const box=document.createElement("div");box.className="owner-track-mini";entries.forEach(t=>{const row=document.createElement("div"),l=document.createElement("span"),meter=document.createElement("progress"),n=document.createElement("strong");row.className="owner-track-row";l.textContent=labels[t.key]||t.key;meter.max=100;meter.value=t.score;meter.setAttribute("aria-label",(labels[t.key]||t.key)+" "+t.score+" of 100");n.textContent=t.score;row.append(l,meter,n);box.append(row);});hero.append(box);}
+  const foot=document.createElement("div");foot.className="owner-overview-footer";foot.textContent="Average track progress is the mean of the five evidence-based career-track scores. Stage and Level remain separate measures.";hero.append(foot);
+  root.append(hero);
+ }
  function renderDirection(progression,tracks,target,version,workspaceVersion){
    const root=el("career-direction");root.replaceChildren();
    const title=document.createElement("h3");title.textContent=isOwner?"Artist direction review":"Your next steps";root.append(title);
@@ -412,7 +440,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      const profile=await sb.from("artist_career_profiles").select("artist_name,genres,goal_12_months").eq("user_id",target).maybeSingle();
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      el("selected-career-profile").textContent=profile.error?"Career direction could not be loaded.":profile.data?[profile.data.artist_name,profile.data.genres,profile.data.goal_12_months].filter(Boolean).join(" · "):"Artist identity and career goal are not recorded yet.";
-     const progression=await sb.rpc("artist_career_progress",{artist_id:target});
+     const [progression,ownerRecognition]=await Promise.all([sb.rpc("artist_career_progress",{artist_id:target}),isOwner?sb.rpc("artist_recognition",{artist_id:target}):Promise.resolve({data:null,error:null})]);
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      const stageBox=el("career-stage");stageBox.replaceChildren();
      if(progression.error){stageBox.textContent="Career stage could not be loaded. Refresh to retry.";}
@@ -440,7 +468,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        });
        const note=document.createElement("p");note.className="muted";note.textContent=tracks.data.notes.join(" ");trackBox.append(note);
      }
-     renderDirection(progression,tracks,target,version,workspaceVersion);
+     renderOwnerArtistOverview(target,profile.data,progression,tracks,ownerRecognition); renderDirection(progression,tracks,target,version,workspaceVersion);
      const history=await sb.rpc("artist_career_history",{artist_id:target});
      if(version!==milestoneGeneration||workspaceVersion!==generation||!uid)return;
      const historyBox=el("career-history");historyBox.replaceChildren();
@@ -467,7 +495,10 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      rows.forEach(m=>{const row=document.createElement("div");row.className="row";const title=document.createElement("strong");title.textContent=(m.complete?"Complete · ":"Next · ")+m.label;const detail=document.createElement("p");detail.className="muted";detail.textContent=m.count+" on record · "+m.evidence;row.append(title,detail);el("milestones-list").append(row);});
    }catch(error){if(version===milestoneGeneration&&workspaceVersion===generation){el("milestones-list").replaceChildren();el("milestones-summary").textContent="Could not load progress. Refresh to retry.";}}
  }
- el("milestone-artist").onchange=()=>loadMilestones(el("milestone-artist").value);
+ function stepOwnerArtist(delta){if(!isOwner)return;const s=el("milestone-artist"),count=s.options.length;if(!count)return;let i=Math.max(0,s.selectedIndex);i=(i+delta+count)%count;s.selectedIndex=i;showArtistDevelopmentPanel("overview");loadMilestones(s.value);}
+ el("owner-prev-artist").onclick=()=>stepOwnerArtist(-1);
+ el("owner-next-artist").onclick=()=>stepOwnerArtist(1);
+ el("milestone-artist").onchange=()=>{showArtistDevelopmentPanel("overview");loadMilestones(el("milestone-artist").value);};
  function setProfileEditing(editing){
   if(isOwner)return;
   el("profile-edit-fields").classList.toggle("hidden",!editing);
