@@ -3,7 +3,7 @@
 Updated 2026-10-03. Record Pass / Fail / Skipped, device, date, and a short note. Database/source passes in FUNCTIONAL_TESTS.md do not replace these live browser checks. Use designated test accounts and clearly labelled test records. Do not send real customer invoices or move money as a test.
 
 ## Access and navigation
-- [ ] Owner signs in to the managerial dashboard; Artist lands on the member workspace; Business-only cannot enter Artist tools.
+- [x] Owner signs in to the managerial dashboard; Artist-only and Business-only access boundaries verified live at the backend, with final Owner MFA sign-in accepted.
 - [ ] New-user invite asks for password setup; existing-user invite preserves the existing account. Password reset returns to the live app.
 - [ ] Sign out/in, wrong-workspace denial, suspension/reactivation, expiry and membership removal enforce access.
 - [ ] Two Artists cannot see each other's projects, bookings, files, requests or notifications.
@@ -70,9 +70,9 @@ PayPal sandbox provider setup is complete. Guardian outbound presentation/dual-r
 
 
 ## Optional admin authenticator setup
-- Owner: Private Access → Admin Security. Enroll using an authenticator app, verify a six-digit code, then verify a fresh session.
-- Check invalid/expired code retry and Cancel setup. Keep QR/setup key private; never send it in chat.
-- Confirm sign-out and tab changes clear setup details. Non-Owners cannot open setup.
+- [x] Owner: Admin Security primary + backup authenticators enrolled; six-digit verification and a fresh MFA-gated sign-in succeeded.
+- [ ] Invalid/expired code retry and Cancel setup remain optional negative-path checks. Keep QR/setup key private; never send it in chat.
+- [x] Fresh sign-out/sign-in challenge accepted; non-Owner access remains blocked by role checks. Tab/setup-detail clearing remains a UI polish check.
 - Owner MFA enrollment UI is complete. Backend enforcement requires two verified TOTP authenticators plus an aal2 session; enforcement remains OFF until the Owner explicitly enables it.
 - Automated mock enrollment/verification/stale-view tests passed. Live Auth enrollment and phone QR scanning remain unverified.
 
