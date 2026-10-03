@@ -232,7 +232,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      if(confirmed)add(40,"Upcoming studio session",confirmed.service_name+" · "+new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(confirmed.starts_at)),"Open booking",()=>shortcut("bookings"));
      else if(requested)add(50,"Session request awaiting confirmation",requested.service_name+" · requested for "+new Intl.DateTimeFormat("en-BB",{timeZone:"America/Barbados",dateStyle:"medium",timeStyle:"short"}).format(new Date(requested.starts_at)),"Open bookings",()=>shortcut("bookings"));
 
-     const unread=isMinor?Number(notifications?.unread||0):Number(notifications?.count||0);
+     const unread=isMinor?Number(notifications?.unread||0):Number(notifications||0);
      if(unread)add(60,"Studio updates to review",unread+" unread notification"+(unread===1?"":"s")+".","Open notifications",async()=>{shortcut("notifications");await loadNotifications();});
 
      actions.sort((a,b)=>a.priority-b.priority);
