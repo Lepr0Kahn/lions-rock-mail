@@ -3,7 +3,7 @@
 
 const URL="https://xsvczfqvscnvmngwcmtp.supabase.co";
 const KEY="sb_publishable_ZQGFWpZzlDsWBRclrySAyg_CYWqvU40";
-let client=null,settings=null,enabled=false;
+let client=null,settings=null,enabled=false,wasEnabled=false,authListenerBound=false;
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function q(root,sel){try{return root&&root.querySelector(sel)}catch(_){return null}}
 function qa(root,sel){try{return [...root.querySelectorAll(sel)]}catch(_){return[]}}
@@ -180,8 +180,7 @@ function installHub(frame){
     ["Project Notes","Work Notes"],
     ["No projects yet.","No work records yet."],
     ["+ Project","+ Work"],
-    ["No project","No work reference"],
-    ["project","work"]
+    ["No project","No work reference"]
   ];
   const apply=()=>replaceTextNodes(doc.body,reps);apply();
   const ob=new MutationObserver(()=>apply());ob.observe(doc.body,{subtree:true,childList:true});
@@ -192,7 +191,10 @@ function applyShellNeutral(){
   const search=document.getElementById("global-search");if(search)search.placeholder="Search clients, work, documents…";
 }
 async function apply(opts){
-  enabled=!!opts?.enabled;if(!enabled)return;
+  const next=!!opts?.enabled;
+  if(!next&&wasEnabled){location.reload();return;}
+  enabled=next;if(!enabled)return;
+  wasEnabled=true;
   await loadSettings();
   applyShellNeutral();
   installDocs(document.getElementById("docs-frame"));
@@ -208,6 +210,10 @@ window.LionsRockBusinessTools={apply};
 async function selfStart(){
   try{
     const sb=ensureClient();if(!sb)return;
+    if(!authListenerBound){
+      authListenerBound=true;
+      sb.auth.onAuthStateChange(()=>setTimeout(selfStart,120));
+    }
     const s=await sb.auth.getSession();const user=s.data?.session?.user;if(!user)return;
     const m=await sb.from("app_memberships").select("role,access_status,business_tools_enabled").eq("user_id",user.id).maybeSingle();
     const mode=localStorage.getItem("lions-rock-access-mode")||"business_tools";
