@@ -205,4 +205,14 @@ function onFrameLoad(id,type){
 }
 onFrameLoad("docs-frame","docs");onFrameLoad("mail-frame","mail");onFrameLoad("hub-frame","hub");
 window.LionsRockBusinessTools={apply};
+async function selfStart(){
+  try{
+    const sb=ensureClient();if(!sb)return;
+    const s=await sb.auth.getSession();const user=s.data?.session?.user;if(!user)return;
+    const m=await sb.from("app_memberships").select("role,access_status,business_tools_enabled").eq("user_id",user.id).maybeSingle();
+    const mode=localStorage.getItem("lions-rock-access-mode")||"business_tools";
+    await apply({enabled:!m.error&&m.data?.role!=="owner"&&m.data?.access_status==="active"&&m.data?.business_tools_enabled===true&&mode==="business_tools"});
+  }catch(e){console.warn("Business neutral startup:",e);}
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(selfStart,120));else setTimeout(selfStart,120);
 })();
