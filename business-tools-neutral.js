@@ -37,9 +37,12 @@ async function saveEmailBranding(footer,logo){
     const s=await sb.auth.getSession();const uid=s.data?.session?.user?.id;if(!uid)return;
     const payload={email_footer:String(footer||"").trim(),updated_at:new Date().toISOString()};
     if(typeof logo==="string")payload.logo_data=logo;
-    const r=await sb.from("business_settings").update(payload).eq("user_id",uid);
+    const r=await sb.from("business_settings").update(payload).eq("user_id",uid).select("user_id,logo_data,email_footer").maybeSingle();
     if(r.error)throw r.error;
-    settings=Object.assign({},settings||{},payload);
+    if(!r.data)throw new Error("Business settings row was not saved.");
+    if(typeof logo==="string"&&String(r.data.logo_data||"")!==logo)throw new Error("Business logo did not persist.");
+    if(String(r.data.email_footer||"")!==payload.email_footer)throw new Error("Business email footer did not persist.");
+    settings=Object.assign({},settings||{},payload,r.data);
   }catch(e){console.warn("Save business email branding:",e);throw e;}
 }
 function addStyle(doc,id,css){
@@ -91,7 +94,7 @@ function installDocs(frame){
       }catch(_){
         const st=doc.getElementById("settings-save-status");if(st){st.textContent="Could not save email branding";st.className="settings-save-status dirty";}
       }
-    },70));
+    },140));
   }
   const currency=doc.getElementById("set-currency");
   if(currency&&!doc.getElementById("business-color-row")){
