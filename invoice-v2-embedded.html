@@ -777,7 +777,7 @@ function renderPreview(){
   var settings=STORE.settings;
   var html='';
   if(state.paid&&isInv)html+='<div class="paid-stamp">PAID</div>';
-  var businessLogo=(settings.logo_data||'').trim();
+  var businessLogo=(settings.logo_data||'').trim()||(window.STUDIO_IS_OWNER?LOGO_DATA:'');
   html+='<div class="preview-header"><div class="preview-business">'+(businessLogo?'<img class="preview-logo" src="'+escapeHtml(businessLogo)+'" alt="Business logo">':'')+'<div class="preview-business-text"><div class="preview-brand">'+escapeHtml(settings.business_name)+'</div><div class="preview-tagline">'+escapeHtml(settings.tagline)+'</div><div class="currency-note">Currency: '+escapeHtml(settings.currency)+'</div></div></div>';
   html+='<div><div class="doc-type">'+title+'</div><div class="doc-num">'+escapeHtml($('doc-number').value)+'</div></div></div>';
   html+='<div class="preview-meta"><div><div class="meta-label">Bill To</div><div class="meta-text"><div class="name">'+escapeHtml($('client-name').value||'—')+'</div>';
@@ -929,7 +929,7 @@ function renderSettingsPreview(){
   var email=($('set-email').value||'').trim();
   var phone=($('set-phone').value||'').trim();
   var web=($('set-instagram').value||'').trim();
-  var logo=settingsDraftLogo||'';
+  var logo=settingsDraftLogo||(window.STUDIO_IS_OWNER?LOGO_DATA:'');
   box.innerHTML=(logo?'<img src="'+escapeHtml(logo)+'" alt="Business logo">':'<div class="business-preview-logo-empty">No logo</div>')+
     '<div><div class="business-preview-name">'+escapeHtml(name)+'</div>'+
     (tagline?'<div class="business-preview-tag">'+escapeHtml(tagline)+'</div>':'')+
