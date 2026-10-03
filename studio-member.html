@@ -455,7 +455,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
      const title=document.createElement("strong");title.textContent=(n.read_at?"":"Unread · ")+n.title;
      const body=document.createElement("p");body.className="muted brief";body.textContent=n.body;
      const date=document.createElement("p");date.className="muted";date.textContent=new Date(n.created_at).toLocaleString();
-     const button=document.createElement("button");button.textContent=({project:"Open project",bookings:"Open bookings",vault:"Open vault",payments:"Open payments"})[n.action_kind]||"Open notifications";
+     const button=document.createElement("button");button.textContent=({project:"Open project",bookings:"Open bookings",vault:"Open vault",payments:"Open payments",rewards:"Open Rewards"})[n.action_kind]||"Open notifications";
      button.onclick=async()=>{button.disabled=true;try{
        const seen=isMinor?await sb.rpc("minor_notifications_seen",{notification_id:n.id}):null;const result=isMinor?{error:seen.error,data:seen.error?[]:[{id:n.id}]}:await sb.from("studio_notifications").update({read_at:new Date().toISOString()}).eq("id",n.id).eq("user_id",user).select("id");
        if(uid!==user)return;if(result.error||!result.data?.length)throw new Error("Could not mark this notification as read. Refresh and retry.");
@@ -464,6 +464,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
        if(n.action_kind==="project"){if(items.some(p=>p.id===n.project_id))open(n.project_id);else notice("This project is unavailable. Refresh to check your access.",true);}
        else if(n.action_kind==="vault"){shortcut("vault");await loadVault();}
        else if(n.action_kind==="payments"&&isOwner){shortcut("payments");await loadPayments();}
+       else if(n.action_kind==="rewards")shortcut("rewards");
        else if(n.action_kind==="bookings")shortcut("bookings");
      }catch(error){notice(error.message||"Could not open notification.",true);}finally{button.disabled=false;}};
      row.append(title,body,date,button);el("notification-list").append(row);
