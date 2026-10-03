@@ -109,11 +109,13 @@ async function verifyWebhook(req:Request,raw:string){
 async function linkedInvoices(server:any,userId:string){
   const [bq,rq]=await Promise.all([
     server.from("studio_bookings").select("id").eq("user_id",userId),
-    server.from("studio_instrumental_requests").select("invoice_id").eq("user_id",userId).not("invoice_id","is",null)
+    server.from("studio_instrumental_requests").select("invoice_id,status,title_snapshot,licence_kind").eq("user_id",userId).not("invoice_id","is",null)
   ]);
   if(bq.error||rq.error)throw Error("invoice_links_unavailable");
   const bookingIds=(bq.data||[]).map((x:any)=>x.id);
-  const requestInvoiceIds=(rq.data||[]).map((x:any)=>x.invoice_id);
+  const requestRows=(rq.data||[]);
+  const requestInvoiceIds=requestRows.map((x:any)=>x.invoice_id);
+  const requestByInvoice=new Map(requestRows.map((x:any)=>[x.invoice_id,x]));
   const docs:any[]=[];
   if(bookingIds.length){
     const r=await server.from("documents").select("id,doc_number,status,doc_date,due_date,currency,deposit_pct,total,amount_paid,balance_due,client_name,booking_id").in("booking_id",bookingIds).eq("doc_type","invoice");
@@ -123,7 +125,10 @@ async function linkedInvoices(server:any,userId:string){
     const r=await server.from("documents").select("id,doc_number,status,doc_date,due_date,currency,deposit_pct,total,amount_paid,balance_due,client_name,booking_id").in("id",requestInvoiceIds).eq("doc_type","invoice");
     if(r.error)throw Error("vault_invoices_unavailable");docs.push(...(r.data||[]));
   }
-  const byId=new Map(docs.map(d=>[d.id,d]));
+  const byId=new Map(docs.map(d=>{
+    const req=requestByInvoice.get(d.id);
+    return [d.id,{...d,is_vault:!!req,vault_status:req?.status||null,vault_title:req?.title_snapshot||null,licence_kind:req?.licence_kind||null}];
+  }));
   return [...byId.values()].filter((d:any)=>!["draft","void"].includes(d.status)&&Number(d.balance_due)>0);
 }
 async function ownsInvoice(server:any,userId:string,invoiceId:string){
@@ -264,6 +269,9 @@ Deno.serve(async req=>{
       const invoiceId=String(body.invoiceId||""),portion=String(body.portion||"deposit");
       const d=await ownsInvoice(server,user.id,invoiceId);
       if(!d)return reply({error:"Invoice not available to this Artist"},403);
+      const vaultReq=await server.from("studio_instrumental_requests").select("id,status,title_snapshot").eq("invoice_id",invoiceId).eq("user_id",user.id).maybeSingle();
+      const isVault=!!vaultReq.data&&!vaultReq.error;
+      if(isVault&&body.finalSaleAccepted!==true)return reply({error:"Confirm the final-sale notice before paying for an instrumental licence."},409);
       if(["draft","void","paid"].includes(d.status)||Number(d.balance_due)<=0)return reply({error:"This invoice is not payable"},409);
       const amount=portionAmount(d,portion);
       if(amount<=0)return reply({error:portion==="deposit"?"The required deposit is already covered. Choose balance.":"Nothing remains to pay."},409);
