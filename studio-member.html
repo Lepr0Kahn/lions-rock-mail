@@ -388,7 +388,7 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
   const entries=Object.entries(trackData).map(([key,t])=>({key,score:Number(t?.score)||0}));
   const avg=entries.length?Math.round(entries.reduce((sum,x)=>sum+x.score,0)/entries.length):0;
   const strongest=[...entries].sort((a,b)=>b.score-a.score)[0],focus=[...entries].sort((a,b)=>a.score-b.score)[0];
-  const labels={craft:"Craft",catalogue:"Catalogue",studio:"Studio",business:"Business",momentum:"Momentum"};
+  const labels={creative:"Creative",audience:"Audience",business:"Business",network:"Network",momentum:"Momentum"};
   const stage=String(p.stage||"Unavailable"),stageLabel=stage==="Unavailable"?stage:stage.charAt(0).toUpperCase()+stage.slice(1);
   const hero=document.createElement("div");hero.className="owner-progress-hero";
   const top=document.createElement("div");top.className="owner-progress-top";
@@ -403,7 +403,14 @@ async function withLoadTimeout(promise,label,ms=12000){let timer;const timeout=n
   stats.append(stat("Career stage",(p.stage_index||"—")+" / "+(p.stage_count||8)),stat("Recognition","Level "+(r.level??"—")),stat("Badges",(r.badges||[]).filter(b=>b.earned).length+" / "+(r.badges||[]).length));hero.append(stats);
   const readout=document.createElement("div");readout.className="owner-progress-readout";
   const note=(title,text)=>{const x=document.createElement("div"),h=document.createElement("h4"),q=document.createElement("p");x.className="owner-progress-note";h.textContent=title;q.textContent=text;x.append(h,q);return x;};
-  readout.append(note("Strongest area",strongest?(labels[strongest.key]||strongest.key)+" · "+strongest.score+"/100":"Not enough evidence yet"),note("Needs attention",focus?(labels[focus.key]||focus.key)+" · "+focus.score+"/100":"Not enough evidence yet"),note("Next recorded action",p.next_action||"No next action available."),note("12-month goal",goal));hero.append(readout);
+  const recent=(r.awards||[])[0];
+  readout.append(
+    note("Strongest area",strongest?(labels[strongest.key]||strongest.key)+" · "+strongest.score+"/100":"Not enough evidence yet"),
+    note("Needs attention",focus?(labels[focus.key]||focus.key)+" · "+focus.score+"/100":"Not enough evidence yet"),
+    note("Next recorded action",p.next_action||"No next action available."),
+    note("Recent progress",recent?("+"+recent.points+" XP · "+activityLabel(recent.key)):"No recent XP evidence yet."),
+    note("12-month goal",goal)
+  );hero.append(readout);
   if(entries.length){const box=document.createElement("div");box.className="owner-track-mini";entries.forEach(t=>{const row=document.createElement("div"),l=document.createElement("span"),meter=document.createElement("progress"),n=document.createElement("strong");row.className="owner-track-row";l.textContent=labels[t.key]||t.key;meter.max=100;meter.value=t.score;meter.setAttribute("aria-label",(labels[t.key]||t.key)+" "+t.score+" of 100");n.textContent=t.score;row.append(l,meter,n);box.append(row);});hero.append(box);}
   const foot=document.createElement("div");foot.className="owner-overview-footer";foot.textContent="Average track progress is the mean of the five evidence-based career-track scores. Stage and Level remain separate measures.";hero.append(foot);
   root.append(hero);
